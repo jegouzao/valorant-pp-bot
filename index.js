@@ -1155,7 +1155,7 @@ await Promise.all(toDelete.map(async (id) => {
   
   // Valeurs de rank par roleId
   const RANK_VALUES_BY_ID = {
-    '1114187578866933790': 69, '1114182691550658650': 61, '1461352160850870427': 55,
+    '1114187578866933790': 70, '1114182691550658650': 61, '1461352160850870427': 55,
     '1461352201267188046': 46, '1114186784574812332': 44, '1461352272075292844': 36,
     '1461352294237868222': 32, '1114187919662522429': 30, '1461352361355378688': 29,
     '1461352408788762738': 28, '1113191909876318268': 27, '1461352440132800768': 25,
@@ -2661,4 +2661,16 @@ process.on('uncaughtException', (error) => {
 
 
 
-client.login(process.env.TOKEN);
+console.log("TOKEN présent ?", !!process.env.TOKEN);
+console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
+console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
+
+client.once('ready', () => {
+  console.log(`✅ BOT DISCORD CONNECTÉ : ${client.user.tag}`);
+});
+
+console.log("Tentative de connexion Discord...");
+
+client.login(process.env.TOKEN)
+  .then(() => console.log("✅ client.login réussi"))
+  .catch((err) => console.error("❌ client.login échoué :", err));

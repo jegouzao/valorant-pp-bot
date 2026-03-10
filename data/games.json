@@ -2606,6 +2606,318 @@
       "attVC": "1479590857232613517",
       "defVC": "1479590858528391351",
       "manageMessageId": "1479590879692984412"
+    },
+    {
+      "id": "1481060934037536840",
+      "messageId": "1481060934037536840",
+      "channelId": "1461346832591360173",
+      "valorantCode": "USW790",
+      "categoryId": "1481060931915088025",
+      "waitingVC": "1481060933097881773",
+      "players": [],
+      "spectators": {
+        "1423615166293213206": "defense"
+      },
+      "mapName": "ʙʀᴇᴇᴢᴇ",
+      "mapImage": "https://cdn.discordapp.com/attachments/1461761854563942400/1480262530419921057/15.png?ex=69af0969&is=69adb7e9&hm=9ad0b2fe1aa5848ad567ddfc7cf8cc826474f06926c7c291ef6fe62956bd7122&",
+      "changeMapVotes": [],
+      "locks": {},
+      "creatorId": "1471602146964406365",
+      "creatorName": "jegouzão",
+      "creatorAvatar": "https://cdn.discordapp.com/avatars/1471602146964406365/633377480c345b36eda493a15ef2c8fe.webp?size=32",
+      "attackers": [
+        {
+          "id": "685952099208790139",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": 1772014660262,
+            "nickname": "DARTAN",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "685952099208790139",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1771360652002,
+            "flags": 512,
+            "avatarDecorationData": null,
+            "displayName": "DARTAN",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1468458885357502599",
+              "1134168535866806314",
+              "1468981898553589803",
+              "1461352408788762738"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/685952099208790139/566b5f55b533feecbf9cf07dd4f64f3b.webp",
+            "displayBannerURL": "https://cdn.discordapp.com/banners/685952099208790139/3170e0fb6f4e409d3781370f39d8f9e5.webp",
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "1478920524552867920",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "KAY/O",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "1478920524552867920",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1772676024333,
+            "flags": 1,
+            "avatarDecorationData": null,
+            "displayName": "KAY/O",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1114186784574812332",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/1478920524552867920/32df94cf113af97c39e76019b024059c.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "498428050132697088",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "Luferno",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "498428050132697088",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1769955085675,
+            "flags": 10,
+            "avatarDecorationData": null,
+            "displayName": "Luferno",
+            "roles": [
+              "1103381272904085636",
+              "1461352361355378688",
+              "1461354176931041312",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/498428050132697088/6bd6ca9f7d7c902586cba75c6579cd7d.webp",
+            "displayBannerURL": "https://cdn.discordapp.com/banners/498428050132697088/a_8ef0d94e2e414cba0dd96b3187e7c37e.gif",
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "409366156286361620",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "Twitch neikyou",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "409366156286361620",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1771627596440,
+            "flags": 0,
+            "avatarDecorationData": null,
+            "displayName": "Twitch neikyou",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1114187578866933790",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/409366156286361620/e10f08baed2ece2777387921bb7e2396.webp",
+            "displayBannerURL": "https://cdn.discordapp.com/banners/409366156286361620/2650e61977f2c2f88df244b2f5b9fdf8.webp",
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "1424187789603246182",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "BEBECITA",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": 1772204933230,
+            "userId": "1424187789603246182",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1771609718083,
+            "flags": 0,
+            "avatarDecorationData": null,
+            "displayName": "BEBECITA",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1461348856100028439",
+              "1461352294237868222",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/1424187789603246182/3e21a63c7868335f54cb951690c53d39.webp",
+            "displayBannerURL": "https://cdn.discordapp.com/banners/1424187789603246182/a_d8b0675d9460f11625e5a1a0b967bf3d.gif",
+            "avatarDecorationURL": null
+          }
+        }
+      ],
+      "defenders": [
+        {
+          "id": "977972386408308848",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "Dard",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "977972386408308848",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1769955361450,
+            "flags": 10,
+            "avatarDecorationData": null,
+            "displayName": "Dard",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1468458885357502599",
+              "1461352460227580111"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/977972386408308848/9b940361842e06bd977b4340e26f8448.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "1259804865941471232",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "sosa┃sad summer",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "1259804865941471232",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1769942108013,
+            "flags": 10,
+            "avatarDecorationData": null,
+            "displayName": "sosa┃sad summer",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1114182691550658650",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/1259804865941471232/ef26dd5bfb672a104ffb4fb9e0da6b05.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "868821539137671199",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "Moshi┃MissMyAimbot",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "868821539137671199",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1769529359753,
+            "flags": 10,
+            "avatarDecorationData": null,
+            "displayName": "Moshi┃MissMyAimbot",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1113191866888884274",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/868821539137671199/fe916960de6052ee28d0650ebb7775b2.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "1471602146964406365",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": 1772555139649,
+            "nickname": null,
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "1471602146964406365",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1772309908845,
+            "flags": 0,
+            "avatarDecorationData": null,
+            "displayName": "jegouzão",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1461348856100028439",
+              "1468458885357502599",
+              "1134168535866806314",
+              "1461352272075292844",
+              "1462598146818572381"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/1471602146964406365/633377480c345b36eda493a15ef2c8fe.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        },
+        {
+          "id": "712009521534468126",
+          "member": {
+            "guildId": "1103381272904085636",
+            "premiumSinceTimestamp": null,
+            "nickname": "Yop┃Candy up",
+            "pending": false,
+            "communicationDisabledUntilTimestamp": null,
+            "userId": "712009521534468126",
+            "avatar": null,
+            "banner": null,
+            "joinedTimestamp": 1772062238640,
+            "flags": 0,
+            "avatarDecorationData": null,
+            "displayName": "Yop┃Candy up",
+            "roles": [
+              "1103381272904085636",
+              "1461354176931041312",
+              "1114182691550658650",
+              "1468458885357502599"
+            ],
+            "avatarURL": null,
+            "bannerURL": null,
+            "displayAvatarURL": "https://cdn.discordapp.com/avatars/712009521534468126/81d1f0f89c22efaa28da8c8602aa7e3c.webp",
+            "displayBannerURL": null,
+            "avatarDecorationURL": null
+          }
+        }
+      ],
+      "attVC": "1481061042934251534",
+      "defVC": "1481061045002047671",
+      "manageMessageId": "1481061060688613518"
     }
   ]
 }
