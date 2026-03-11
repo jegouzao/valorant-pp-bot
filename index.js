@@ -2677,19 +2677,6 @@ client.on('warn', (msg) => {
   console.warn("⚠️ client warn :", msg);
 });
 
-client.on('debug', (msg) => {
-  if (
-    msg.includes('Hit a 429') ||
-    msg.includes('Provided token') ||
-    msg.includes('Session') ||
-    msg.includes('Connecting') ||
-    msg.includes('Identifying') ||
-    msg.includes('Ready')
-  ) {
-    console.log("🔎 DEBUG :", msg);
-  }
-});
-
 client.on('invalidated', () => {
   console.error("❌ Session invalidated");
 });
