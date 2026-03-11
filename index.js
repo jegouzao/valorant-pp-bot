@@ -24,15 +24,6 @@ async function initMongo() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connecté');
-
-    await migratePointsJsonToMongo();
-    await migrateInvitesJsonToMongo();
-    await migrateRiotDataJsonToMongo();
-    await migrateModerationJsonToMongo();
-    await migrateTop15JsonToMongo();
-    await migrateGamesJsonToMongo();
-
-    console.log('✅ Toutes les migrations MongoDB sont terminées');
   } catch (err) {
     console.error('❌ MongoDB erreur :', err);
   }
