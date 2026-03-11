@@ -20,19 +20,23 @@ const maps = require('./config/maps');
 
 const mongoose = require('mongoose');
 
-
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
+async function initMongo() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connecté');
+
     await migratePointsJsonToMongo();
     await migrateInvitesJsonToMongo();
     await migrateRiotDataJsonToMongo();
     await migrateModerationJsonToMongo();
     await migrateTop15JsonToMongo();
     await migrateGamesJsonToMongo();
-  })
-  .catch((err) => console.error('❌ MongoDB erreur :', err));
 
+    console.log('✅ Toutes les migrations MongoDB sont terminées');
+  } catch (err) {
+    console.error('❌ MongoDB erreur :', err);
+  }
+}
 
 
 const http = require('http');
@@ -741,7 +745,11 @@ client.once(Events.ClientReady, async () => {
   console.log('\n');
 
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
-  if (!guild) return;
+if (!guild) return;
+
+await initMongo();
+gamesData.games = await getAllGames();
+console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
 
   await guild.members.fetch();
 console.log('✅ Tous les membres du serveur ont été chargés en cache');
@@ -768,8 +776,6 @@ console.log('✅ Tous les membres du serveur ont été chargés en cache');
   console.log(`${colors.blue}✅ ${colors.bright}${guild.memberCount}${colors.reset}${colors.blue} membres${colors.reset}`);
 
 
-  gamesData.games = await getAllGames();
-console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
 
   // 🎮 Définir le statut du bot
   client.user.setPresence({
@@ -1320,7 +1326,7 @@ gamesData.games.push({
   creatorAvatar: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
 });
 
-    persistGames();
+    await persistGames();
     return interaction.editReply('✅ Partie créée.');
   }
 
@@ -1336,7 +1342,7 @@ const vc = (choice === 'attack' ? att : def) || waitingVC;
     await moveVerifiedToVC(interaction.member, vc);
     if (!game.spectators) game.spectators = {};
     game.spectators[interaction.user.id] = choice;
-    persistGames();
+    await persistGames();
 
     // Update embed PARTIE CRÉÉE
     await updateRegistrationEmbed(interaction.guild, game);
@@ -1386,7 +1392,7 @@ case 'change_map': {
     game.mapImage = newMap.image;
 
     game.changeMapVotes = [];
-    persistGames();
+    await persistGames();
 
     await updateRegistrationEmbed(interaction.guild, game);
 
@@ -1396,7 +1402,7 @@ case 'change_map': {
     });
   }
 
-  persistGames();
+  await persistGames();
   await updateRegistrationEmbed(interaction.guild, game);
 
   return interaction.reply({ content: `✅ Vote enregistré (${votes}/${needed}).`, ephemeral: true });
@@ -1447,7 +1453,7 @@ await Promise.all(toDelete.map(async (id) => {
   // Supprimer la partie du json
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
   await deleteGame(game.id);
-  persistGames();
+  await persistGames();
 
   // Réponse
   try {
@@ -1636,7 +1642,7 @@ const defVC = await interaction.guild.channels.create({
   game.attVC = attVC.id;
   game.defVC = defVC.id;
 
-persistGames();
+await persistGames();
 
   // Déplacer joueurs et spectateurs connectés
   for (const p of [...game.attackers, ...game.defenders]) {
@@ -1720,7 +1726,7 @@ if (game.mapImage) {
 
 // ✅ on stocke l'id du message "PARTIE EN COURS"
 game.manageMessageId = inGameMsg.id;
-persistGames();
+await persistGames();
 
 await interaction.editReply('✅ Partie lancée');
 break;
@@ -1805,7 +1811,7 @@ if (!waitingVC) {
     // Supprimer la partie
     gamesData.games = gamesData.games.filter(g => g.id !== game.id);
     await deleteGame(game.id);
-    persistGames();
+    await persistGames();
     if (gameLocks[game.id]) delete gameLocks[game.id];
     return;
   }
@@ -1852,7 +1858,7 @@ await updateTop15Embed();
   // Supprimer la partie
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
   await deleteGame(game.id);
-  persistGames();
+  await persistGames();
 
   // ───────────── Embed final ─────────────
   const formatPlayers = (ids) => {
@@ -2519,14 +2525,14 @@ if (affectedGame) {
       }
 
       affectedGame.players.push(newState.member.id);
-      persistGames();
+      await persistGames();
       scheduleRegistrationUpdate(guild, affectedGame);
     }
   }
 
   if (oldState.channelId === affectedGame.waitingVC && oldState.channelId !== newState.channelId) {
     affectedGame.players = affectedGame.players.filter(id => id !== oldState.member.id);
-    persistGames();
+    await persistGames();
     scheduleRegistrationUpdate(guild, affectedGame);
   }
 }
@@ -3040,9 +3046,6 @@ console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
 console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
 console.log("Longueur TOKEN :", token.length);
 
-client.on('ready', () => {
-  console.log(`✅ BOT DISCORD CONNECTÉ : ${client.user.tag}`);
-});
 
 client.on('error', (err) => {
   console.error("❌ client error :", err);
