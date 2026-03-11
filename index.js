@@ -2681,7 +2681,7 @@ client.on('guildMemberAdd', async member => {
 
         await thread.send(
             `## ${member.displayName}, bienvenue sur **VALORANT PP** <:Roles:1471219666473980065>\n\n` +
-            `Pour débloquer l'accès, configure ton profil :` +
+            `Pour débloquer l'accès, configure ton profil :\n` +
             `> 1. Choisis ton **PEAK rank 2025**\n` +
             `> 2. Renomme toi par ton pseudo In-game\n` +
             `> 3. Et essaie de survivre`
@@ -2690,6 +2690,7 @@ client.on('guildMemberAdd', async member => {
 
         const rankMenu = new StringSelectMenuBuilder()
             .setCustomId('rank_select')
+            .setPlaceholder('Mon peak rank Valorant') // 👈 ton "titre"
             .setMinValues(1)
             .setMaxValues(1)
             .addOptions([ { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } }, { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } }, { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } }, { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } }, { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } }, { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } }, { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } }, { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } }, { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } }, { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } }, { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } }, { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } }, { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } }, { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } }, { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } }, { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } }, { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } }, { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } }, { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } }, { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } }, { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } }, { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } }, { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } }, { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } }, { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } } ]);
