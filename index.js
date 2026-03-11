@@ -1328,23 +1328,41 @@ gamesData.games.push({
 
   // ── SELECT MENU OBSERVER ──
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
-    if (!isVerified) return interaction.reply({ content: '⛔ Seuls les Vérifiés peuvent observer.', ephemeral: true });
-    if (!game) return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-    const choice = interaction.values[0]; // attack ou defense
-    const att = interaction.guild.channels.cache.get(game.attVC);
-const def = interaction.guild.channels.cache.get(game.defVC);
-const vc = (choice === 'attack' ? att : def) || waitingVC;
-    if (!vc) return interaction.reply({ content: '❌ Aucun salon disponible.', ephemeral: true });
-    await moveVerifiedToVC(interaction.member, vc);
-    if (!game.spectators) game.spectators = {};
-    game.spectators[interaction.user.id] = choice;
-    await persistGames();
-
-    // Update embed PARTIE CRÉÉE
-    await updateRegistrationEmbed(interaction.guild, game);
-
-    return interaction.update({ content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`, components: [] });
+  if (!isVerified) {
+    return interaction.reply({ content: '⛔ Seuls les Vérifiés peuvent observer.', ephemeral: true });
   }
+
+  if (!game) {
+    return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
+  }
+
+  await interaction.deferUpdate();
+
+  const choice = interaction.values[0];
+  const att = interaction.guild.channels.cache.get(game.attVC);
+  const def = interaction.guild.channels.cache.get(game.defVC);
+  const vc = (choice === 'attack' ? att : def) || waitingVC;
+
+  if (!vc) {
+    return interaction.editReply({
+      content: '❌ Aucun salon disponible.',
+      components: []
+    });
+  }
+
+  await moveVerifiedToVC(interaction.member, vc);
+
+  if (!game.spectators) game.spectators = {};
+  game.spectators[interaction.user.id] = choice;
+
+  await persistGames();
+  await updateRegistrationEmbed(interaction.guild, game);
+
+  return interaction.editReply({
+    content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
+    components: []
+  });
+}
 
 
 
@@ -2443,35 +2461,33 @@ if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal
 
 // ── Gestion du modal MANAGE ──
 if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
+  await interaction.deferReply({ ephemeral: true });
+
   const [, , type, userId] = interaction.customId.split('_');
   const amount = parseInt(interaction.fields.getTextInputValue('rr_amount'));
 
   if (isNaN(amount) || amount <= 0) {
-    return interaction.reply({
-      content: '❌ Montant invalide. Veuillez entrer un nombre positif.',
-      ephemeral: true
-    });
+    return interaction.editReply('❌ Montant invalide. Veuillez entrer un nombre positif.');
   }
 
   const currentStats = await getPlayerPoints(userId);
 
-if (type === 'add') {
-  currentStats.rr += amount;
-} else if (type === 'remove') {
-  currentStats.rr -= amount;
-  if (currentStats.rr < 0) {
-    currentStats.rr = 0;
+  if (type === 'add') {
+    currentStats.rr += amount;
+  } else if (type === 'remove') {
+    currentStats.rr -= amount;
+    if (currentStats.rr < 0) {
+      currentStats.rr = 0;
+    }
   }
-}
 
-await setPlayerPoints(userId, currentStats);
-await updateTop15Embed();
+  await setPlayerPoints(userId, currentStats);
+  await updateTop15Embed();
 
-const actionText = type === 'add' ? 'ajouté' : 'retiré';
-return interaction.reply({
-  content: `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`,
-  ephemeral: true
-});
+  const actionText = type === 'add' ? 'ajouté' : 'retiré';
+  return interaction.editReply(
+    `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`
+  );
 }
 
 
