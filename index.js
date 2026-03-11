@@ -281,9 +281,9 @@ const loadInvites = () => JSON.parse(fs.readFileSync(invitesFile, 'utf8'));
 
 // ✅ Variables globales en mémoire
 let gamesData = { games: [] };
-let pointsData = loadPoints();
-let invitesData = loadInvites();
-let top15Data = loadTop15();
+let pointsData = {};
+let invitesData = {};
+let top15Data = {};
 
 
 const moderationFile = path.join(__dirname, 'data', 'moderation.json');
@@ -901,7 +901,9 @@ const sorted = Object.entries(pointsData)
     const emptyEmbed = new EmbedBuilder()
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀʀꜱ")
       .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
-      .setDescription("*Calcul en cours...*")
+      .setDescription(
+  `## Cashprize du mois : <:TopLeaderboardCashprize:1465709888729776296> 3650 VP\n\n*Calcul en cours...*`
+)
       .setColor(0x242429);
 
     await msg.edit({ embeds: [emptyEmbed] }).catch(() => {});
@@ -952,7 +954,10 @@ const sorted = Object.entries(pointsData)
   const embed = new EmbedBuilder()
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀʀꜱ")
     .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
-    .setDescription(lines.join("\n") || "*Calcul en cours...*")
+    .setDescription(
+  `## Cashprize du mois : <:TopLeaderboardCashprize:1465709888729776296> 3650 VP\n\n` +
+  (lines.join("\n") || "*Calcul en cours...*")
+)
     .setColor(0x242429);
 
   await msg.edit({ embeds: [embed] }).catch(() => {});
@@ -2896,7 +2901,31 @@ function getRandomLeaveMockery() {
   }
 });
 
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  try {
+    const oldBoost = oldMember.premiumSince;
+    const newBoost = newMember.premiumSince;
 
+    if (!oldBoost && newBoost) {
+      const boostChannel = newMember.guild.channels.cache.get('1474066060528451743');
+      if (!boostChannel) return;
+
+      const embed = new EmbedBuilder()
+        .setColor(0xff73fa)
+        .setDescription(
+          `## <:Roles:1471219666473980065> NOUVEAU BOOSTEUR\n\n` +
+          `> Merci à ${newMember} pour le boost du serveur !\n` +
+          `> Ton soutien aide directement **VALORANT PP** à évoluer.`
+        )
+        .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
+        .setTimestamp();
+
+      await boostChannel.send({ embeds: [embed] });
+    }
+  } catch (err) {
+    console.error('Erreur embed boost serveur :', err);
+  }
+});
 
 
 
