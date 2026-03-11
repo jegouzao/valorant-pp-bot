@@ -2706,8 +2706,30 @@ client.on('shardReconnecting', (id) => {
   console.log(`🔄 Shard ${id} reconnecting...`);
 });
 
-console.log("Tentative de connexion Discord...");
+async function testDiscordApi() {
+  try {
+    console.log("🌐 Test API Discord /users/@me...");
+    const res = await fetch("https://discord.com/api/v10/users/@me", {
+      headers: {
+        Authorization: `Bot ${token}`,
+      },
+    });
 
-client.login(token)
-  .then(() => console.log("✅ client.login réussi"))
-  .catch((err) => console.error("❌ client.login échoué :", err));
+    console.log("🌐 Status API Discord :", res.status);
+
+    const text = await res.text();
+    console.log("🌐 Réponse API Discord :", text.slice(0, 300));
+  } catch (err) {
+    console.error("❌ Erreur test API Discord :", err);
+  }
+}
+
+(async () => {
+  await testDiscordApi();
+
+  console.log("Tentative de connexion Discord...");
+
+  client.login(token)
+    .then(() => console.log("✅ client.login réussi"))
+    .catch((err) => console.error("❌ client.login échoué :", err));
+})();
