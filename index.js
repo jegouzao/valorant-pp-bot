@@ -2665,8 +2665,33 @@ console.log("TOKEN présent ?", !!process.env.TOKEN);
 console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
 console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
 
-client.once('ready', () => {
+client.on('ready', () => {
   console.log(`✅ BOT DISCORD CONNECTÉ : ${client.user.tag}`);
+});
+
+client.on('error', (err) => {
+  console.error("❌ client error :", err);
+});
+
+client.on('warn', (msg) => {
+  console.warn("⚠️ client warn :", msg);
+});
+
+client.on('debug', (msg) => {
+  if (
+    msg.includes('Hit a 429') ||
+    msg.includes('Provided token') ||
+    msg.includes('Session') ||
+    msg.includes('Connecting') ||
+    msg.includes('Identifying') ||
+    msg.includes('Ready')
+  ) {
+    console.log("🔎 DEBUG :", msg);
+  }
+});
+
+client.on('invalidated', () => {
+  console.error("❌ Session invalidated");
 });
 
 console.log("Tentative de connexion Discord...");
