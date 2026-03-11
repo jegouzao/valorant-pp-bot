@@ -10,15 +10,26 @@ if (!fs.existsSync(gamesFile)) fs.writeFileSync(gamesFile, JSON.stringify({ game
 
 
 const Points = require('./models/Points');
+const Invite = require('./models/Invite');
+const RiotUser = require('./models/RiotUser');
+const Moderation = require('./models/Moderation');
+const Config = require('./models/Config');
+const Game = require('./models/Game');
 
 const maps = require('./config/maps');
 
 const mongoose = require('mongoose');
 
+
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('✅ MongoDB connecté');
     await migratePointsJsonToMongo();
+    await migrateInvitesJsonToMongo();
+    await migrateRiotDataJsonToMongo();
+    await migrateModerationJsonToMongo();
+    await migrateTop15JsonToMongo();
+    await migrateGamesJsonToMongo();
   })
   .catch((err) => console.error('❌ MongoDB erreur :', err));
 
@@ -274,7 +285,7 @@ const loadInvites = () => JSON.parse(fs.readFileSync(invitesFile, 'utf8'));
 
 
 // ✅ Variables globales en mémoire
-let gamesData = loadGames();
+let gamesData = { games: [] };
 let pointsData = loadPoints();
 let invitesData = loadInvites();
 let top15Data = loadTop15();
@@ -306,8 +317,10 @@ function persistModeration() {
 
 
 // ✅ Fonctions de sauvegarde
-function persistGames() {
-  fs.writeFileSync(gamesFile, JSON.stringify(gamesData, null, 2));
+async function persistGames() {
+  for (const game of gamesData.games) {
+    await saveGame(game);
+  }
 }
 
 function persistInvites() {
@@ -398,6 +411,255 @@ async function getAllPoints() {
 
   return result;
 }
+
+async function getInviteData(inviterId) {
+  let doc = await Invite.findOne({ inviterId });
+
+  if (!doc) {
+    doc = await Invite.create({
+      inviterId,
+      invites: 0,
+      members: []
+    });
+  }
+
+  return {
+    inviterId: doc.inviterId,
+    invites: doc.invites,
+    members: doc.members
+  };
+}
+
+async function setInviteData(inviterId, data) {
+  await Invite.updateOne(
+    { inviterId },
+    {
+      $set: {
+        invites: data.invites ?? 0,
+        members: data.members ?? []
+      }
+    },
+    { upsert: true }
+  );
+}
+
+async function getAllInvites() {
+  const docs = await Invite.find({});
+  const result = {};
+
+  for (const doc of docs) {
+    result[doc.inviterId] = {
+      invites: doc.invites,
+      members: doc.members
+    };
+  }
+
+  return result;
+}
+
+async function migrateInvitesJsonToMongo() {
+  const localInvites = loadInvites();
+  const existingCount = await Invite.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration invites ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localInvites);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun invite local à migrer.');
+    return;
+  }
+
+  for (const [inviterId, data] of entries) {
+    await Invite.updateOne(
+      { inviterId },
+      {
+        $set: {
+          invites: data.invites ?? 0,
+          members: data.members ?? []
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration invites.json → MongoDB terminée (${entries.length} inviteurs).`);
+}
+
+async function getRiotUser(userId) {
+  let doc = await RiotUser.findOne({ userId });
+
+  if (!doc) {
+    doc = await RiotUser.create({
+      userId,
+      pseudo: ''
+    });
+  }
+
+  return {
+    userId: doc.userId,
+    pseudo: doc.pseudo
+  };
+}
+
+async function setRiotUser(userId, data) {
+  await RiotUser.updateOne(
+    { userId },
+    {
+      $set: {
+        pseudo: data.pseudo ?? ''
+      }
+    },
+    { upsert: true }
+  );
+}
+
+async function migrateRiotDataJsonToMongo() {
+  const localRiotData = JSON.parse(fs.readFileSync('./riotData.json', 'utf8'));
+  const existingCount = await RiotUser.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration riotData ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localRiotData);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun riotData local à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await RiotUser.updateOne(
+      { userId },
+      {
+        $set: {
+          pseudo: data.pseudo ?? ''
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration riotData.json → MongoDB terminée (${entries.length} joueurs).`);
+}
+
+async function migrateModerationJsonToMongo() {
+  const localModeration = loadModeration();
+  const existingCount = await Moderation.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration moderation ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const bannedUsers = localModeration.bannedUsers || {};
+  const entries = Object.entries(bannedUsers);
+
+  if (!entries.length) {
+    console.log('ℹ️ Aucune donnée moderation locale à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await Moderation.updateOne(
+      { userId },
+      {
+        $set: {
+          userId,
+          banned: true,
+          reason: data.reason ?? '',
+          date: data.date ?? '',
+          riotPseudo: data.riotPseudo ?? '',
+          username: data.username ?? ''
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration moderation.json → MongoDB terminée (${entries.length} bans).`);
+}
+
+
+async function getConfigValue(key, fallback = null) {
+  const doc = await Config.findOne({ key });
+  return doc ? doc.value : fallback;
+}
+
+async function setConfigValue(key, value) {
+  await Config.updateOne(
+    { key },
+    { $set: { value } },
+    { upsert: true }
+  );
+}
+
+async function migrateTop15JsonToMongo() {
+  const existing = await Config.findOne({ key: 'top15Data' });
+  if (existing) {
+    console.log('ℹ️ Migration top15 ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const localTop15 = loadTop15();
+  await setConfigValue('top15Data', localTop15);
+  console.log('✅ Migration top15.json → MongoDB terminée.');
+}
+
+async function getAllGames() {
+  return await Game.find({}).lean();
+}
+
+async function getGameByAnyMessageId(id) {
+  return await Game.findOne({
+    $or: [
+      { id },
+      { messageId: id },
+      { manageMessageId: id },
+      { betMessageId: id }
+    ]
+  });
+}
+
+async function saveGame(gameData) {
+  await Game.updateOne(
+    { id: gameData.id },
+    { $set: gameData },
+    { upsert: true }
+  );
+}
+
+async function deleteGame(gameId) {
+  await Game.deleteOne({ id: gameId });
+}
+
+async function migrateGamesJsonToMongo() {
+  const existingCount = await Game.countDocuments();
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration games ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const localGames = loadGames().games || [];
+  if (!localGames.length) {
+    console.log('ℹ️ Aucun game local à migrer.');
+    return;
+  }
+
+  for (const game of localGames) {
+    await saveGame(game);
+  }
+
+  console.log(`✅ Migration games.json → MongoDB terminée (${localGames.length} parties).`);
+}
+
+
+
+
+
 
 
 // ===== Slash Commands =====
@@ -505,6 +767,10 @@ console.log('✅ Tous les membres du serveur ont été chargés en cache');
   console.log(`${colors.blue}✅ Connecté sur le serveur: ${colors.bright}${guild.name}${colors.reset}`);
   console.log(`${colors.blue}✅ ${colors.bright}${guild.memberCount}${colors.reset}${colors.blue} membres${colors.reset}`);
 
+
+  gamesData.games = await getAllGames();
+console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
+
   // 🎮 Définir le statut du bot
   client.user.setPresence({
     activities: [{
@@ -611,7 +877,8 @@ console.log(`${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.
 
 
 async function updateTop15Embed() {
-  if (!top15Data.messageId || !top15Data.channelId) return;
+  const top15Data = await getConfigValue('top15Data', {});
+if (!top15Data.messageId || !top15Data.channelId) return;
 
   const channel = client.channels.cache.get(top15Data.channelId)
     || await client.channels.fetch(top15Data.channelId).catch(() => null);
@@ -620,10 +887,12 @@ async function updateTop15Embed() {
   const msg = await channel.messages.fetch(top15Data.messageId).catch(() => null);
   if (!msg) return console.log('❌ Message leaderboard introuvable');
 
-  const totalInvitesPerMember = {};
-  for (const inviterId in invitesData) {
-    totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
-  }
+  const invitesData = await getAllInvites();
+
+const totalInvitesPerMember = {};
+for (const inviterId in invitesData) {
+  totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
+}
 
 const pointsData = await getAllPoints();
 
@@ -1177,6 +1446,7 @@ await Promise.all(toDelete.map(async (id) => {
 
   // Supprimer la partie du json
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+  await deleteGame(game.id);
   persistGames();
 
   // Réponse
@@ -1534,6 +1804,7 @@ if (!waitingVC) {
 
     // Supprimer la partie
     gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+    await deleteGame(game.id);
     persistGames();
     if (gameLocks[game.id]) delete gameLocks[game.id];
     return;
@@ -1580,6 +1851,7 @@ await updateTop15Embed();
 
   // Supprimer la partie
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+  await deleteGame(game.id);
   persistGames();
 
   // ───────────── Embed final ─────────────
@@ -1784,9 +2056,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'riot_modal') {
   const pseudo = interaction.fields.getTextInputValue('riot_pseudo');
 
   // 📁 Sauvegarde des données
-  const data = JSON.parse(fs.readFileSync('./riotData.json', 'utf8'));
-  data[interaction.user.id] = { pseudo };
-  fs.writeFileSync('./riotData.json', JSON.stringify(data, null, 2));
+  await setRiotUser(interaction.user.id, { pseudo });
 
   // 🏷️ Changement de pseudo
   await interaction.member.setNickname(pseudo).catch(() => {});
@@ -1849,8 +2119,10 @@ return;
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
-      top15Data = { messageId: msg.id, channelId: interaction.channel.id };
-      persistTop15();
+      await setConfigValue('top15Data', {
+  messageId: msg.id,
+  channelId: interaction.channel.id
+});
       await updateTop15Embed();
       return interaction.editReply({ content: "✅ TOP15 créé dans ce salon", ephemeral: true });
 }
@@ -1974,14 +2246,22 @@ if (interaction.isModalSubmit() && interaction.customId.startsWith('ban_modal_')
     ).catch(() => {});
     
     // Stockage modération
-    const riotData = JSON.parse(fs.readFileSync('./riotData.json', 'utf8'));
-    moderationData.bannedUsers[userId] = {
+    const riotUser = await RiotUser.findOne({ userId });
+
+await Moderation.updateOne(
+  { userId },
+  {
+    $set: {
+      userId,
+      banned: true,
       reason,
       date: new Date().toISOString(),
-      riotPseudo: riotData[userId]?.pseudo || null,
+      riotPseudo: riotUser?.pseudo || '',
       username: user.tag
-    };
-    persistModeration();
+    }
+  },
+  { upsert: true }
+);
 
     await interaction.guild.members.ban(userId, { reason });
 
@@ -2490,10 +2770,10 @@ await welcomeChannel.send({ embeds: [embed] });
 if (usedInvite) {
   const inviterId = usedInvite.inviter?.id;
   if (inviterId) {
-    if (!invitesData[inviterId]) invitesData[inviterId] = { invites: 0, members: [] };
-invitesData[inviterId].invites += 1;
-invitesData[inviterId].members.push(member.id);
-persistInvites();
+    const currentInviteData = await getInviteData(inviterId);
+    currentInviteData.invites += 1;
+    currentInviteData.members.push(member.id);
+    await setInviteData(inviterId, currentInviteData);
   }
 }
 });
@@ -2667,6 +2947,8 @@ if (message.channel.id !== '1474064338431250482') {
 async function sendStatsEmbed(message, member) {
 
 // Total d'invites par membre
+const invitesData = await getAllInvites();
+
 const totalInvitesPerMember = {};
 for (const inviterId in invitesData) {
   totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
