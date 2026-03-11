@@ -2661,9 +2661,14 @@ process.on('uncaughtException', (error) => {
 
 
 
-console.log("TOKEN présent ?", !!process.env.TOKEN);
+const token = (process.env.TOKEN || '').trim();
+
+console.log("TOKEN présent ?", !!token);
 console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
 console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
+console.log("Longueur TOKEN :", token.length);
+console.log("Début TOKEN :", token.slice(0, 6));
+console.log("Fin TOKEN :", token.slice(-6));
 
 client.on('ready', () => {
   console.log(`✅ BOT DISCORD CONNECTÉ : ${client.user.tag}`);
@@ -2681,8 +2686,28 @@ client.on('invalidated', () => {
   console.error("❌ Session invalidated");
 });
 
+client.on('shardConnecting', (id) => {
+  console.log(`🔌 Shard ${id} connecting...`);
+});
+
+client.on('shardReady', (id) => {
+  console.log(`✅ Shard ${id} ready`);
+});
+
+client.on('shardDisconnect', (event, id) => {
+  console.error(`❌ Shard ${id} disconnected. Code: ${event.code}`);
+});
+
+client.on('shardError', (error, id) => {
+  console.error(`❌ Shard ${id} error:`, error);
+});
+
+client.on('shardReconnecting', (id) => {
+  console.log(`🔄 Shard ${id} reconnecting...`);
+});
+
 console.log("Tentative de connexion Discord...");
 
-client.login(process.env.TOKEN)
+client.login(token)
   .then(() => console.log("✅ client.login réussi"))
   .catch((err) => console.error("❌ client.login échoué :", err));
