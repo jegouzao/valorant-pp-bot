@@ -11,7 +11,11 @@ if (!fs.existsSync(gamesFile)) fs.writeFileSync(gamesFile, JSON.stringify({ game
 
 const maps = require('./config/maps');
 
+const mongoose = require('mongoose');
 
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connecté'))
+  .catch((err) => console.error('❌ MongoDB erreur :', err));
 
 
 
