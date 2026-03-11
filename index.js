@@ -2667,8 +2667,6 @@ console.log("TOKEN présent ?", !!token);
 console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
 console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
 console.log("Longueur TOKEN :", token.length);
-console.log("Début TOKEN :", token.slice(0, 6));
-console.log("Fin TOKEN :", token.slice(-6));
 
 client.on('ready', () => {
   console.log(`✅ BOT DISCORD CONNECTÉ : ${client.user.tag}`);
@@ -2706,30 +2704,8 @@ client.on('shardReconnecting', (id) => {
   console.log(`🔄 Shard ${id} reconnecting...`);
 });
 
-async function testDiscordApi() {
-  try {
-    console.log("🌐 Test API Discord /users/@me...");
-    const res = await fetch("https://discord.com/api/v10/users/@me", {
-      headers: {
-        Authorization: `Bot ${token}`,
-      },
-    });
+console.log("Tentative de connexion Discord...");
 
-    console.log("🌐 Status API Discord :", res.status);
-
-    const text = await res.text();
-    console.log("🌐 Réponse API Discord :", text.slice(0, 300));
-  } catch (err) {
-    console.error("❌ Erreur test API Discord :", err);
-  }
-}
-
-(async () => {
-  await testDiscordApi();
-
-  console.log("Tentative de connexion Discord...");
-
-  client.login(token)
-    .then(() => console.log("✅ client.login réussi"))
-    .catch((err) => console.error("❌ client.login échoué :", err));
-})();
+client.login(token)
+  .then(() => console.log("✅ client.login réussi"))
+  .catch((err) => console.error("❌ client.login échoué :", err));
