@@ -9,12 +9,17 @@ const gamesFile = path.join(dataDir, 'games.json');
 if (!fs.existsSync(gamesFile)) fs.writeFileSync(gamesFile, JSON.stringify({ games: [] }, null, 2));
 
 
+const Points = require('./models/Points');
+
 const maps = require('./config/maps');
 
 const mongoose = require('mongoose');
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connecté'))
+  .then(async () => {
+    console.log('✅ MongoDB connecté');
+    await migratePointsJsonToMongo();
+  })
   .catch((err) => console.error('❌ MongoDB erreur :', err));
 
 
@@ -305,10 +310,6 @@ function persistGames() {
   fs.writeFileSync(gamesFile, JSON.stringify(gamesData, null, 2));
 }
 
-function persistPoints() {
-  fs.writeFileSync(pointsFile, JSON.stringify(pointsData, null, 2));
-}
-
 function persistInvites() {
   fs.writeFileSync(invitesFile, JSON.stringify(invitesData, null, 2));
 }
@@ -316,6 +317,88 @@ function persistInvites() {
 function persistTop15() {
   fs.writeFileSync(top15File, JSON.stringify(top15Data, null, 2));
 }
+
+async function getPlayerPoints(userId) {
+  let doc = await Points.findOne({ userId });
+
+  if (!doc) {
+    doc = await Points.create({
+      userId,
+      rr: 0,
+      games: 0,
+      wins: 0
+    });
+  }
+
+  return {
+    userId: doc.userId,
+    rr: doc.rr,
+    games: doc.games,
+    wins: doc.wins
+  };
+}
+
+async function setPlayerPoints(userId, data) {
+  await Points.updateOne(
+    { userId },
+    {
+      $set: {
+        rr: data.rr ?? 0,
+        games: data.games ?? 0,
+        wins: data.wins ?? 0
+      }
+    },
+    { upsert: true }
+  );
+}
+
+async function migratePointsJsonToMongo() {
+  const localPoints = loadPoints();
+  const existingCount = await Points.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration points ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localPoints);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun point local à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await Points.updateOne(
+      { userId },
+      {
+        $set: {
+          rr: data.rr ?? 0,
+          games: data.games ?? 0,
+          wins: data.wins ?? 0
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration points.json → MongoDB terminée (${entries.length} joueurs).`);
+}
+
+async function getAllPoints() {
+  const docs = await Points.find({});
+  const result = {};
+
+  for (const doc of docs) {
+    result[doc.userId] = {
+      rr: doc.rr,
+      games: doc.games,
+      wins: doc.wins
+    };
+  }
+
+  return result;
+}
+
 
 // ===== Slash Commands =====
 const commands = [
@@ -542,9 +625,11 @@ async function updateTop15Embed() {
     totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
   }
 
-  const sorted = Object.entries(pointsData)
-    .sort((a, b) => b[1].rr - a[1].rr)
-    .slice(0, 10);
+const pointsData = await getAllPoints();
+
+const sorted = Object.entries(pointsData)
+  .sort((a, b) => b[1].rr - a[1].rr)
+  .slice(0, 10);
 
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
@@ -716,9 +801,8 @@ if (interaction.isButton()) {
     await interaction.deferReply({ ephemeral: true });
     const userId = interaction.customId.split('_').pop();
 
-    pointsData[userId] = { rr: 0, games: 0, wins: 0 };
-    persistPoints();
-    await updateTop15Embed();
+    await setPlayerPoints(userId, { rr: 0, games: 0, wins: 0 });
+await updateTop15Embed();
 
     return interaction.editReply(`🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`);
   }
@@ -1462,17 +1546,21 @@ if (!waitingVC) {
 
   // Attribution RR
   for (const playerId of allPlayers) {
-    if (!pointsData[playerId]) pointsData[playerId] = { rr: 0, games: 0, wins: 0 };
-    const isWinner =
-      (winningSide === 'attack' && attackers.includes(playerId)) ||
-      (winningSide === 'defense' && defenders.includes(playerId));
-    const delta = isWinner ? 30 : -15;
+  const currentStats = await getPlayerPoints(playerId);
 
-    pointsData[playerId].rr = Math.max(0, pointsData[playerId].rr + delta);
-    pointsData[playerId].games += 1;
-    if (isWinner) pointsData[playerId].wins += 1;
-    matchRR[playerId] = delta;
-  }
+  const isWinner =
+    (winningSide === 'attack' && attackers.includes(playerId)) ||
+    (winningSide === 'defense' && defenders.includes(playerId));
+
+  const delta = isWinner ? 30 : -15;
+
+  currentStats.rr = Math.max(0, currentStats.rr + delta);
+  currentStats.games += 1;
+  if (isWinner) currentStats.wins += 1;
+
+  await setPlayerPoints(playerId, currentStats);
+  matchRR[playerId] = delta;
+}
 
   // ✅ Déplacer tout le monde IMMÉDIATEMENT (joueurs + spectateurs)
 const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
@@ -1481,7 +1569,6 @@ const everyoneToMove = [...new Set([...allPlayers, ...spectatorIds])];
 await moveMembersToVC(everyoneToMove, waitingVC);
 
 // ✅ Ensuite seulement : RR + leaderboard (lent)
-persistPoints();
 await updateTop15Embed();
 
 
@@ -1559,7 +1646,7 @@ await updateTop15Embed();
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'manage') {
   const targetUser = interaction.options.getUser('joueur');
-  const userStats = pointsData[targetUser.id] || { rr: 0, games: 0, wins: 0 };
+  const userStats = await getPlayerPoints(targetUser.id);
 
   const embed = new EmbedBuilder()
     .setTitle(`⚙️ GESTION DE ${targetUser.tag}`)
@@ -2084,27 +2171,25 @@ if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal
     });
   }
 
-  if (!pointsData[userId]) {
-    pointsData[userId] = { rr: 0, games: 0, wins: 0 };
+  const currentStats = await getPlayerPoints(userId);
+
+if (type === 'add') {
+  currentStats.rr += amount;
+} else if (type === 'remove') {
+  currentStats.rr -= amount;
+  if (currentStats.rr < 0) {
+    currentStats.rr = 0;
   }
+}
 
-  if (type === 'add') {
-    pointsData[userId].rr += amount;
-  } else if (type === 'remove') {
-    pointsData[userId].rr -= amount;
-    if (pointsData[userId].rr < 0) {
-      pointsData[userId].rr = 0;
-    }
-  }
+await setPlayerPoints(userId, currentStats);
+await updateTop15Embed();
 
-  persistPoints();
-  await updateTop15Embed();
-
-  const actionText = type === 'add' ? 'ajouté' : 'retiré';
-  return interaction.reply({
-    content: `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${pointsData[userId].rr} ʀʀ**`,
-    ephemeral: true
-  });
+const actionText = type === 'add' ? 'ajouté' : 'retiré';
+return interaction.reply({
+  content: `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`,
+  ephemeral: true
+});
 }
 
 
@@ -2588,7 +2673,7 @@ for (const inviterId in invitesData) {
 }
 
   // 🔹 Stats
-  const stats = pointsData[member.id] || { rr: 0, games: 0, wins: 0 };
+  const stats = await getPlayerPoints(member.id);
   const winrate = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
 
   // 🔹 Emoji de rank
@@ -2596,7 +2681,8 @@ for (const inviterId in invitesData) {
   const rankEmoji = rankName ? rankEmojis[rankName] : '<:Unranked:1465744234182086789>';
 
   // 🔹 Classement RR
-  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr);
+  const allPoints = await getAllPoints();
+const sorted = Object.entries(allPoints).sort((a, b) => b[1].rr - a[1].rr);
   const index = sorted.findIndex(([id]) => id === member.id);
   const position = index !== -1 ? index + 1 : '0';
 
