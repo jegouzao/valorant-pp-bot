@@ -977,7 +977,6 @@ const sorted = Object.entries(pointsData)
 
 
 
-
 // ===== Interaction Handler =====
 client.on('interactionCreate', async (interaction) => {
   try {
@@ -1830,93 +1829,89 @@ if (!waitingVC) {
     return;
   }
 
-  // ───────────── FIN DE PARTIE ─────────────
+      // ───────────── FIN DE PARTIE ─────────────
   const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
   const finalColor = winningSide === 'attack' ? 0x763746 : 0x1f8072;
   const matchRR = {};
 
-  // Attribution RR
+  const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
+  const everyoneToMove = [...new Set([...allPlayers, ...spectatorIds])];
+
+  // ✅ Déplacer tout le monde immédiatement
+  await moveMembersToVC(everyoneToMove, waitingVC);
+
+  // ✅ Attribution RR
   for (const playerId of allPlayers) {
-  const currentStats = await getPlayerPoints(playerId);
+    const currentStats = await getPlayerPoints(playerId);
 
-  const isWinner =
-    (winningSide === 'attack' && attackers.includes(playerId)) ||
-    (winningSide === 'defense' && defenders.includes(playerId));
+    const isWinner =
+      (winningSide === 'attack' && attackers.includes(playerId)) ||
+      (winningSide === 'defense' && defenders.includes(playerId));
 
-  const delta = isWinner ? 30 : -15;
+    const delta = isWinner ? 30 : -15;
 
-  currentStats.rr = Math.max(0, currentStats.rr + delta);
-  currentStats.games += 1;
-  if (isWinner) currentStats.wins += 1;
+    currentStats.rr = Math.max(0, currentStats.rr + delta);
+    currentStats.games += 1;
+    if (isWinner) currentStats.wins += 1;
 
-  await setPlayerPoints(playerId, currentStats);
-  matchRR[playerId] = delta;
-}
+    await setPlayerPoints(playerId, currentStats);
+    matchRR[playerId] = delta;
+  }
 
-  // ✅ Déplacer tout le monde IMMÉDIATEMENT (joueurs + spectateurs)
-const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
-const everyoneToMove = [...new Set([...allPlayers, ...spectatorIds])];
+  await updateTop15Embed();
 
-await moveMembersToVC(everyoneToMove, waitingVC);
-
-// ✅ Ensuite seulement : RR + leaderboard (lent)
-await updateTop15Embed();
-
-
-  // Cleanup channels
+  // ✅ Supprimer les salons
   for (const id of [game.attVC, game.defVC, game.categoryId]) {
     const ch = interaction.guild.channels.cache.get(id);
     if (ch) await ch.delete().catch(() => {});
   }
 
-  // Supprimer la partie
+  // ✅ Supprimer la partie
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
   await deleteGame(game.id);
   await persistGames();
 
   // ───────────── Embed final ─────────────
   const formatPlayers = (ids) => {
+    let data = [];
 
-  let data = [];
+    for (const id of ids) {
+      const member = interaction.guild.members.cache.get(id) || null;
+      if (!member) continue;
 
-  for (const id of ids) {
+      const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+      const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+      const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
 
-    const member = interaction.guild.members.cache.get(id) || null;
-    if (!member) continue;
+      const rr = matchRR[id] > 0 ? `+${matchRR[id]}ʀʀ` : `${matchRR[id]}ʀʀ`;
 
-    const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-    const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-    const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
+      data.push({
+        id,
+        rankValue,
+        rankEmoji,
+        rr
+      });
+    }
 
-    const rr = matchRR[id] > 0 ? `+${matchRR[id]}ʀʀ` : `${matchRR[id]}ʀʀ`;
+    data.sort((a, b) => a.rankValue - b.rankValue);
 
-    data.push({
-      id,
-      rankValue,
-      rankEmoji,
-      rr
-    });
-  }
-
-  data.sort((a, b) => a.rankValue - b.rankValue);
-
-  return data.map(p => `${p.rankEmoji} <@${p.id}>  **${p.rr}**`).join('\n');
-};
-
+    return data.map(p => `${p.rankEmoji} <@${p.id}>  **${p.rr}**`).join('\n');
+  };
 
   const embed = new EmbedBuilder()
-  .setTitle(`PARTIE TERMINÉE`)
-  .addFields(
-    { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: formatPlayers(attackers), inline: true },
-    { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: formatPlayers(defenders), inline: true }
-  )
-  .setColor(finalColor)
-  .setFooter({
-    iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-    text: `Validée par ${interaction.member.displayName}`
-  });
+    .setTitle(`PARTIE TERMINÉE`)
+    .addFields(
+      { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: formatPlayers(attackers), inline: true },
+      { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: formatPlayers(defenders), inline: true }
+    )
+    .setColor(finalColor)
+    .setFooter({
+      iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+      text: `Validée par ${interaction.member.displayName}`
+    });
 
   await interaction.channel.send({ embeds: [embed] }).catch(console.error);
+
   if (gameLocks[game.id]) delete gameLocks[game.id];
   break;
 }default:

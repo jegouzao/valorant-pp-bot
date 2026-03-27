@@ -1,3 +1,8 @@
 node_modules
 .env
 .git
+games.json
+invites.json
+moderation.json
+top15.json
+points.json
