@@ -771,7 +771,7 @@ console.log('✅ Tous les membres du serveur ont été chargés en cache');
   // 🎮 Définir le statut du bot
   client.user.setPresence({
     activities: [{
-      name: '.gg/valorant-pp',
+      name: 'by @jegouzao',
       type: 1,
       url: 'https://www.twitch.tv/jegouzao' // peut être factice
     }],
