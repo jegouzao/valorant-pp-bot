@@ -660,6 +660,11 @@ async function migrateGamesJsonToMongo() {
 
 // ===== Slash Commands =====
 const commands = [
+  {
+  name: 'resetseason',
+  description: 'Réinitialiser toute la saison compétitive',
+  default_member_permissions: PermissionFlagsBits.Administrator.toString()
+},
   { 
   name: 'ban',
   description: 'Bannir un joueur avec raison',
@@ -900,10 +905,10 @@ const sorted = Object.entries(pointsData)
 
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
-      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀʀꜱ")
+      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
       .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
       .setDescription(
-  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **3 650 VP**\n*Calcul en cours...*`
+  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **3650 VP**\n*Calcul en cours...*`
 )
       .setColor(0x242429);
 
@@ -953,7 +958,7 @@ const sorted = Object.entries(pointsData)
   }));
 
   const embed = new EmbedBuilder()
-    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀʀꜱ")
+    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
     .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
     .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **3650 VP**\n` +
@@ -1207,6 +1212,33 @@ if (interaction.isButton()) {
 
   modal.addComponents(new ActionRowBuilder().addComponents(valorantCodeInput));
   return interaction.showModal(modal);
+}
+
+if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const result = await Points.updateMany(
+      {},
+      {
+        $set: {
+          rr: 0,
+          games: 0,
+          wins: 0
+        }
+      }
+    );
+
+    await updateTop15Embed();
+
+    return interaction.editReply(
+      `✅ Nouvelle saison initialisée.\n` +
+      `Joueurs reset : **${result.modifiedCount ?? 0}**`
+    );
+  } catch (err) {
+    console.error('Erreur resetseason :', err);
+    return interaction.editReply('❌ Impossible de réinitialiser la saison.');
+  }
 }
 
   // ── MODAL SUBMIT ──
@@ -2147,7 +2179,7 @@ return;
     if (interaction.isChatInputCommand() && interaction.commandName === 'top15'){
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
-        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀʀꜱ")
+        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
         .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
