@@ -3040,7 +3040,7 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setColor(0x242429)
     .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472593223984877592/Design_sans_titre_14.png?ex=699322d0&is=6991d150&hm=d1110919ea1d1d88d72ec25f1f8756b33036adb76cb48ced58595b3de0a700ab&')
+    .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488564804552626387/Design_sans_titre_16.png?ex=69cd3d81&is=69cbec01&hm=ac1c714f818f9c50b0b6839077de3663130e0bec22df734105672cea191b9a6c&=&format=webp&quality=lossless&width=1032&height=44')
       .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1472667834881409181> ' ? `<:POINTS:1472667834881409181> #${position}` : `<:POINTS:1472667834881409181> `, inline: true },
                   { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> ${stats.rr} ʀʀ`, inline: true },
                   { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> ${memberInvites}`, inline: true },
