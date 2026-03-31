@@ -908,7 +908,7 @@ const sorted = Object.entries(pointsData)
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
       .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
       .setDescription(
-  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **3650 VP**\n*Calcul en cours...*`
+  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
 )
       .setColor(0x242429);
 
@@ -961,7 +961,7 @@ const sorted = Object.entries(pointsData)
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
     .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1472293135437529159/3.png?ex=69920b55&is=6990b9d5&hm=8202e2bd395ddb64d47464154b3a02d174f83c942a633b448a54672d04288666&')
     .setDescription(
-  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **3650 VP**\n` +
+  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
 )
     .setColor(0x242429);
