@@ -236,6 +236,7 @@ const WELCOME_CHANNEL_ID = '1474066060528451743';
 const EXEMPT_VC_IDS = [
   '1479551340635095270',
   '1479547523201896490', // ✅ salon "créer" à ne jamais supprimer
+  '1488654880385007729', // ✅ salon fixe à ne jamais supprimer
 ];
 
 
@@ -1788,27 +1789,47 @@ const WAITING_ROOM_ID = '1474562499897594071';
 const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
 if (!waitingVC) {
-  console.log("❌ Lobby principal introuvable.");
-  return;
-}
+    console.log("❌ Lobby principal introuvable.");
+    return;
+  }
 
-  const attackers = game.attackers.map(p => p.id);
-  const defenders = game.defenders.map(p => p.id);
-  const allPlayers = [...attackers, ...defenders];
+  const attChannel = interaction.guild.channels.cache.get(game.attVC);
+const defChannel = interaction.guild.channels.cache.get(game.defVC);
+
+// ✅ Joueurs prévus dans la game (sert encore pour les RR / embed final)
+const attackers = game.attackers.map(p => p.id);
+const defenders = game.defenders.map(p => p.id);
+const allPlayers = [...attackers, ...defenders];
+
+// ✅ Membres réellement présents dans les vocaux au moment du clic
+const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
+const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
+
+// ✅ Spectateurs enregistrés
+const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
+
+// ✅ Liste finale ultra safe
+  const everyoneInGameVCs = [...new Set([
+    ...liveAttackers,
+    ...liveDefenders,
+    ...allPlayers,
+    ...spectatorIds
+  ])];
 
   const moveMembersToVC = async (ids, vc) => {
     for (const id of ids) {
       const member = interaction.guild.members.cache.get(id) || null;
-      if (member?.voice?.channel) await member.voice.setChannel(vc).catch(() => {});
+      if (member?.voice?.channel) {
+        await member.voice.setChannel(vc).catch(() => {});
+      }
     }
   };
 
 
   // ───────────── CANCEL GAME ─────────────
   if (interaction.customId === 'cancel_game') {
-    // Déplacer joueurs + spectateurs
-    await moveMembersToVC(allPlayers, waitingVC);
-    if (game.spectators) await moveMembersToVC(Object.keys(game.spectators), waitingVC);
+  // ✅ Déplacer toutes les personnes réellement présentes dans les 2 vocaux
+  await moveMembersToVC(everyoneInGameVCs, waitingVC);
 
     // Supprimer channels
     for (const id of [game.attVC, game.defVC, game.categoryId]) {
@@ -1834,11 +1855,8 @@ if (!waitingVC) {
   const finalColor = winningSide === 'attack' ? 0x763746 : 0x1f8072;
   const matchRR = {};
 
-  const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
-  const everyoneToMove = [...new Set([...allPlayers, ...spectatorIds])];
-
-  // ✅ Déplacer tout le monde immédiatement
-  await moveMembersToVC(everyoneToMove, waitingVC);
+// ✅ Déplacer toutes les personnes réellement présentes dans les 2 vocaux
+await moveMembersToVC(everyoneInGameVCs, waitingVC);
 
   // ✅ Attribution RR
   for (const playerId of allPlayers) {
@@ -2594,6 +2612,12 @@ if (affectedGame) {
       ]
     });
 
+    const createVC = guild.channels.cache.get(AUTO_CREATE_VC_ID);
+
+if (createVC && createVC.parentId === TEMP_VOCAL_CATEGORY_ID) {
+  await channel.setPosition(createVC.rawPosition + 1).catch(() => {});
+}
+
     // ✅ Recheck avant move
     if (member.voice.channelId === AUTO_CREATE_VC_ID) {
       await member.voice.setChannel(channel).catch(() => {});
@@ -3041,12 +3065,12 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
-      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1472667834881409181> ' ? `<:POINTS:1472667834881409181> #${position}` : `<:POINTS:1472667834881409181> `, inline: true },
-                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> ${stats.rr} ʀʀ`, inline: true },
-                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> ${memberInvites}`, inline: true },
-                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> ${stats.games}`, inline: true },
-                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1472667857405087897> ${stats.wins}`, inline: true },
-                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1472667816468418631> ${winrate}%`, inline: true }  );
+      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1472667834881409181> ' ? `<:POINTS:1472667834881409181> **#${position}**` : `<:POINTS:1472667834881409181> `, inline: true },
+                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> **${stats.rr} ʀʀ**`, inline: true },
+                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
+                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
+                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1472667857405087897> **${stats.wins}**`, inline: true },
+                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1472667816468418631> **${winrate}%**`, inline: true }  );
     
   await message.reply({ embeds: [embed] });
 }
