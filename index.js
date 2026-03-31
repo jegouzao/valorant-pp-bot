@@ -3098,7 +3098,7 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
       .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1472667834881409181> ' ? `<:POINTS:1472667834881409181> **#${position}**` : `<:POINTS:1472667834881409181> `, inline: true },
-                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> **${stats.rr} ʀʀ**`, inline: true },
+                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> **${stats.rr}** ʀʀ`, inline: true },
                   { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
                   { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
                   { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1472667857405087897> **${stats.wins}**`, inline: true },
