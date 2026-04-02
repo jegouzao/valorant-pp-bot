@@ -202,7 +202,7 @@ const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
     const creatorDisplayName = creatorMember?.displayName || game.creatorName || 'Inconnu';
 
 const embed = new EmbedBuilder()
-  .setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
+  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
   .setDescription(
     `## <#${game.waitingVC}>\n` +
     `*${remaining} slots restants*\n` +
@@ -211,7 +211,7 @@ const embed = new EmbedBuilder()
   .addFields({ name: 'ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ', value: playersText })
   .setFooter({
     iconURL: game.creatorAvatar || guild.iconURL({ dynamic: true, size: 32 }),
-    text: `Organisée par ${creatorDisplayName}`
+    text: `Partie organisée par ${creatorDisplayName}`
   })
   .setColor(0x242429)
       
@@ -1359,7 +1359,7 @@ if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason
     const map = maps[Math.floor(Math.random() * maps.length)];
 
 const embed = new EmbedBuilder()
-  .setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
+  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
   .setDescription(`## <#${waitingVC.id}>\n*10 slots restants*\n*en attente de participants...*`)
   .setImage(map?.image || 'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif')
   .setColor(0x242429)
@@ -1785,7 +1785,7 @@ const defendersText = sortTeamByRank(game.defenders);
 
 
 const gameEmbed = new EmbedBuilder()
-  .setTitle(`ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ`)
+  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ`)
   .addFields(
     { name:'<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline:true },
     { name:'<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline:true }
@@ -1793,7 +1793,7 @@ const gameEmbed = new EmbedBuilder()
   .setColor(0x242429)
   .setFooter({
     iconURL: interaction.user.displayAvatarURL({ dynamic:true, size:32 }),
-    text:`Lancée par ${interaction.member.displayName}`
+    text:`Partie lancée par ${interaction.member.displayName}`
   });
 
 // ✅ Image de la map de la game (celle tirée au /pp ou changée par votes)
@@ -1925,7 +1925,6 @@ const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
 
       // ───────────── FIN DE PARTIE ─────────────
   const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
-  const finalColor = winningSide === 'attack' ? 0x763746 : 0x1f8072;
   const matchRR = {};
 
 // ✅ Déplacer toutes les personnes réellement présentes dans les 2 vocaux
@@ -2000,15 +1999,15 @@ for (const playerId of allPlayers) {
 };
 
   const embed = new EmbedBuilder()
-    .setTitle(`ᴘᴀʀᴛɪᴇ ᴛᴇʀᴍɪɴᴇᴇ`)
+    //.setTitle(`ᴘᴀʀᴛɪᴇ ᴛᴇʀᴍɪɴᴇᴇ`)
     .addFields(
   { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
   { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
 )
-    .setColor(finalColor)
+    .setColor(0x242429)
     .setFooter({
       iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-      text: `Validée par ${interaction.member.displayName}`
+      text: `Partie validée par ${interaction.member.displayName}`
     });
 
   await interaction.channel.send({ embeds: [embed] }).catch(console.error);
