@@ -227,7 +227,7 @@ const embed = new EmbedBuilder()
 
 
 
-
+const COMMUNITY_CATEGORY_ID = '1462477754208616750';
 const ROLE_VERIFIE = '1461354176931041312';
 const AUTO_CREATE_VC_ID = '1479547523201896490'; // ← mets ici l'id du vocal "créer"
 const TEMP_VOCAL_CATEGORY_ID = '1479549016466395217';
@@ -1313,14 +1313,22 @@ if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason
           id: MOD_ROLE_ID,
           allow: [
             PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.Connect,
-            PermissionsBitField.Flags.MoveMembers,
-          ],
-        },
-      ]
-    : [])
-      ]
-    });
+              PermissionsBitField.Flags.Connect,
+              PermissionsBitField.Flags.MoveMembers,
+            ],
+          },
+        ]
+      : [])
+  ]
+});
+
+// ✅ placer la catégorie juste sous ᴄᴏᴍᴍᴜɴᴀᴜᴛᴇᴇ
+const communityCategory = interaction.guild.channels.cache.get(COMMUNITY_CATEGORY_ID)
+  || await interaction.guild.channels.fetch(COMMUNITY_CATEGORY_ID).catch(() => null);
+
+if (communityCategory) {
+  await category.setPosition(communityCategory.position + 1).catch(console.error);
+}
 
     const waitingVC = await interaction.guild.channels.create({
   name: `┃préparation ${valorantCode}`,
