@@ -1365,7 +1365,7 @@ const embed = new EmbedBuilder()
   .setColor(0x242429)
   .setFooter({
     iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-    text: `Organisée par ${interaction.member.displayName}`
+    text: `Partie organisée par ${interaction.member.displayName}`
   });
 
     const row = new ActionRowBuilder().addComponents(
