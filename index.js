@@ -947,7 +947,7 @@ const sorted = Object.entries(pointsData)
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-      .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
       .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
 )
@@ -1000,7 +1000,7 @@ const sorted = Object.entries(pointsData)
 
   const embed = new EmbedBuilder()
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-    .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
     .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
@@ -2110,6 +2110,11 @@ const RANK_ROLES = {
     Iron1: '1461352715631460516'
   };
 
+  function memberHasSelectedRank(member) {
+  if (!member?.roles?.cache) return false;
+  return Object.values(RANK_ROLES).some(roleId => member.roles.cache.has(roleId));
+}
+
 
   // --------------------------------------
   // MENU RANK
@@ -2144,32 +2149,70 @@ if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') 
     .setDescription(
       `### Ton peak rank 2025 a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`
     )
-    .setFooter({ text: 'Si ton peak rank évolue au fil du temps, contacte-nous.' });
+    .setFooter({ text: 'Tu peux maintenant utiliser le bouton "Me renommer" ci-dessous.' });
 
-  return interaction.editReply({ content: null, embeds: [rankEmbed] });
+  await interaction.editReply({ content: null, embeds: [rankEmbed] });
+
+  // ✅ Active le bouton "Me renommer" dans le thread
+  try {
+    const messages = await thread.messages.fetch({ limit: 10 });
+    const renameMessage = messages.find(msg =>
+      msg.author.id === client.user.id &&
+      msg.components?.some(row =>
+        row.components?.some(component => component.customId === 'verify_riot')
+      )
+    );
+
+    if (renameMessage) {
+      const enabledButton = new ButtonBuilder()
+        .setCustomId('verify_riot')
+        .setLabel('┃Me renommer')
+        .setEmoji({ id: '1466470349351686194' })
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(false);
+
+      await renameMessage.edit({
+        content: '> ✅ Rank sélectionné. Tu peux maintenant te renommer.',
+        components: [new ActionRowBuilder().addComponents(enabledButton)]
+      });
+    }
+  } catch (err) {
+    console.error('Erreur activation bouton Me renommer :', err);
+  }
+
+  return;
 }
+
   // --------------------------------------
   // BOUTON RIOT
   // --------------------------------------
   if (interaction.isButton() && interaction.customId === 'verify_riot') {
-    if (interaction.replied || interaction.deferred) return;
+  if (interaction.replied || interaction.deferred) return;
 
-    const modal = new ModalBuilder()
-      .setCustomId('riot_modal')
-      .setTitle('Vérification Riot ID');
-
-    const pseudoInput = new TextInputBuilder()
-      .setCustomId('riot_pseudo')
-      .setLabel('Pseudo sur VALORANT, sans le #TAG')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true);
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(pseudoInput)    );
-
-    await interaction.showModal(modal);
-    return;
+  if (!memberHasSelectedRank(interaction.member)) {
+    return interaction.reply({
+      content: '❌ Tu dois d’abord sélectionner ton **peak rank 2025** avant de pouvoir te renommer.',
+      ephemeral: true
+    });
   }
+
+  const modal = new ModalBuilder()
+    .setCustomId('riot_modal')
+    .setTitle('Vérification Riot ID');
+
+  const pseudoInput = new TextInputBuilder()
+    .setCustomId('riot_pseudo')
+    .setLabel('Pseudo sur VALORANT, sans le #TAG')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(pseudoInput)
+  );
+
+  await interaction.showModal(modal);
+  return;
+}
   // --------------------------------------
   // MODAL RIOT
   // --------------------------------------
@@ -2238,7 +2281,7 @@ return;
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
         .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-        .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
@@ -2287,7 +2330,7 @@ if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
       '<:VIDE:1465704930160410847>\n'
     )
     .setColor(0x242429)
-    .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44');
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png?ex=69de4b28&is=69dcf9a8&hm=667bc612badd1e6395e61f6e17c1f04b4a8dfcd319cee276f90d9dfb7cf45826&');
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -2529,7 +2572,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal
       `> L'équipe a été notifiée et viendra t'aider.\n\n`
     )
     .setColor(0x242429)
-    .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44');
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071222295105658/4.png?ex=69de4b2f&is=69dcf9af&hm=4c6d2a35c5a8ca7bce1ea212b84f321c8622b5d821509cbe30b3e01e0be4b1bd&');
 
   const closeButton = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -2800,12 +2843,12 @@ client.on('guildMemberAdd', async member => {
 
 
         await thread.send(
-            `## ${member.displayName}, bienvenue sur **VALORANT PP** <:Roles:1471219666473980065>\n\n` +
-            `Pour débloquer l'accès, configure ton profil :\n` +
-            `> 1. Choisis ton **PEAK rank 2025**\n` +
-            `> 2. Renomme toi par ton pseudo In-game\n` +
-            `> 3. Et essaie de survivre`
-        );
+  `## ${member.displayName}, bienvenue sur **VALORANT PP** <:Roles:1493046347337699499>\n\n` +
+  `Pour débloquer l'accès, suis ces étapes :\n` +
+  `> 1. Choisis ton **PEAK rank 2025**\n` +
+  `> 2. Attends que le bouton **Me renommer** se débloque\n` +
+  `> 3. Entre ton pseudo VALORANT`
+);
 
 
         const rankMenu = new StringSelectMenuBuilder()
@@ -2819,12 +2862,16 @@ client.on('guildMemberAdd', async member => {
 
 
         const riotButton = new ButtonBuilder()
-            .setCustomId('verify_riot')
-            .setLabel('┃Me renommer')
-            .setEmoji({ id: '1466470349351686194' })
-            .setStyle(ButtonStyle.Success);
+    .setCustomId('verify_riot')
+    .setLabel('┃Me renommer')
+    .setEmoji({ id: '1466470349351686194' })
+    .setStyle(ButtonStyle.Success)
+    .setDisabled(true);
 
-        await thread.send({ content: ' ', components: [new ActionRowBuilder().addComponents(riotButton)] });
+await thread.send({
+  content: '> Choisis d’abord ton **peak rank 2025** pour débloquer le renommage.',
+  components: [new ActionRowBuilder().addComponents(riotButton)]
+});
     }
     } catch (err) {
   console.error('Erreur thread bienvenue :', err);
@@ -3155,11 +3202,11 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
       .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1493266536813690970> ' ? `<:POINTS:1493266536813690970> **#${position}**` : `<:POINTS:1493266536813690970> `, inline: true },
-                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> **${stats.rr}** ʀʀ`, inline: true },
-                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
-                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
-                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> **${stats.wins}**`, inline: true },
-                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> **${winrate}%**`, inline: true }  );
+                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> ${stats.rr} ʀʀ`, inline: true },
+                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> ${memberInvites}`, inline: true },
+                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> ${stats.games}`, inline: true },
+                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> ${stats.wins}`, inline: true },
+                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> ${winrate}%`, inline: true }  );
     
   await message.reply({ embeds: [embed] });
 }
