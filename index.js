@@ -3367,12 +3367,12 @@ client.on('messageCreate', async (message) => {
 
     // ❌ GIF interdit
     if (hasBlockedGif) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
       await message.delete().catch(() => {});
 
       const warning = await message.channel.send(
-        `❌ ${message.author}, les **GIFs** sont interdits dans <#${CLIPFARMING_CHANNEL_ID}>.\n` +
-        `✅ Formats autorisés : **image, vidéo, ou lien** provenant de **YouTube, Medal, Streamable, Twitch, TikTok ou Discord CDN**.\n` +
-        `💬 La discussion se fait dans le **thread** créé sous chaque clip.`
+        `## ${message.author}, ce salon accepte uniquement les **médias**.\n` +
+        `-# Envoie une **image**, une **vidéo**, ou un **lien** du clip.\n`
       ).catch(() => null);
 
       if (warning) {
@@ -3386,10 +3386,11 @@ client.on('messageCreate', async (message) => {
 
     // ❌ Message non conforme
     if (!isValidMessage) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
       await message.delete().catch(() => {});
 
       const warning = await message.channel.send(
-        `### ${message.author}, ce salon accepte uniquement les **médias**.\n` +
+        `## ${message.author}, ce salon accepte uniquement les **médias**.\n` +
         `-# Envoie une **image**, une **vidéo**, ou un **lien** du clip.\n`
       ).catch(() => null);
 
