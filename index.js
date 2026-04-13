@@ -1087,7 +1087,7 @@ const sorted = Object.entries(pointsData)
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
       .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
 )
@@ -1140,7 +1140,7 @@ const sorted = Object.entries(pointsData)
 
   const embed = new EmbedBuilder()
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
     .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
@@ -2464,7 +2464,7 @@ return;
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
         .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
