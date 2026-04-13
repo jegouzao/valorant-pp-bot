@@ -3391,23 +3391,6 @@ client.on('messageCreate', async (message) => {
       return;
     }
 
-    // ✅ Réactions de vote
-    await message.react('👍').catch(() => {});
-    await message.react('👎').catch(() => {});
-
-    // ✅ Création automatique du thread public
-    if (!message.hasThread) {
-      const cleanText = (message.content || '').trim();
-      const baseName = cleanText
-        ? cleanText.slice(0, 60)
-        : `discussion-${message.author.username}`;
-
-      await message.startThread({
-        name: `💬 ${baseName}`.slice(0, 100),
-        autoArchiveDuration: CLIPFARMING_THREAD_AUTOARCHIVE,
-        reason: 'Thread auto pour discussion sous un clip/highlight'
-      }).catch(console.error);
-    }
 
   } catch (err) {
     console.error('Erreur modération #clipfarming :', err);
