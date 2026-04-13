@@ -115,10 +115,18 @@ const RANK_ORDER = {
 const MIN_ACCOUNT_AGE_DAYS = 30;
 
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
+
 const spamMap = new Map();
 const spamStrikeMap = new Map();
 
 const SPAM_INTERVAL = 5000; // 5 secondes
+
+const TRACKER_CHANNEL_ID = '1474064338431250482';
+
+const trackerSpamMap = new Map();
+const trackerSpamStrikeMap = new Map();
+
+const TRACKER_SPAM_INTERVAL = 5000; // 5 secondes
 
 const ALLOWED_CLIP_DOMAINS = [
   'youtube.com',
@@ -1166,7 +1174,29 @@ function getSpamPenalty(strike) {
   };
 }
 
+function getTrackerSpamPenalty(strike) {
+  if (strike === 0) {
+    return {
+      limit: 7,
+      durationMs: 60 * 1000,
+      label: '60 secondes'
+    };
+  }
 
+  if (strike === 1) {
+    return {
+      limit: 5,
+      durationMs: 5 * 60 * 1000,
+      label: '5 minutes'
+    };
+  }
+
+  return {
+    limit: 4,
+    durationMs: 60 * 60 * 1000,
+    label: '1 heure'
+  };
+}
 
 
 
@@ -3277,28 +3307,98 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
-  if (!message.content.startsWith('!tracker')) return;
+  if (!message.guild) return;
 
-   // ✅ Autoriser uniquement dans ce salon
-if (message.channel.id !== '1474064338431250482') {
+  const isTrackerCommand = message.content.startsWith('!tracker');
+  const isInTrackerChannel = message.channel.id === TRACKER_CHANNEL_ID;
 
-  // Supprime le message !tracker
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  await message.delete().catch(() => {});
+  // ✅ Si quelqu’un fait !tracker hors du salon tracker
+  if (isTrackerCommand && !isInTrackerChannel) {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await message.delete().catch(() => {});
 
-  // Envoie un message temporaire
-  const warning = await message.channel.send(
-    `❌ ${message.author}, cette commande est disponible uniquement dans <#1474064338431250482>.`
-  );
+    const warning = await message.channel.send(
+      `## ${message.author}, cette commande est disponible uniquement dans <#${TRACKER_CHANNEL_ID}>.`
+    ).catch(() => null);
 
-  // Supprime le message après 5 secondes
-  setTimeout(() => {
-    warning.delete().catch(() => {});
-  }, 5000);
+    if (warning) {
+      setTimeout(() => {
+        warning.delete().catch(() => {});
+      }, 5000);
+    }
 
-  return;
-}
+    return;
+  }
 
+  // ✅ Modération stricte du salon tracker
+  if (isInTrackerChannel) {
+    const userId = message.author.id;
+    const now = Date.now();
+
+    if (!trackerSpamMap.has(userId)) {
+      trackerSpamMap.set(userId, []);
+    }
+
+    const strike = trackerSpamStrikeMap.get(userId) || 0;
+    const penalty = getTrackerSpamPenalty(strike);
+
+    const timestamps = trackerSpamMap
+      .get(userId)
+      .filter(ts => now - ts < TRACKER_SPAM_INTERVAL);
+
+    timestamps.push(now);
+    trackerSpamMap.set(userId, timestamps);
+
+    if (timestamps.length > penalty.limit) {
+      const member = message.member;
+
+      if (member?.moderatable) {
+        try {
+          await member.timeout(penalty.durationMs, 'Spam dans #tracker');
+
+          trackerSpamStrikeMap.set(userId, strike + 1);
+          trackerSpamMap.delete(userId);
+
+          await message.delete().catch(() => {});
+
+          const warning = await message.channel.send(
+            `⛔ ${message.author} a été timeout **${penalty.label}** pour spam dans <#${TRACKER_CHANNEL_ID}>.`
+          ).catch(() => null);
+
+          if (warning) {
+            setTimeout(() => {
+              warning.delete().catch(() => {});
+            }, 5000);
+          }
+        } catch (err) {
+          console.error('Erreur timeout anti-spam #tracker :', err);
+        }
+      }
+
+      return;
+    }
+
+    // ❌ Tout message autre que !tracker est interdit dans #tracker
+    if (!isTrackerCommand) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      await message.delete().catch(() => {});
+
+      const warning = await message.channel.send(
+        `## ${message.author}, ce salon accepte uniquement la commande \`!tracker\`.`
+      ).catch(() => null);
+
+      if (warning) {
+        setTimeout(() => {
+          warning.delete().catch(() => {});
+        }, 5000);
+      }
+
+      return;
+    }
+  }
+
+  // ✅ Traitement normal de !tracker dans le bon salon
+  if (!isTrackerCommand) return;
 
   const args = message.content.split(' ');
   const target =
@@ -3308,6 +3408,8 @@ if (message.channel.id !== '1474064338431250482') {
 
   await sendStatsEmbed(message, target);
 });
+
+
 async function sendStatsEmbed(message, member) {
 
 // Total d'invites par membre
