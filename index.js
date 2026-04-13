@@ -117,6 +117,7 @@ const MIN_ACCOUNT_AGE_DAYS = 30;
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
 
 const spamMap = new Map();
+
 const spamStrikeMap = new Map();
 
 const SPAM_INTERVAL = 5000; // 5 secondes
@@ -151,6 +152,26 @@ const ALLOWED_CLIP_DOMAINS = [
   'cdn.discordapp.com',
   'media.discordapp.net'
 ];
+
+let saveTimeouts = new Map();
+
+function saveGameDebounced(game) {
+  if (saveTimeouts.has(game.id)) {
+    clearTimeout(saveTimeouts.get(game.id));
+  }
+
+  const timeout = setTimeout(async () => {
+    try {
+      await saveGame(game);
+    } catch (err) {
+      console.error('Erreur saveGameDebounced :', err);
+    } finally {
+      saveTimeouts.delete(game.id);
+    }
+  }, 300);
+
+  saveTimeouts.set(game.id, timeout);
+}
 
 function extractUrls(content = '') {
   return content.match(/https?:\/\/[^\s]+/gi) || [];
@@ -1568,9 +1589,9 @@ const embed = new EmbedBuilder()
 
 // Stocke l'ID du channel dans la partie
 const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
-gamesData.games.push({
+const newGame = {
   id: msg.id,
-  messageId: msg.id,          // ✅ AJOUT
+  messageId: msg.id,
   channelId: interaction.channel.id,
   valorantCode,
   categoryId: category.id,
@@ -1584,9 +1605,10 @@ gamesData.games.push({
   creatorId: interaction.user.id,
   creatorName: interaction.member.displayName,
   creatorAvatar: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-});
+};
 
-    await persistGames();
+gamesData.games.push(newGame);
+await saveGame(newGame);
     return interaction.editReply('✅ Partie créée.');
   }
 
@@ -1619,7 +1641,7 @@ gamesData.games.push({
   if (!game.spectators) game.spectators = {};
   game.spectators[interaction.user.id] = choice;
 
-  await persistGames();
+  saveGameDebounced(game); // ✅ remplace
   await updateRegistrationEmbed(interaction.guild, game);
 
   return interaction.editReply({
@@ -1670,7 +1692,7 @@ case 'change_map': {
     game.mapImage = newMap.image;
 
     game.changeMapVotes = [];
-    await persistGames();
+    saveGameDebounced(game); // ✅ remplace
 
     await updateRegistrationEmbed(interaction.guild, game);
 
@@ -1680,7 +1702,7 @@ case 'change_map': {
     });
   }
 
-  await persistGames();
+  await saveGame(game);
   await updateRegistrationEmbed(interaction.guild, game);
 
   return interaction.reply({ content: `✅ Vote enregistré (${votes}/${needed}).`, ephemeral: true });
@@ -1725,13 +1747,17 @@ await Promise.all(toDelete.map(async (id) => {
 }));
 
   // Supprimer le message d'inscription
-  const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
-  if (registrationMsg) await registrationMsg.delete().catch(() => {});
+  const registrationMsg = await interaction.channel.messages
+  .fetch(game.messageId || game.id)
+  .catch(() => null);
+
+if (registrationMsg?.deletable) {
+  registrationMsg.delete().catch(() => {});
+}
 
   // Supprimer la partie du json
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
   await deleteGame(game.id);
-  await persistGames();
 
   // Réponse
   try {
@@ -1758,42 +1784,40 @@ await Promise.all(toDelete.map(async (id) => {
     return interaction.editReply({ content: "Aucun joueur inscrit." });
   }
 
-  const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
-  if (registrationMsg) await registrationMsg.delete().catch(() => {});
+  const registrationMsg = await interaction.channel.messages
+  .fetch(game.messageId || game.id)
+  .catch(() => null);
+
+if (registrationMsg?.deletable) {
+  registrationMsg.delete().catch(() => {});
+}
 
 
   // ─────────────── ÉQUILIBRAGE DES ÉQUIPES ───────────────
   function balanceTeams(players) {
-    if (players.length === 2) return { attackers: [players[0]], defenders: [players[1]] };
-    const combinations = getCombinations(players, Math.floor(players.length / 2));
-    let bestDiff = Infinity;
-    let bestTeams = null;
-    for (const teamA of combinations) {
-      const teamB = players.filter(p => !teamA.includes(p));
-      const sumA = teamA.reduce((sum, p) => sum + p.rankValue, 0);
-      const sumB = teamB.reduce((sum, p) => sum + p.rankValue, 0);
-      const diff = Math.abs(sumA - sumB);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        bestTeams = { attackers: teamA, defenders: teamB };
-      }
+  // Tri du plus fort au plus faible
+  players.sort((a, b) => b.rankValue - a.rankValue);
+
+  const attackers = [];
+  const defenders = [];
+
+  let sumA = 0;
+  let sumB = 0;
+
+  for (const p of players) {
+    if (sumA <= sumB) {
+      attackers.push(p);
+      sumA += p.rankValue;
+    } else {
+      defenders.push(p);
+      sumB += p.rankValue;
     }
-    return bestTeams;
   }
 
-  function getCombinations(arr, k) {
-    const result = [];
-    function comb(start, chosen) {
-      if (chosen.length === k) { result.push([...chosen]); return; }
-      for (let i = start; i < arr.length; i++) {
-        chosen.push(arr[i]);
-        comb(i + 1, chosen);
-        chosen.pop();
-      }
-    }
-    comb(0, []);
-    return result;
-  }
+  return { attackers, defenders };
+}
+
+
   
   // Valeurs de rank par roleId
   const RANK_VALUES_BY_ID = {
@@ -1844,7 +1868,6 @@ for (const id of [game.attVC, game.defVC]) {
   if (ch) await ch.delete().catch(() => {});
 }
 
-const VERIFIED_ROLE_ID = '1461354176931041312';
 
 const attVC = await interaction.guild.channels.create({
   name: '┃attaquants',
@@ -1920,23 +1943,36 @@ const defVC = await interaction.guild.channels.create({
   game.attVC = attVC.id;
   game.defVC = defVC.id;
 
-await persistGames();
+await saveGame(game);
 
-  // Déplacer joueurs et spectateurs connectés
-  for (const p of [...game.attackers, ...game.defenders]) {
-    if (p.member?.voice?.channel) {
-      const targetVC = game.attackers.find(a=>a.id===p.id) ? attVC : defVC;
-      await p.member.voice.setChannel(targetVC).catch(()=>{});
-    }
+// ✅ Déplacement parallèle des joueurs
+const movePromises = [];
+
+// Joueurs
+for (const p of game.attackers) {
+  if (p.member?.voice?.channel) {
+    movePromises.push(p.member.voice.setChannel(attVC).catch(() => {}));
   }
+}
 
-  if (game.spectators) {
+for (const p of game.defenders) {
+  if (p.member?.voice?.channel) {
+    movePromises.push(p.member.voice.setChannel(defVC).catch(() => {}));
+  }
+}
+
+// Spectateurs
+if (game.spectators) {
   for (const [id, choice] of Object.entries(game.spectators)) {
     const member = interaction.guild.members.cache.get(id) || null;
     const vc = choice === 'attack' ? attVC : defVC;
-    if (member?.voice?.channel) await member.voice.setChannel(vc).catch(() => {});
+    if (member?.voice?.channel) {
+      movePromises.push(member.voice.setChannel(vc).catch(() => {}));
+    }
   }
 }
+
+await Promise.all(movePromises);
 
   // Supprimer le salon de préparation
   const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
@@ -2004,7 +2040,7 @@ if (game.mapImage) {
 
 // ✅ on stocke l'id du message "PARTIE EN COURS"
 game.manageMessageId = inGameMsg.id;
-await persistGames();
+await saveGame(game);
 
 await interaction.editReply('✅ Partie lancée');
 break;
@@ -2038,41 +2074,27 @@ case 'attack_win':
 case 'defense_win':
 case 'cancel_game': {
   await interaction.deferUpdate();
-
   if (!game) return;
 
-  // ✅ AJOUT ICI
-  if (interaction.customId === 'attack_win' || interaction.customId === 'defense_win') {
-    if (game.manageMessageId) {
-      const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
-      if (inGameMsg?.deletable) await inGameMsg.delete().catch(() => {});
-    }
-  }
-  
-const WAITING_ROOM_ID = '1474562499897594071';
-const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
+  const WAITING_ROOM_ID = '1474562499897594071';
+  const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
-if (!waitingVC) {
+  if (!waitingVC) {
     console.log("❌ Lobby principal introuvable.");
     return;
   }
 
   const attChannel = interaction.guild.channels.cache.get(game.attVC);
-const defChannel = interaction.guild.channels.cache.get(game.defVC);
+  const defChannel = interaction.guild.channels.cache.get(game.defVC);
 
-// ✅ Joueurs prévus dans la game (sert encore pour les RR / embed final)
-const attackers = game.attackers.map(p => p.id);
-const defenders = game.defenders.map(p => p.id);
-const allPlayers = [...attackers, ...defenders];
+  const attackers = game.attackers.map(p => p.id);
+  const defenders = game.defenders.map(p => p.id);
+  const allPlayers = [...attackers, ...defenders];
 
-// ✅ Membres réellement présents dans les vocaux au moment du clic
-const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
-const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
+  const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
+  const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
+  const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
 
-// ✅ Spectateurs enregistrés
-const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
-
-// ✅ Liste finale ultra safe
   const everyoneInGameVCs = [...new Set([
     ...liveAttackers,
     ...liveDefenders,
@@ -2081,120 +2103,113 @@ const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
   ])];
 
   const moveMembersToVC = async (ids, vc) => {
-    for (const id of ids) {
-      const member = interaction.guild.members.cache.get(id) || null;
-      if (member?.voice?.channel) {
-        await member.voice.setChannel(vc).catch(() => {});
-      }
-    }
+    await Promise.all(
+      ids.map(async (id) => {
+        const member = interaction.guild.members.cache.get(id) || null;
+        if (member?.voice?.channel) {
+          await member.voice.setChannel(vc).catch(() => {});
+        }
+      })
+    );
   };
 
+  // ✅ 1) On redirige d'abord absolument tout le monde
+  await moveMembersToVC(everyoneInGameVCs, waitingVC);
+
+  // ✅ 2) Ensuite seulement on supprime l'embed "partie en cours"
+  if (game.manageMessageId) {
+    const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
+    if (inGameMsg?.deletable) {
+      await inGameMsg.delete().catch(() => {});
+    }
+  }
 
   // ───────────── CANCEL GAME ─────────────
   if (interaction.customId === 'cancel_game') {
-  // ✅ Déplacer toutes les personnes réellement présentes dans les 2 vocaux
-  await moveMembersToVC(everyoneInGameVCs, waitingVC);
-
-    // Supprimer channels
     for (const id of [game.attVC, game.defVC, game.categoryId]) {
       const ch = interaction.guild.channels.cache.get(id);
       if (ch) await ch.delete().catch(() => {});
     }
 
-    // Supprimer message
-    const gameMsgId = game.manageMessageId || game.betMessageId || game.id;
-    const gameMsg = await interaction.channel.messages.fetch(gameMsgId).catch(() => null);
-    if (gameMsg?.deletable) await gameMsg.delete().catch(() => {});
-
-    // Supprimer la partie
     gamesData.games = gamesData.games.filter(g => g.id !== game.id);
     await deleteGame(game.id);
-    await persistGames();
+
     if (gameLocks[game.id]) delete gameLocks[game.id];
     return;
   }
 
-      // ───────────── FIN DE PARTIE ─────────────
+  // ───────────── FIN DE PARTIE ─────────────
   const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
   const matchRR = {};
 
-// ✅ Déplacer toutes les personnes réellement présentes dans les 2 vocaux
-await moveMembersToVC(everyoneInGameVCs, waitingVC);
+  for (const playerId of allPlayers) {
+    const currentStats = await getPlayerPoints(playerId);
 
-  // ✅ Attribution RR
-for (const playerId of allPlayers) {
-  const currentStats = await getPlayerPoints(playerId);
+    const member =
+      interaction.guild.members.cache.get(playerId) ||
+      await interaction.guild.members.fetch(playerId).catch(() => null);
 
-  const member =
-    interaction.guild.members.cache.get(playerId) ||
-    await interaction.guild.members.fetch(playerId).catch(() => null);
+    const isWinner =
+      (winningSide === 'attack' && attackers.includes(playerId)) ||
+      (winningSide === 'defense' && defenders.includes(playerId));
 
-  const isWinner =
-    (winningSide === 'attack' && attackers.includes(playerId)) ||
-    (winningSide === 'defense' && defenders.includes(playerId));
+    const delta = getPlayerRRDelta(member, isWinner);
 
-  const delta = getPlayerRRDelta(member, isWinner);
+    currentStats.rr = Math.max(0, currentStats.rr + delta);
+    currentStats.games += 1;
 
-  currentStats.rr = Math.max(0, currentStats.rr + delta);
-  currentStats.games += 1;
+    if (isWinner) {
+      currentStats.wins += 1;
+    }
 
-  if (isWinner) {
-    currentStats.wins += 1;
+    await setPlayerPoints(playerId, currentStats);
+    matchRR[playerId] = delta;
   }
-
-  await setPlayerPoints(playerId, currentStats);
-  matchRR[playerId] = delta;
-}
 
   await updateTop15Embed();
 
-  // ✅ Supprimer les salons
   for (const id of [game.attVC, game.defVC, game.categoryId]) {
     const ch = interaction.guild.channels.cache.get(id);
     if (ch) await ch.delete().catch(() => {});
   }
 
-  // ✅ Supprimer la partie
   gamesData.games = gamesData.games.filter(g => g.id !== game.id);
   await deleteGame(game.id);
-  await persistGames();
 
-  // ───────────── Embed final ─────────────
   const formatPlayers = async (ids) => {
-  let data = [];
+    let data = [];
 
-  for (const id of ids) {
-    const member =
-      interaction.guild.members.cache.get(id) ||
-      await interaction.guild.members.fetch(id).catch(() => null);
+    for (const id of ids) {
+      const member =
+        interaction.guild.members.cache.get(id) ||
+        await interaction.guild.members.fetch(id).catch(() => null);
 
-    if (!member) continue;
+      if (!member) continue;
 
-    const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-    const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-    const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
+      const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+      const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+      const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
 
-    const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+      const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
 
-    data.push({
-      id,
-      rankValue,
-      rankEmoji,
-      rrDisplay
-    });
-  }
+      data.push({
+        id,
+        rankValue,
+        rankEmoji,
+        rrDisplay
+      });
+    }
 
-  data.sort((a, b) => a.rankValue - b.rankValue);
+    data.sort((a, b) => a.rankValue - b.rankValue);
 
-  return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
-};
+    return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
+  };
 
   const embed = new EmbedBuilder()
-    //.setTitle(`ᴘᴀʀᴛɪᴇ ᴛᴇʀᴍɪɴᴇᴇ`)
     .addFields(
-  { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
-  { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
-)
+      { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
+      { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
+    )
     .setColor(0x242429)
     .setFooter({
       iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
@@ -2205,10 +2220,8 @@ for (const playerId of allPlayers) {
 
   if (gameLocks[game.id]) delete gameLocks[game.id];
   break;
-}default:
-      break;
-  }
 }
+}}
 
 
 
@@ -2866,14 +2879,14 @@ if (affectedGame) {
       }
 
       affectedGame.players.push(newState.member.id);
-      await persistGames();
+      saveGameDebounced(affectedGame); // ✅ CORRECT
       scheduleRegistrationUpdate(guild, affectedGame);
     }
   }
 
   if (oldState.channelId === affectedGame.waitingVC && oldState.channelId !== newState.channelId) {
     affectedGame.players = affectedGame.players.filter(id => id !== oldState.member.id);
-    await persistGames();
+    saveGameDebounced(affectedGame); // ✅
     scheduleRegistrationUpdate(guild, affectedGame);
   }
 }
@@ -3341,12 +3354,11 @@ client.on('messageCreate', async message => {
     const strike = trackerSpamStrikeMap.get(userId) || 0;
     const penalty = getTrackerSpamPenalty(strike);
 
-    const timestamps = trackerSpamMap
-      .get(userId)
-      .filter(ts => now - ts < TRACKER_SPAM_INTERVAL);
+    let timestamps = (trackerSpamMap.get(userId) || [])
+  .filter(ts => now - ts < TRACKER_SPAM_INTERVAL);
 
-    timestamps.push(now);
-    trackerSpamMap.set(userId, timestamps);
+timestamps.push(now);
+trackerSpamMap.set(userId, timestamps);
 
     if (timestamps.length > penalty.limit) {
       const member = message.member;
@@ -3546,12 +3558,12 @@ client.on('messageCreate', async (message) => {
     const strike = spamStrikeMap.get(userId) || 0;
     const penalty = getSpamPenalty(strike);
 
-    const timestamps = spamMap
-      .get(userId)
-      .filter(ts => now - ts < SPAM_INTERVAL);
+    let timestamps = (spamMap.get(userId) || [])
+  .filter(ts => now - ts < SPAM_INTERVAL);
 
-    timestamps.push(now);
-    spamMap.set(userId, timestamps);
+timestamps.push(now);
+
+spamMap.set(userId, timestamps);
 
     // Déclenchement seulement si le nombre dépasse la limite voulue
     if (timestamps.length > penalty.limit) {
