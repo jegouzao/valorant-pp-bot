@@ -114,6 +114,135 @@ const RANK_ORDER = {
 
 const MIN_ACCOUNT_AGE_DAYS = 30;
 
+const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
+const CLIPFARMING_THREAD_AUTOARCHIVE = 1440; // 24h
+
+const ALLOWED_CLIP_DOMAINS = [
+  'youtube.com',
+  'www.youtube.com',
+  'youtu.be',
+  'm.youtube.com',
+
+  'medal.tv',
+  'www.medal.tv',
+
+  'streamable.com',
+  'www.streamable.com',
+
+  'twitch.tv',
+  'www.twitch.tv',
+  'clips.twitch.tv',
+
+  'tiktok.com',
+  'www.tiktok.com',
+  'vm.tiktok.com',
+
+  'cdn.discordapp.com',
+  'media.discordapp.net'
+];
+
+function extractUrls(content = '') {
+  return content.match(/https?:\/\/[^\s]+/gi) || [];
+}
+
+function normalizeHostname(rawUrl) {
+  try {
+    return new URL(rawUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function isAllowedClipDomain(url = '') {
+  const hostname = normalizeHostname(url);
+  if (!hostname) return false;
+
+  return ALLOWED_CLIP_DOMAINS.some(domain =>
+    hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+}
+
+function isGifUrl(url = '') {
+  const u = url.toLowerCase();
+
+  return (
+    u.endsWith('.gif') ||
+    u.includes('.gif?') ||
+    u.includes('tenor.com') ||
+    u.includes('giphy.com') ||
+    u.includes('media.tenor.com') ||
+    u.includes('media.giphy.com') ||
+    u.includes('/view/')
+  );
+}
+
+function isAllowedMediaAttachment(att) {
+  const name = (att.name || '').toLowerCase();
+  const contentType = (att.contentType || '').toLowerCase();
+  const url = (att.url || '').toLowerCase();
+
+  // ❌ GIF interdit
+  if (
+    name.endsWith('.gif') ||
+    contentType.includes('gif') ||
+    isGifUrl(url)
+  ) {
+    return false;
+  }
+
+  // ✅ images/vidéos autorisées
+  if (contentType.startsWith('image/')) return true;
+  if (contentType.startsWith('video/')) return true;
+
+  // fallback extensions
+  const allowedExt = [
+    '.png', '.jpg', '.jpeg', '.webp', '.bmp',
+    '.mp4', '.mov', '.webm', '.mkv', '.avi'
+  ];
+
+  return allowedExt.some(ext => name.endsWith(ext));
+}
+
+function messageContainsBlockedGif(message) {
+  const urls = extractUrls(message.content);
+  const attachments = [...message.attachments.values()];
+
+  const gifInText = urls.some(url => isGifUrl(url));
+
+  const gifInAttachments = attachments.some(att => {
+    const name = (att.name || '').toLowerCase();
+    const contentType = (att.contentType || '').toLowerCase();
+    const url = (att.url || '').toLowerCase();
+
+    return (
+      name.endsWith('.gif') ||
+      contentType.includes('gif') ||
+      isGifUrl(url)
+    );
+  });
+
+  return gifInText || gifInAttachments;
+}
+
+function messageHasAllowedWhitelistedLink(message) {
+  const urls = extractUrls(message.content);
+  if (!urls.length) return false;
+
+  return urls.some(url => isAllowedClipDomain(url) && !isGifUrl(url));
+}
+
+function messageHasAllowedAttachment(message) {
+  const attachments = [...message.attachments.values()];
+  return attachments.some(att => isAllowedMediaAttachment(att));
+}
+
+function isValidClipFarmingMessage(message) {
+  return (
+    messageHasAllowedAttachment(message) ||
+    messageHasAllowedWhitelistedLink(message)
+  );
+}
+
 
 const registrationUpdateTimeouts = new Map();
 
@@ -947,7 +1076,7 @@ const sorted = Object.entries(pointsData)
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
       .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
 )
@@ -1000,7 +1129,7 @@ const sorted = Object.entries(pointsData)
 
   const embed = new EmbedBuilder()
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
     .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
@@ -1009,7 +1138,6 @@ const sorted = Object.entries(pointsData)
 
   await msg.edit({ embeds: [embed] }).catch(() => {});
 }
-
 
 
 
@@ -2281,7 +2409,7 @@ return;
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
         .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493289923761934408/2.png?ex=69de6e1d&is=69dd1c9d&hm=aef29539d30fcb531882181c44b8424f273efb9c84f2fd7496d1c5851d3b0f27&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
@@ -3201,17 +3329,90 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
-      .addFields( { name: formatName('-# ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1493266536813690970> ' ? `<:POINTS:1493266536813690970> **#${position}**` : `<:POINTS:1493266536813690970> `, inline: true },
-                  { name: formatName('-# ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> **${stats.rr}** ʀʀ`, inline: true },
-                  { name: formatName('-# ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
-                  { name: formatName('-# ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
-                  { name: formatName('-# ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> **${stats.wins}**`, inline: true },
-                  { name: formatName('-# ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> **${winrate}%**`, inline: true }  );
+      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1493266536813690970> ' ? `<:POINTS:1493266536813690970> **#${position}**` : `<:POINTS:1493266536813690970> `, inline: true },
+                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> **${stats.rr}** ʀʀ`, inline: true },
+                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
+                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
+                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> **${stats.wins}**`, inline: true },
+                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> **${winrate}%**`, inline: true }  );
     
   await message.reply({ embeds: [embed] });
 }
 
+client.on('messageCreate', async (message) => {
+  try {
+    if (message.author.bot) return;
+    if (!message.guild) return;
 
+    // ✅ On modère uniquement le salon clipfarming
+    if (message.channel.id !== CLIPFARMING_CHANNEL_ID) return;
+
+    // ✅ On laisse les gens parler dans les threads
+    if (message.channel.isThread()) return;
+
+    const hasBlockedGif = messageContainsBlockedGif(message);
+    const isValidMessage = isValidClipFarmingMessage(message);
+
+    // ❌ GIF interdit
+    if (hasBlockedGif) {
+      await message.delete().catch(() => {});
+
+      const warning = await message.channel.send(
+        `❌ ${message.author}, les **GIFs** sont interdits dans <#${CLIPFARMING_CHANNEL_ID}>.\n` +
+        `✅ Formats autorisés : **image, vidéo, ou lien** provenant de **YouTube, Medal, Streamable, Twitch, TikTok ou Discord CDN**.\n` +
+        `💬 La discussion se fait dans le **thread** créé sous chaque clip.`
+      ).catch(() => null);
+
+      if (warning) {
+        setTimeout(() => {
+          warning.delete().catch(() => {});
+        }, 5000);
+      }
+
+      return;
+    }
+
+    // ❌ Message non conforme
+    if (!isValidMessage) {
+      await message.delete().catch(() => {});
+
+      const warning = await message.channel.send(
+        `❌ ${message.author}, ce salon accepte uniquement des **highlights / best-of**.\n` +
+        `✅ Envoie une **image**, une **vidéo**, ou un lien venant de **YouTube, Medal, Streamable, Twitch, TikTok ou Discord CDN**.\n` +
+        `💬 La discussion se fait dans le **thread** créé sous le post.`
+      ).catch(() => null);
+
+      if (warning) {
+        setTimeout(() => {
+          warning.delete().catch(() => {});
+        }, 5000);
+      }
+
+      return;
+    }
+
+    // ✅ Réactions de vote
+    await message.react('👍').catch(() => {});
+    await message.react('👎').catch(() => {});
+
+    // ✅ Création automatique du thread public
+    if (!message.hasThread) {
+      const cleanText = (message.content || '').trim();
+      const baseName = cleanText
+        ? cleanText.slice(0, 60)
+        : `discussion-${message.author.username}`;
+
+      await message.startThread({
+        name: `💬 ${baseName}`.slice(0, 100),
+        autoArchiveDuration: CLIPFARMING_THREAD_AUTOARCHIVE,
+        reason: 'Thread auto pour discussion sous un clip/highlight'
+      }).catch(console.error);
+    }
+
+  } catch (err) {
+    console.error('Erreur modération #clipfarming :', err);
+  }
+});
 
 
 
