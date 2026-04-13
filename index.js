@@ -2964,7 +2964,7 @@ client.on('guildMemberAdd', async member => {
 
     if (welcomeChannel) {
       const embed = new EmbedBuilder()
-        .setColor(0xe03434)
+        .setColor(0xe70019)
         .setDescription(
           `## <:Roles:1493073492856406156> ACCÈS RESTREINT\n\n` +
           `> ${member}\n` +
@@ -3221,7 +3221,7 @@ client.on('guildMemberRemove', async member => {
     const serverDuration = formatServerDuration(member.joinedAt);
 
     const leaveEmbed = new EmbedBuilder()
-      .setColor(0xe03434)
+      .setColor(0xe70019)
       .setDescription(
         `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n\n` +
         `> **${member.user.tag}** (<@${member.id}>) aura tenu **${serverDuration}** .\n`
