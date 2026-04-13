@@ -3028,9 +3028,7 @@ client.on('guildMemberAdd', async member => {
         await thread.send(
   `## ${member.displayName}, bienvenue sur **VALORANT PP** <:Roles:1493046347337699499>\n\n` +
   `Pour débloquer l'accès, suis ces étapes :\n` +
-  `> 1. Choisis ton **PEAK rank 2025**\n` +
-  `> 2. Attends que le bouton **Me renommer** se débloque\n` +
-  `> 3. Entre ton pseudo VALORANT`
+  `> 1. Choisis ton **PEAK rank 2025**\n`
 );
 
 
@@ -3052,7 +3050,8 @@ client.on('guildMemberAdd', async member => {
     .setDisabled(true);
 
 await thread.send({
-  content: '> Choisis d’abord ton **peak rank 2025** pour débloquer le renommage.',
+  content: `> 2. Attends que le bouton **Me renommer** se débloque\n` +
+  `> 3. Entre ton pseudo VALORANT`,
   components: [new ActionRowBuilder().addComponents(riotButton)]
 });
     }
@@ -3478,6 +3477,55 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     
   await message.reply({ embeds: [embed] });
 }
+
+const JOUETS_CHANNEL_ID = '1461346832591360173';
+const ROLE_ORGANISATEUR_ID = '1461348856100028439';
+const ROLE_NOTIF_PP_ID = '1468458885357502599';
+
+client.on('messageCreate', async (message) => {
+  try {
+    if (!message.guild) return;
+
+    // 🎯 FILTRAGE SALON JOUETS
+    if (message.channel.id === JOUETS_CHANNEL_ID) {
+
+      // ✅ Autoriser les bots (IMPORTANT pour tes embeds auto)
+      if (message.author.bot) return;
+
+      const member = message.member;
+      if (!member) return;
+
+      const isAdmin = member.permissions.has('Administrator');
+      const isOrganizer = member.roles.cache.has(ROLE_ORGANISATEUR_ID);
+      const hasNotifMention = message.mentions.roles.has(ROLE_NOTIF_PP_ID);
+
+      // ✅ Autoriser admin (toi + staff)
+      if (isAdmin) return;
+
+      // ✅ Autoriser organisateur UNIQUEMENT si mention
+      if (isOrganizer && hasNotifMention) return;
+
+      // ❌ Tout le reste = suppression
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await message.delete().catch(() => {});
+
+      // ⚠️ Message d'avertissement
+      const warning = await message.channel.send(
+        `🚫 ${message.author}, ce salon est réservé aux notifications de parties.\n` +
+        `👉 Utilise <@&${ROLE_NOTIF_PP_ID}> pour poster une annonce valide.`
+      ).catch(() => null);
+
+      if (warning) {
+        setTimeout(() => {
+          warning.delete().catch(() => {});
+        }, 5000);
+      }
+    }
+
+  } catch (err) {
+    console.error('Erreur modération salon jouets :', err);
+  }
+});
 
 client.on('messageCreate', async (message) => {
   try {
