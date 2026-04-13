@@ -115,7 +115,10 @@ const RANK_ORDER = {
 const MIN_ACCOUNT_AGE_DAYS = 30;
 
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
-const CLIPFARMING_THREAD_AUTOARCHIVE = 1440; // 24h
+const spamMap = new Map();
+const spamStrikeMap = new Map();
+
+const SPAM_INTERVAL = 5000; // 5 secondes
 
 const ALLOWED_CLIP_DOMAINS = [
   'youtube.com',
@@ -1139,7 +1142,29 @@ const sorted = Object.entries(pointsData)
   await msg.edit({ embeds: [embed] }).catch(() => {});
 }
 
+function getSpamPenalty(strike) {
+  if (strike === 0) {
+    return {
+      limit: 7, // plus de 7 => 8e message déclenche
+      durationMs: 60 * 1000,
+      label: '60 secondes'
+    };
+  }
 
+  if (strike === 1) {
+    return {
+      limit: 5, // plus de 5 => 6e message déclenche
+      durationMs: 5 * 60 * 1000,
+      label: '5 minutes'
+    };
+  }
+
+  return {
+    limit: 4, // plus de 4 => 5e message déclenche
+    durationMs: 60 * 60 * 1000,
+    label: '1 heure'
+  };
+}
 
 
 
@@ -3258,6 +3283,7 @@ client.on('messageCreate', async message => {
 if (message.channel.id !== '1474064338431250482') {
 
   // Supprime le message !tracker
+  await new Promise(resolve => setTimeout(resolve, 1500));
   await message.delete().catch(() => {});
 
   // Envoie un message temporaire
@@ -3359,8 +3385,52 @@ client.on('messageCreate', async (message) => {
     // ✅ On modère uniquement le salon clipfarming
     if (message.channel.id !== CLIPFARMING_CHANNEL_ID) return;
 
-    // ✅ On laisse les gens parler dans les threads
-    if (message.channel.isThread()) return;
+
+        const userId = message.author.id;
+    const now = Date.now();
+
+    if (!spamMap.has(userId)) {
+      spamMap.set(userId, []);
+    }
+
+    const strike = spamStrikeMap.get(userId) || 0;
+    const penalty = getSpamPenalty(strike);
+
+    const timestamps = spamMap
+      .get(userId)
+      .filter(ts => now - ts < SPAM_INTERVAL);
+
+    timestamps.push(now);
+    spamMap.set(userId, timestamps);
+
+    // Déclenchement seulement si le nombre dépasse la limite voulue
+    if (timestamps.length > penalty.limit) {
+      const member = message.member;
+
+      if (member?.moderatable) {
+        try {
+          await member.timeout(penalty.durationMs, `Spam dans #clipfarming`);
+
+          spamStrikeMap.set(userId, strike + 1);
+          spamMap.delete(userId);
+
+          const warning = await message.channel.send(
+            `⛔ ${message.author} a été timeout **${penalty.label}** pour spam dans <#${CLIPFARMING_CHANNEL_ID}>.`
+          ).catch(() => null);
+
+          if (warning) {
+            setTimeout(() => {
+              warning.delete().catch(() => {});
+            }, 5000);
+          }
+        } catch (err) {
+          console.error('Erreur timeout anti-spam #clipfarming :', err);
+        }
+      }
+
+      // petit stop pour éviter le reste du traitement
+      return;
+    }
 
     const hasBlockedGif = messageContainsBlockedGif(message);
     const isValidMessage = isValidClipFarmingMessage(message);
