@@ -3377,9 +3377,8 @@ client.on('messageCreate', async (message) => {
       await message.delete().catch(() => {});
 
       const warning = await message.channel.send(
-        `❌ ${message.author}, ce salon accepte uniquement des **highlights / best-of**.\n` +
-        `✅ Envoie une **image**, une **vidéo**, ou un lien venant de **YouTube, Medal, Streamable, Twitch, TikTok ou Discord CDN**.\n` +
-        `💬 La discussion se fait dans le **thread** créé sous le post.`
+        `### ${message.author}, ce salon accepte uniquement les **médias**.\n` +
+        `-# Envoie une **image**, une **vidéo**, ou un **lien** du clip.\n`
       ).catch(() => null);
 
       if (warning) {
