@@ -264,14 +264,14 @@ const RR_VALUES = {
 };
 
 const RR_EMOJIS = {
-  WIN_30: '<:rr_plus_30:1489283298114011176>',
-  RR_GREEN: '<:rr_green:1489283306766995597>',
+  WIN_30: '<:rr_plus_30:1493259044893360200>',
+  RR_GREEN: '<:rr_green:1493259054804369408>',
 
-  WIN_33: '<:rr_plus_33:1489283284885180506>',
-  RR_PINK: '<:rr_pink:1489283290677514281>',
+  WIN_33: '<:rr_plus_33:1493259026262130719>',
+  RR_PINK: '<:rr_pink:1493259036072607914>',
 
-  LOSS_15: '<:rr_minus_15:1489283259547390054>',
-  RR_RED: '<:rr_red:1489283271031390270>',
+  LOSS_15: '<:rr_minus_15:1493259005584343080>',
+  RR_RED: '<:rr_red:1493259016686538932>',
 };
 
 function getPlayerRRDelta(member, isWinner) {
@@ -2768,13 +2768,12 @@ client.on('guildMemberAdd', async member => {
 
     if (welcomeChannel) {
       const embed = new EmbedBuilder()
-        .setColor(0xd05855)
+        .setColor(0xe03434)
         .setDescription(
-          `## <:Roles:1471219666473980065> ACCÈS RESTREINT\n\n` +
+          `## <:Roles:1493073492856406156> ACCÈS RESTREINT\n\n` +
           `> ${member}\n` +
           `> Ton compte Discord a seulement **${accountAgeDays} jours**.\n` +
-          `> Un minimum de **30 jours** est requis pour accéder au serveur.\n` +
-          `> Ouvre un ticket si tu penses qu'il s'agit d'une erreur.`
+          `> Tu pourras toujours ouvrir un ticket.`
         )
         .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
@@ -2882,11 +2881,10 @@ const welcomeChannel = guild.channels.cache.get(WELCOME_CHANNEL_ID);
 if (!welcomeChannel) return;
 
 const embed = new EmbedBuilder()
-  .setColor(0x4f6183)
+  .setColor(0xc5b174)
   .setDescription(
-    `## <:Roles:1471219666473980065> BIENVENUE SUR VALORANT PP\n\n` +
-    `### <#1474562499897594071> pour participer à la prochaine !\n` +
-    `> ${member}\n` +
+    `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n\n` +
+    `> **${member.user.tag}** (<@${member.id}>)\n` +
     `> Invité par **${inviterTag}**\n` +
     `> Sur Discord depuis **${accountAge} jours**`
   )
@@ -3012,9 +3010,9 @@ function getRandomLeaveMockery() {
     if (!leaveChannel) return;
 
     const leaveEmbed = new EmbedBuilder()
-      .setColor(0xd05855)
+      .setColor(0xe03434)
       .setDescription(
-         `## <:Roles:1471219666473980065> DÉPART DU SERVEUR\n\n` +
+         `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n\n` +
         `> **${member.user.tag}** (<@${member.id}>) ${getRandomLeaveMockery()}\n`
       )
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 128 }))
@@ -3038,9 +3036,10 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       const embed = new EmbedBuilder()
         .setColor(0xff73fa)
         .setDescription(
-          `## <:Roles:1471219666473980065> NOUVEAU BOOSTEUR\n\n` +
-          `> Merci à ${newMember} pour le boost du serveur !\n` +
-          `> Ton soutien aide directement **VALORANT PP** à évoluer.`
+          `## <:Roles:1488545490189549629> NOUVEAU BOOST\n\n` +
+          `> <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
+          `> **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +          
+          `> Tiens : <:Boost:1488893206887403520> ʀʀ pour toutes tes prochaines victoires`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
@@ -3155,12 +3154,12 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
     .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
     .setThumbnail(member.displayAvatarURL({ dynamic: true }))
     .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
-      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1472667834881409181> ' ? `<:POINTS:1472667834881409181> **#${position}**` : `<:POINTS:1472667834881409181> `, inline: true },
-                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667816468418631> **${stats.rr}** ʀʀ`, inline: true },
+      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1493266536813690970> ' ? `<:POINTS:1493266536813690970> **#${position}**` : `<:POINTS:1493266536813690970> `, inline: true },
+                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> **${stats.rr}** ʀʀ`, inline: true },
                   { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
                   { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
-                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1472667857405087897> **${stats.wins}**`, inline: true },
-                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1472667816468418631> **${winrate}%**`, inline: true }  );
+                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> **${stats.wins}**`, inline: true },
+                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> **${winrate}%**`, inline: true }  );
     
   await message.reply({ embeds: [embed] });
 }
