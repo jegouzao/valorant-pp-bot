@@ -947,7 +947,7 @@ const sorted = Object.entries(pointsData)
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
       .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
       .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
 )
@@ -1000,7 +1000,7 @@ const sorted = Object.entries(pointsData)
 
   const embed = new EmbedBuilder()
     .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
     .setDescription(
   `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
@@ -2281,7 +2281,7 @@ return;
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
         .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&')
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493258355123290233/960_x_540_px_21.png?ex=69de50b7&is=69dcff37&hm=f75537fedabe6775b537f40f6e7298e7dd69619903f0e3565687b7df07a6c9c9&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
@@ -2572,7 +2572,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal
       `> L'équipe a été notifiée et viendra t'aider.\n\n`
     )
     .setColor(0x242429)
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071222295105658/4.png?ex=69de4b2f&is=69dcf9af&hm=4c6d2a35c5a8ca7bce1ea212b84f321c8622b5d821509cbe30b3e01e0be4b1bd&');
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&');
 
   const closeButton = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
