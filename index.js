@@ -3512,7 +3512,7 @@ client.on('messageCreate', async (message) => {
       // ⚠️ Message d'avertissement
       const warning = await message.channel.send(
         `## ${message.author}, ce salon est réservé aux notifications de parties.\n` +
-        `-# Utilise <@&${ROLE_NOTIF_PP_ID}> pour poster une annonce valide.`
+        `-# Utilise @NotifsPP pour poster une annonce valide.`,
       ).catch(() => null);
 
       if (warning) {
