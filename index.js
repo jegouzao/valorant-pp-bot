@@ -122,12 +122,16 @@ const spamStrikeMap = new Map();
 
 const SPAM_INTERVAL = 5000; // 5 secondes
 
+
+
 const TRACKER_CHANNEL_ID = '1474064338431250482';
 
 const trackerSpamMap = new Map();
 const trackerSpamStrikeMap = new Map();
 
 const TRACKER_SPAM_INTERVAL = 5000; // 5 secondes
+
+const STRIKE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
 const ALLOWED_CLIP_DOMAINS = [
   'youtube.com',
@@ -154,6 +158,30 @@ const ALLOWED_CLIP_DOMAINS = [
 ];
 
 let saveTimeouts = new Map();
+
+function getActiveStrike(strikeMap, userId, now = Date.now()) {
+  const data = strikeMap.get(userId);
+
+  if (!data) {
+    return 0;
+  }
+
+  if ((now - data.lastStrikeAt) > STRIKE_WINDOW_MS) {
+    strikeMap.delete(userId);
+    return 0;
+  }
+
+  return data.count;
+}
+
+function addStrike(strikeMap, userId, now = Date.now()) {
+  const current = getActiveStrike(strikeMap, userId, now);
+
+  strikeMap.set(userId, {
+    count: current + 1,
+    lastStrikeAt: now
+  });
+}
 
 function saveGameDebounced(game) {
   if (saveTimeouts.has(game.id)) {
@@ -3351,8 +3379,8 @@ client.on('messageCreate', async message => {
       trackerSpamMap.set(userId, []);
     }
 
-    const strike = trackerSpamStrikeMap.get(userId) || 0;
-    const penalty = getTrackerSpamPenalty(strike);
+    const strike = getActiveStrike(trackerSpamStrikeMap, userId, now);
+const penalty = getTrackerSpamPenalty(strike);
 
     let timestamps = (trackerSpamMap.get(userId) || [])
   .filter(ts => now - ts < TRACKER_SPAM_INTERVAL);
@@ -3367,7 +3395,7 @@ trackerSpamMap.set(userId, timestamps);
         try {
           await member.timeout(penalty.durationMs, 'Spam dans #tracker');
 
-          trackerSpamStrikeMap.set(userId, strike + 1);
+          addStrike(trackerSpamStrikeMap, userId, now);
           trackerSpamMap.delete(userId);
 
           await message.delete().catch(() => {});
@@ -3490,7 +3518,7 @@ const memberInvites = totalInvitesPerMember[member.id] || 0;
   await message.reply({ embeds: [embed] });
 }
 
-const JOUETS_CHANNEL_ID = '1461346832591360173';
+const JOUER_CHANNEL_ID = '1461346832591360173';
 const ROLE_ORGANISATEUR_ID = '1461348856100028439';
 const ROLE_NOTIF_PP_ID = '1468458885357502599';
 
@@ -3499,7 +3527,7 @@ client.on('messageCreate', async (message) => {
     if (!message.guild) return;
 
     // 🎯 FILTRAGE SALON JOUETS
-    if (message.channel.id === JOUETS_CHANNEL_ID) {
+    if (message.channel.id === JOUER_CHANNEL_ID) {
 
       // ✅ Autoriser les bots (IMPORTANT pour tes embeds auto)
       if (message.author.bot) return;
@@ -3544,28 +3572,24 @@ client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (!message.guild) return;
 
-    // ✅ On modère uniquement le salon clipfarming
     if (message.channel.id !== CLIPFARMING_CHANNEL_ID) return;
 
-
-        const userId = message.author.id;
+    const userId = message.author.id;
     const now = Date.now();
 
     if (!spamMap.has(userId)) {
       spamMap.set(userId, []);
     }
 
-    const strike = spamStrikeMap.get(userId) || 0;
-    const penalty = getSpamPenalty(strike);
+    const strike = getActiveStrike(spamStrikeMap, userId, now);
+const penalty = getSpamPenalty(strike);
 
     let timestamps = (spamMap.get(userId) || [])
-  .filter(ts => now - ts < SPAM_INTERVAL);
+      .filter(ts => now - ts < SPAM_INTERVAL);
 
-timestamps.push(now);
+    timestamps.push(now);
+    spamMap.set(userId, timestamps);
 
-spamMap.set(userId, timestamps);
-
-    // Déclenchement seulement si le nombre dépasse la limite voulue
     if (timestamps.length > penalty.limit) {
       const member = message.member;
 
@@ -3573,7 +3597,7 @@ spamMap.set(userId, timestamps);
         try {
           await member.timeout(penalty.durationMs, `Spam dans #clipfarming`);
 
-          spamStrikeMap.set(userId, strike + 1);
+          addStrike(spamStrikeMap, userId, now);
           spamMap.delete(userId);
 
           const warning = await message.channel.send(
@@ -3590,21 +3614,18 @@ spamMap.set(userId, timestamps);
         }
       }
 
-      // petit stop pour éviter le reste du traitement
       return;
     }
 
     const hasBlockedGif = messageContainsBlockedGif(message);
-    const isValidMessage = isValidClipFarmingMessage(message);
 
-    // ❌ GIF interdit
     if (hasBlockedGif) {
       await new Promise(resolve => setTimeout(resolve, 1500));
       await message.delete().catch(() => {});
 
       const warning = await message.channel.send(
-        `## ${message.author}, ce salon accepte uniquement les **médias**.\n` +
-        `-# Envoie une **image**, une **vidéo**, ou un **lien** du clip.\n`
+        `## ${message.author}, les **GIF** sont interdits dans ce salon.\n` +
+        `-# Tu peux envoyer du **texte**, des **images**, des **vidéos** ou des **liens**, mais pas de GIF.\n`
       ).catch(() => null);
 
       if (warning) {
@@ -3615,26 +3636,6 @@ spamMap.set(userId, timestamps);
 
       return;
     }
-
-    // ❌ Message non conforme
-    if (!isValidMessage) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await message.delete().catch(() => {});
-
-      const warning = await message.channel.send(
-        `## ${message.author}, ce salon accepte uniquement les **médias**.\n` +
-        `-# Envoie une **image**, une **vidéo**, ou un **lien** du clip.\n`
-      ).catch(() => null);
-
-      if (warning) {
-        setTimeout(() => {
-          warning.delete().catch(() => {});
-        }, 5000);
-      }
-
-      return;
-    }
-
 
   } catch (err) {
     console.error('Erreur modération #clipfarming :', err);
