@@ -3166,20 +3166,19 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
     }
 
     // ── TIMEOUT ───────────────────────────────────
-const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp || null;
-const newTimeoutTs = newMember.communicationDisabledUntilTimestamp || null;
+const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp ?? 0;
+const newTimeoutTs = newMember.communicationDisabledUntilTimestamp ?? 0;
 
 const timeoutApplied =
-  !oldTimeoutTs &&
-  newTimeoutTs &&
-  newTimeoutTs > Date.now();
+  newTimeoutTs > Date.now() &&
+  newTimeoutTs !== oldTimeoutTs;
 
 if (timeoutApplied) {
   let reason = 'Non fournie';
 
   try {
     const logs = await newMember.guild.fetchAuditLogs({
-      type: 24,
+      type: 24, // MemberUpdate
       limit: 10
     });
 
