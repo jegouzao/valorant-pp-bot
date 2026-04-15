@@ -2102,56 +2102,115 @@ case 'cancel_game': {
   await interaction.deferUpdate();
   if (!game) return;
 
-  const WAITING_ROOM_ID = '1474562499897594071';
-  const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
-
-  if (!waitingVC) {
-    console.log("❌ Lobby principal introuvable.");
+  if (gameLocks[game.id]) {
     return;
   }
+  gameLocks[game.id] = true;
 
-  const attChannel = interaction.guild.channels.cache.get(game.attVC);
-  const defChannel = interaction.guild.channels.cache.get(game.defVC);
+  try {
+    const WAITING_ROOM_ID = '1474562499897594071';
+    const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
-  const attackers = game.attackers.map(p => p.id);
-  const defenders = game.defenders.map(p => p.id);
-  const allPlayers = [...attackers, ...defenders];
-
-  const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
-  const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
-  const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
-
-  const everyoneInGameVCs = [...new Set([
-    ...liveAttackers,
-    ...liveDefenders,
-    ...allPlayers,
-    ...spectatorIds
-  ])];
-
-  const moveMembersToVC = async (ids, vc) => {
-    await Promise.all(
-      ids.map(async (id) => {
-        const member = interaction.guild.members.cache.get(id) || null;
-        if (member?.voice?.channel) {
-          await member.voice.setChannel(vc).catch(() => {});
-        }
-      })
-    );
-  };
-
-  // ✅ 1) On redirige d'abord absolument tout le monde
-  await moveMembersToVC(everyoneInGameVCs, waitingVC);
-
-  // ✅ 2) Ensuite seulement on supprime l'embed "partie en cours"
-  if (game.manageMessageId) {
-    const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
-    if (inGameMsg?.deletable) {
-      await inGameMsg.delete().catch(() => {});
+    if (!waitingVC) {
+      console.log("❌ Lobby principal introuvable.");
+      return;
     }
-  }
 
-  // ───────────── CANCEL GAME ─────────────
-  if (interaction.customId === 'cancel_game') {
+    // ✅ Désactive immédiatement les boutons pour éviter un 2e clic
+    try {
+      if (interaction.message?.editable) {
+        const disabledRows = interaction.message.components.map(row =>
+          new ActionRowBuilder().addComponents(
+            row.components.map(component =>
+              ButtonBuilder.from(component).setDisabled(true)
+            )
+          )
+        );
+
+        await interaction.message.edit({ components: disabledRows }).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Erreur désactivation boutons fin de partie :', err);
+    }
+
+    const attChannel = interaction.guild.channels.cache.get(game.attVC);
+    const defChannel = interaction.guild.channels.cache.get(game.defVC);
+
+    const attackers = game.attackers.map(p => p.id);
+    const defenders = game.defenders.map(p => p.id);
+    const allPlayers = [...attackers, ...defenders];
+
+    const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
+    const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
+    const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
+
+    const everyoneInGameVCs = [...new Set([
+      ...liveAttackers,
+      ...liveDefenders,
+      ...allPlayers,
+      ...spectatorIds
+    ])];
+
+    const moveMembersToVC = async (ids, vc) => {
+      await Promise.all(
+        ids.map(async (id) => {
+          const member = interaction.guild.members.cache.get(id) || null;
+          if (member?.voice?.channel) {
+            await member.voice.setChannel(vc).catch(() => {});
+          }
+        })
+      );
+    };
+
+    await moveMembersToVC(everyoneInGameVCs, waitingVC);
+
+    if (game.manageMessageId) {
+      const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
+      if (inGameMsg?.deletable) {
+        await inGameMsg.delete().catch(() => {});
+      }
+    }
+
+    if (interaction.customId === 'cancel_game') {
+      for (const id of [game.attVC, game.defVC, game.categoryId]) {
+        const ch = interaction.guild.channels.cache.get(id);
+        if (ch) await ch.delete().catch(() => {});
+      }
+
+      gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+      await deleteGame(game.id);
+      return;
+    }
+
+    const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
+    const matchRR = {};
+
+    for (const playerId of allPlayers) {
+      const currentStats = await getPlayerPoints(playerId);
+
+      const member =
+        interaction.guild.members.cache.get(playerId) ||
+        await interaction.guild.members.fetch(playerId).catch(() => null);
+
+      const isWinner =
+        (winningSide === 'attack' && attackers.includes(playerId)) ||
+        (winningSide === 'defense' && defenders.includes(playerId));
+
+      const delta = getPlayerRRDelta(member, isWinner);
+
+      currentStats.rr = Math.max(0, currentStats.rr + delta);
+      currentStats.games += 1;
+
+      if (isWinner) {
+        currentStats.wins += 1;
+      }
+
+      await setPlayerPoints(playerId, currentStats);
+      matchRR[playerId] = delta;
+    }
+
+    await updateTop15Embed();
+
     for (const id of [game.attVC, game.defVC, game.categoryId]) {
       const ch = interaction.guild.channels.cache.get(id);
       if (ch) await ch.delete().catch(() => {});
@@ -2160,91 +2219,51 @@ case 'cancel_game': {
     gamesData.games = gamesData.games.filter(g => g.id !== game.id);
     await deleteGame(game.id);
 
-    if (gameLocks[game.id]) delete gameLocks[game.id];
-    return;
-  }
+    const formatPlayers = async (ids) => {
+      let data = [];
 
-  // ───────────── FIN DE PARTIE ─────────────
-  const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
-  const matchRR = {};
+      for (const id of ids) {
+        const member =
+          interaction.guild.members.cache.get(id) ||
+          await interaction.guild.members.fetch(id).catch(() => null);
 
-  for (const playerId of allPlayers) {
-    const currentStats = await getPlayerPoints(playerId);
+        if (!member) continue;
 
-    const member =
-      interaction.guild.members.cache.get(playerId) ||
-      await interaction.guild.members.fetch(playerId).catch(() => null);
+        const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+        const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+        const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
 
-    const isWinner =
-      (winningSide === 'attack' && attackers.includes(playerId)) ||
-      (winningSide === 'defense' && defenders.includes(playerId));
+        const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
 
-    const delta = getPlayerRRDelta(member, isWinner);
+        data.push({
+          id,
+          rankValue,
+          rankEmoji,
+          rrDisplay
+        });
+      }
 
-    currentStats.rr = Math.max(0, currentStats.rr + delta);
-    currentStats.games += 1;
+      data.sort((a, b) => a.rankValue - b.rankValue);
 
-    if (isWinner) {
-      currentStats.wins += 1;
-    }
+      return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
+    };
 
-    await setPlayerPoints(playerId, currentStats);
-    matchRR[playerId] = delta;
-  }
-
-  await updateTop15Embed();
-
-  for (const id of [game.attVC, game.defVC, game.categoryId]) {
-    const ch = interaction.guild.channels.cache.get(id);
-    if (ch) await ch.delete().catch(() => {});
-  }
-
-  gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-  await deleteGame(game.id);
-
-  const formatPlayers = async (ids) => {
-    let data = [];
-
-    for (const id of ids) {
-      const member =
-        interaction.guild.members.cache.get(id) ||
-        await interaction.guild.members.fetch(id).catch(() => null);
-
-      if (!member) continue;
-
-      const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-      const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-      const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
-
-      const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
-
-      data.push({
-        id,
-        rankValue,
-        rankEmoji,
-        rrDisplay
+    const embed = new EmbedBuilder()
+      .addFields(
+        { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
+        { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
+      )
+      .setColor(0x242429)
+      .setFooter({
+        iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+        text: `Partie validée par ${interaction.member.displayName}`
       });
-    }
 
-    data.sort((a, b) => a.rankValue - b.rankValue);
+    await interaction.channel.send({ embeds: [embed] }).catch(console.error);
+  } finally {
+    delete gameLocks[game.id];
+  }
 
-    return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
-  };
-
-  const embed = new EmbedBuilder()
-    .addFields(
-      { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
-      { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
-    )
-    .setColor(0x242429)
-    .setFooter({
-      iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-      text: `Partie validée par ${interaction.member.displayName}`
-    });
-
-  await interaction.channel.send({ embeds: [embed] }).catch(console.error);
-
-  if (gameLocks[game.id]) delete gameLocks[game.id];
   break;
 }
 }}
