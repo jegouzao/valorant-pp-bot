@@ -421,6 +421,21 @@ const ROLE_VERIFIE = '1461354176931041312';
 const AUTO_CREATE_VC_ID = '1479547523201896490'; // ← mets ici l'id du vocal "créer"
 const TEMP_VOCAL_CATEGORY_ID = '1479549016466395217';
 const WELCOME_CHANNEL_ID = '1474066060528451743';
+
+const ACTIVITIES_CHANNEL_ID = WELCOME_CHANNEL_ID;
+
+const recentBans = new Map();
+const RECENT_BAN_WINDOW_MS = 15000;
+
+async function sendActivityMessage(guild, payload) {
+  const channel =
+    guild.channels.cache.get(ACTIVITIES_CHANNEL_ID) ||
+    await guild.channels.fetch(ACTIVITIES_CHANNEL_ID).catch(() => null);
+
+  if (!channel) return null;
+  return channel.send(payload).catch(() => null);
+}
+
 // ✅ Salons vocaux à ne jamais supprimer automatiquement
 const EXEMPT_VC_IDS = [
   '1479551340635095270',
@@ -894,23 +909,6 @@ const commands = [
   name: 'resetseason',
   description: 'Réinitialiser toute la saison compétitive',
   default_member_permissions: PermissionFlagsBits.Administrator.toString()
-},
-  { 
-  name: 'ban',
-  description: 'Bannir un joueur avec raison',
-  default_member_permissions: PermissionFlagsBits.BanMembers.toString(),
-  options: [
-    { name: 'joueur', description: 'Le joueur à bannir', type: 6, required: true }
-  ]
-},
-{ 
-  name: 'timeout',
-  description: 'Timeout un joueur pendant une durée',
-  default_member_permissions: PermissionFlagsBits.ModerateMembers.toString(),
-  options: [
-    { name: 'joueur', description: 'Le joueur à timeout', type: 6, required: true },
-    { name: 'duree', description: 'Durée en minutes', type: 4, required: true }
-  ]
 },
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'top15', description: 'Créer l\'embed TOP 15', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
@@ -2582,118 +2580,9 @@ if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
 
 
 
-if (interaction.isChatInputCommand() && interaction.commandName === 'ban') {
-  const targetUser = interaction.options.getUser('joueur');
 
-  const modal = new ModalBuilder()
-    .setCustomId(`ban_modal_${targetUser.id}`)
-    .setTitle('Banir un joueur');
 
-  const reasonInput = new TextInputBuilder()
-    .setCustomId('ban_reason')
-    .setLabel('Raison du ban')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true)
-    .setMaxLength(500);
 
-  modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
-  return interaction.showModal(modal);
-}
-
-if (interaction.isChatInputCommand() && interaction.commandName === 'timeout') {
-  const targetUser = interaction.options.getUser('joueur');
-  const duration = interaction.options.getInteger('duree');
-
-  const modal = new ModalBuilder()
-    .setCustomId(`timeout_modal_${targetUser.id}_${duration}`)
-    .setTitle('Timeout un joueur');
-
-  const reasonInput = new TextInputBuilder()
-    .setCustomId('timeout_reason')
-    .setLabel('Raison du timeout')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true)
-    .setMaxLength(500);
-
-  modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
-  return interaction.showModal(modal);
-}
-
-if (interaction.isModalSubmit() && interaction.customId.startsWith('ban_modal_')) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const userId = interaction.customId.split('_').pop();
-  const reason = interaction.fields.getTextInputValue('ban_reason');
-  const user = await client.users.fetch(userId).catch(() => null);
-
-  if (!user) {
-    return interaction.editReply('❌ Utilisateur introuvable.');
-  }
-
-  try {
-    await user.send(
-      `Tu as été **banni** du serveur **${interaction.guild.name}**.\nRaison : **${reason}**`
-    ).catch(() => {});
-    
-    // Stockage modération
-    const riotUser = await RiotUser.findOne({ userId });
-
-await Moderation.updateOne(
-  { userId },
-  {
-    $set: {
-      userId,
-      banned: true,
-      reason,
-      date: new Date().toISOString(),
-      riotPseudo: riotUser?.pseudo || '',
-      username: user.tag
-    }
-  },
-  { upsert: true }
-);
-
-    await interaction.guild.members.ban(userId, { reason });
-
-    return interaction.editReply(`✅ <@${userId}> a été banni.\n**Raison :** ${reason}`);
-  } catch (err) {
-    console.error(err);
-    return interaction.editReply(`❌ Impossible de bannir <@${userId}>.`);
-  }
-}
-
-if (interaction.isModalSubmit() && interaction.customId.startsWith('timeout_modal_')) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const parts = interaction.customId.split('_');
-  const userId = parts[2];
-  const durationMinutes = parseInt(parts[3], 10);
-  const reason = interaction.fields.getTextInputValue('timeout_reason');
-
-  const member = await interaction.guild.members.fetch(userId).catch(() => null);
-  if (!member) {
-    return interaction.editReply('❌ Membre introuvable.');
-  }
-
-  if (!member.moderatable) {
-    return interaction.editReply('❌ Je ne peux pas timeout ce membre.');
-  }
-
-  try {
-    await member.send(
-      `Tu as reçu un **timeout de ${durationMinutes} minute(s)** sur **${interaction.guild.name}**.\nRaison : **${reason}**`
-    ).catch(() => {});
-
-    await member.timeout(durationMinutes * 60 * 1000, reason);
-
-    return interaction.editReply(
-      `✅ <@${userId}> a été timeout pendant **${durationMinutes} minute(s)**.\n**Raison :** ${reason}`
-    );
-  } catch (err) {
-    console.error(err);
-    return interaction.editReply(`❌ Impossible de timeout <@${userId}>.`);
-  }
-}
 
 
 
@@ -3175,6 +3064,9 @@ if (usedInvite) {
 });
 
 client.on('guildMemberRemove', async member => {
+  if (recentBans.has(member.id)) {
+    return;
+  }
   const leaveMockeries = [
     "a quitté OOHHH GNOOOOOOOOOOOOOON.",
     "a quitté GNOOOOOOOOOOOOOOOOON.",
@@ -3306,34 +3198,124 @@ client.on('guildMemberRemove', async member => {
   }
 });
 
+
+
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   try {
     const oldBoost = oldMember.premiumSince;
     const newBoost = newMember.premiumSince;
 
+    // ── BOOST ─────────────────────────────────────
     if (!oldBoost && newBoost) {
-      const boostChannel = newMember.guild.channels.cache.get('1474066060528451743');
-      if (!boostChannel) return;
-
       const embed = new EmbedBuilder()
         .setColor(0xff73fa)
         .setDescription(
-          `## <:Roles:1488545490189549629> NOUVEAU BOOST\n\n` +
-          `> <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
-          `> **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +          
+          `## <:Roles:1492125876437913641> NOUVEAU BOOST\n\n` +
+          `> <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
+          `> **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +
           `> Tiens : <:Boost:1488893206887403520> ʀʀ pour toutes tes prochaines victoires`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
 
-      await boostChannel.send({ embeds: [embed] });
+      await sendActivityMessage(newMember.guild, { embeds: [embed] });
+    }
+
+    // ── TIMEOUT ───────────────────────────────────
+const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp || null;
+const newTimeoutTs = newMember.communicationDisabledUntilTimestamp || null;
+
+const timeoutApplied =
+  !oldTimeoutTs &&
+  newTimeoutTs &&
+  newTimeoutTs > Date.now();
+
+if (timeoutApplied) {
+  let reason = 'Non fournie';
+
+  try {
+    const logs = await newMember.guild.fetchAuditLogs({
+      type: 24,
+      limit: 10
+    });
+
+    const entry = logs.entries.find(entry =>
+      entry.target?.id === newMember.id &&
+      Date.now() - entry.createdTimestamp < 15000
+    );
+
+    if (entry?.reason) {
+      reason = entry.reason;
     }
   } catch (err) {
-    console.error('Erreur embed boost serveur :', err);
+    console.error('Erreur audit logs timeout :', err);
+  }
+
+  const endUnix = Math.floor(newTimeoutTs / 1000);
+
+  const embed = new EmbedBuilder()
+    .setColor(0xe70019)
+    .setDescription(
+      `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
+      `> **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+      `> Temps restant : <t:${endUnix}:R>\n` +
+      `> Raison : **${reason}**`
+    )
+    .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
+    .setTimestamp();
+
+  await sendActivityMessage(newMember.guild, { embeds: [embed] });
+}
+  } catch (err) {
+    console.error('Erreur guildMemberUpdate activité :', err);
   }
 });
 
 
+
+client.on('guildBanAdd', async (ban) => {
+  try {
+    const guild = ban.guild;
+    const user = ban.user;
+
+    recentBans.set(user.id, Date.now());
+    setTimeout(() => recentBans.delete(user.id), RECENT_BAN_WINDOW_MS);
+
+    let reason = ban.reason || 'Non fournie';
+
+    try {
+      const logs = await guild.fetchAuditLogs({
+        type: 22,
+        limit: 10
+      });
+
+      const entry = logs.entries.find(entry =>
+        entry.target?.id === user.id &&
+        Date.now() - entry.createdTimestamp < 15000
+      );
+
+      if (entry?.reason) {
+        reason = entry.reason;
+      }
+    } catch (err) {
+      console.error('Erreur audit logs ban :', err);
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0xe70019)
+      .setDescription(
+        `## <:Roles:1493073492856406156> BANNISSEMENT\n\n` +
+        `> **${user.tag}** (<@${user.id}>)\n` +
+        `> Raison : **${reason}**`
+      )
+      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 128 }))
+      .setTimestamp();
+
+    await sendActivityMessage(guild, { embeds: [embed] });
+  } catch (err) {
+    console.error('Erreur embed ban activité :', err);
+  }
+});
 
 
 
