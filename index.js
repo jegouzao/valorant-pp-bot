@@ -3083,121 +3083,47 @@ if (usedInvite) {
 });
 
 client.on('guildMemberRemove', async member => {
-  if (recentBans.has(member.id)) {
-    return;
-  }
-  const leaveMockeries = [
-    "a quitté OOHHH GNOOOOOOOOOOOOOON.",
-    "a quitté GNOOOOOOOOOOOOOOOOON.",
-    "a quitté GNOOOOOOOOOON YUKIIIIIII.",
-    "a quitté ALLOOOOOOOOOOOOOO LES GARS GNOOOOOOOOON.",
-    "a quitté GNOOOOOOOOOOOOOOOOOON.",
-    "a quitté GNOOOOOOOOOOOOOOOOOOOOOOON.",
-    "a quitté. J'avooooooouuuuuuuuuuuuuuuuuuuue",
-    "est parti, et c'est OK",
-    "a leave notre doux serveur.",
-    "a mangé son carry",
-    "a prit son carry",
-    "AHAHAH ! regardez-moi ce looser",
-    "est parti oh gnoooooooooooooooon yuki les gaaaars",
-    "le gros bébé cadum",
-    "s'est envolé, on souhaite TOUS une bonne continuation",
-    "Parfois la retraite est la meilleure option.",
-    "s'est échappé avant de passer dans #clipfarming",
-    "a pris la fuite",
-    "utilise l'attaque Fuite",
-    "utilise Téléport.",
-    "a fui le combat.",
-    "utilise Anti-Brume et disparait.",
-    "utilise Vol.",
-    "a quitté la zone.",
-    "a quitté le quartier.",
-    "a quitté le tieks.",
-    "a quitté le tiéquar.",
-    "a quitté le cité.",
-    "a disparu wesh.",
-    "a prit la porte",
-    "a été renvoyé",
-    "a tout whippin",
-    "a tout cassé son bureau",
-    "a explosé son PC",
-    "est tellement vener qu'il a fait un trou dans le mur",
-    "est dégouté...",
-    "a perdu le combat.\nVous gagnez **1200 ₽**.",
-    "a pris un coup critique",
-    "a utilisé Brume et a disparu.",
-    "a pris la fuite. Le combat est terminé.",
-    "s’est enfui. +999XP.",
-    "a quitté le serveur.",
-    "a déconnecté.",
-    "a quitté ce monde.",
-    "a quitté la partie prématurément.",
-    "est déjà parti. La découverte fut brève.",
-    "a abandonné la mission.",
-    "a quitté la session.",
-    "a abandonné la quête.",
-    "a quitté la guilde.",
-    "a quitté le clan.",
-    "s'est fait diff",
-    "est un imposteur",
-    "est un thug life",
-    "est mega aigri les gars",
-    "s'est fait labubu",
-    "ne veux plus jouer de PP avec nous.....",
-    "est parti bouder dans son coin frérot",
-    "eh va dormir ya zebi",
-    "est cringe",
-    "est parti, est-ce que c'est bon pour vous",
-    "a quitté. Raison : Serveur trop exigent",
-    "a quitté. Raison : Serveur trop competitif",
-    "a quitté. Raison : Trop de troll",
-    "a quitté. Raison : Serveur trop sérieux",
-    "a quitté. Raison : Serveur non-sérieux wala",
-    "a quitté. Raison : Pas assez de trolling",
-    "a quitté. Raison : Serveur pas assez intelligent",
-    "a quitté. Raison : Serveur trop doux",
-    "a quitté. Raison : Serveur pas assez drôle",
-    "est parti, et c'est ciaooooooOOOOAHAHAHHAHAHAHHAHAHA",
-    "a quitté. Serveur trop beau et trop intelligent pour lui baby.",
-    "saiu. Servidor bonito demais, do brasile, saudeeeeee ninguem me fode.",
-    "est trop bas QI pour le serv...",
-    "nous souhaite tout le malheur du monde.",
-    "adios amigos hastas prontos pequenitos espagnolitos",
-    "à plus l'ancien",
-    "est parti manger une pizza au kebab",
-    "au revoir mon sucre",
-    "au revoir mon loup",
-    "n'a pas assez de mental",
-    "s'est prit un pressing, carrément il est parti",
-    "s'est stratégiquement barré.",
-    "est parti, j'espère vraiement que le serveur survivra à cette perte...",
-    "a tiré sa révérence.",
-    "est parti, fin de l'aventure.",
-    "a quitté la scène.",
-    "HJIhoiuopJ.PH?ouhg _799 okhhhk;...bIO GNOOOOOOOON",
-    "EST PARTI?! QUOI???????",
-    "est discrètement parti."
-  ];
-
-  function getRandomLeaveMockery() {
-    return leaveMockeries[Math.floor(Math.random() * leaveMockeries.length)];
-  }
-
-  function formatServerDuration(joinedAt) {
-    if (!joinedAt) return 'une durée inconnue';
-
-    const diffMs = Date.now() - joinedAt.getTime();
-    const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-
-    if (totalDays < 1) return 'moins d’un jour';
-    if (totalDays === 1) return '1 jour';
-
-    return `${totalDays} jours`;
-  }
-
   try {
+    // ✅ 1) Vérifie d'abord si c'est un ban récent
+    let wasBanned = false;
+
+    try {
+      const logs = await member.guild.fetchAuditLogs({
+        type: 22, // MEMBER_BAN_ADD
+        limit: 10
+      });
+
+      const entry = logs.entries.find(entry =>
+        entry.target?.id === member.id &&
+        Date.now() - entry.createdTimestamp < 15000
+      );
+
+      if (entry) {
+        wasBanned = true;
+      }
+    } catch (err) {
+      console.error('Erreur audit logs guildMemberRemove :', err);
+    }
+
+    // ✅ Si c'est un ban, on n'envoie PAS l'embed départ
+    if (wasBanned) {
+      return;
+    }
+
     const leaveChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!leaveChannel) return;
+
+    function formatServerDuration(joinedAt) {
+      if (!joinedAt) return 'une durée inconnue';
+
+      const diffMs = Date.now() - joinedAt.getTime();
+      const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+
+      if (totalDays < 1) return 'moins d’un jour';
+      if (totalDays === 1) return '1 jour';
+
+      return `${totalDays} jours`;
+    }
 
     const serverDuration = formatServerDuration(member.joinedAt);
 
@@ -3205,8 +3131,7 @@ client.on('guildMemberRemove', async member => {
       .setColor(0xe70019)
       .setDescription(
         `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n\n` +
-        `> **${member.user.tag}** (<@${member.id}>) aura tenu **${serverDuration}** .\n`
-        //`> ${getRandomLeaveMockery()}\n`
+        `> **${member.user.tag}** (<@${member.id}>) aura tenu **${serverDuration}**.\n`
       )
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 128 }))
       .setTimestamp();
@@ -3297,14 +3222,11 @@ client.on('guildBanAdd', async (ban) => {
     const guild = ban.guild;
     const user = ban.user;
 
-    recentBans.set(user.id, Date.now());
-    setTimeout(() => recentBans.delete(user.id), RECENT_BAN_WINDOW_MS);
-
     let reason = ban.reason || 'Non fournie';
 
     try {
       const logs = await guild.fetchAuditLogs({
-        type: 22,
+        type: 22, // MEMBER_BAN_ADD
         limit: 10
       });
 
