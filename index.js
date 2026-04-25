@@ -56,19 +56,20 @@ if (!fs.existsSync('./riotData.json')) {
 const { 
   Client,
   GatewayIntentBits,
-  ChannelType, // <- Ajoute ceci
+  ChannelType,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ModalBuilder,       // <- Ajoute ça
-  TextInputBuilder,   // <- Ajoute ça
+  ModalBuilder,
+  TextInputBuilder,
   TextInputStyle,
   EmbedBuilder,
   REST,
   Routes,
   PermissionFlagsBits,
   PermissionsBitField,
-  StringSelectMenuBuilder, // ← AJOUTÉ
+  StringSelectMenuBuilder,
+  Events, // ✅ AJOUTE ÇA
 } = require('discord.js');
 
 const rankEmojis = {
@@ -156,6 +157,9 @@ const ALLOWED_CLIP_DOMAINS = [
   'cdn.discordapp.com',
   'media.discordapp.net'
 ];
+
+const SERVER_TAG_ROLE_ID = '1497390571051024615'; // rôle donné quand le membre porte ton tag serveur
+const SERVER_TAG_GUILD_ID = process.env.GUILD_ID;
 
 let saveTimeouts = new Map();
 
@@ -922,8 +926,39 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
   .then(() => console.log('✅ Slash commands enregistrées'))
   .catch(console.error);
 
-// ===== Ready event + CADRE CONSOLE =====
-const { Events } = require('discord.js');
+async function syncServerTagRole(userId, user = null) {
+  try {
+    const guild = client.guilds.cache.get(SERVER_TAG_GUILD_ID);
+    if (!guild) return;
+
+    const member =
+      guild.members.cache.get(userId) ||
+      await guild.members.fetch(userId).catch(() => null);
+
+    if (!member) return;
+
+    const freshUser = user || await client.users.fetch(userId, { force: true }).catch(() => null);
+    if (!freshUser) return;
+
+    const pg = freshUser.primaryGuild;
+
+    const hasServerTag =
+      pg?.identityEnabled === true &&
+      pg?.identityGuildId === SERVER_TAG_GUILD_ID;
+
+    const hasRole = member.roles.cache.has(SERVER_TAG_ROLE_ID);
+
+    if (hasServerTag && !hasRole) {
+      await member.roles.add(SERVER_TAG_ROLE_ID, 'Tag serveur actif');
+    }
+
+    if (!hasServerTag && hasRole) {
+      await member.roles.remove(SERVER_TAG_ROLE_ID, 'Tag serveur retiré');
+    }
+  } catch (err) {
+    console.error('Erreur syncServerTagRole :', err);
+  }
+}
 
 client.once(Events.ClientReady, async () => {
   
@@ -979,6 +1014,11 @@ console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
 
   await guild.members.fetch();
 console.log('✅ Tous les membres du serveur ont été chargés en cache');
+for (const member of guild.members.cache.values()) {
+  await syncServerTagRole(member.id, member.user);
+}
+
+console.log('✅ Rôles tag serveur synchronisés');
 
   // Récupérer toutes les invites du serveur
   const guildInvites = await guild.invites.fetch();
@@ -1094,7 +1134,9 @@ console.log(`${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.
 
 });
 
-
+client.on(Events.UserUpdate, async (oldUser, newUser) => {
+  await syncServerTagRole(newUser.id, newUser);
+});
 
 
 
@@ -1807,9 +1849,11 @@ if (registrationMsg?.deletable) {
     return interaction.editReply({ content: '⚠️ Rôle Vérifié introuvable.' });
   }
 
-  if (!game.players.length) {
-    return interaction.editReply({ content: "Aucun joueur inscrit." });
-  }
+  if (game.players.length !== 10) {
+  return interaction.editReply({
+    content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
+  });
+}
 
   const registrationMsg = await interaction.channel.messages
   .fetch(game.messageId || game.id)
@@ -1822,27 +1866,50 @@ if (registrationMsg?.deletable) {
 
   // ─────────────── ÉQUILIBRAGE DES ÉQUIPES ───────────────
   function balanceTeams(players) {
-  // Tri du plus fort au plus faible
+  if (players.length !== 10) {
+    throw new Error(`Équilibrage impossible : ${players.length} joueurs au lieu de 10.`);
+  }
+
   players.sort((a, b) => b.rankValue - a.rankValue);
 
-  const attackers = [];
-  const defenders = [];
+  let best = null;
 
-  let sumA = 0;
-  let sumB = 0;
+  function combinations(arr, k, start = 0, combo = [], result = []) {
+    if (combo.length === k) {
+      result.push([...combo]);
+      return result;
+    }
 
-  for (const p of players) {
-    if (sumA <= sumB) {
-      attackers.push(p);
-      sumA += p.rankValue;
-    } else {
-      defenders.push(p);
-      sumB += p.rankValue;
+    for (let i = start; i < arr.length; i++) {
+      combo.push(arr[i]);
+      combinations(arr, k, i + 1, combo, result);
+      combo.pop();
+    }
+
+    return result;
+  }
+
+  const allAttackCombinations = combinations(players, 5);
+
+  for (const attackers of allAttackCombinations) {
+    const attackerIds = new Set(attackers.map(p => p.id));
+    const defenders = players.filter(p => !attackerIds.has(p.id));
+
+    const sumA = attackers.reduce((sum, p) => sum + p.rankValue, 0);
+    const sumB = defenders.reduce((sum, p) => sum + p.rankValue, 0);
+    const diff = Math.abs(sumA - sumB);
+
+    if (!best || diff < best.diff) {
+      best = { attackers, defenders, diff };
     }
   }
 
-  return { attackers, defenders };
+  return {
+    attackers: best.attackers,
+    defenders: best.defenders
+  };
 }
+
 
 
   
@@ -1868,6 +1935,11 @@ if (registrationMsg?.deletable) {
   });
 
   const balanced = balanceTeams(sortedPlayers);
+  if (balanced.attackers.length !== 5 || balanced.defenders.length !== 5) {
+  return interaction.editReply({
+    content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.'
+  });
+}
   game.attackers = balanced.attackers.map(p => ({ id: p.id, member: p.member }));
   game.defenders = balanced.defenders.map(p => ({ id: p.id, member: p.member }));
 
