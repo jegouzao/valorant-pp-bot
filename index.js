@@ -467,7 +467,8 @@ const BOOSTER_ROLE_ID = '1134168535866806314';
 
 const RR_VALUES = {
   WIN: 30,
-  WIN_BOOSTER: 33,
+  WIN_TAG: 33,
+  WIN_BOOSTER: 36,
   LOSS: -15,
 };
 
@@ -475,8 +476,11 @@ const RR_EMOJIS = {
   WIN_30: '<:rr_plus_30:1493259044893360200>',
   RR_GREEN: '<:rr_green:1493259054804369408>',
 
-  WIN_33: '<:rr_plus_33:1493259026262130719>',
-  RR_PINK: '<:rr_pink:1493259036072607914>',
+  WIN_33: '<:33_gold:1497395187415126127>',
+  RR_GOLD: '<:rr_gold:1497395194289455114>',
+
+  WIN_36: '<:36_rose:1497395169224556686>',
+  RR_ROSE: '<:rr_rose:1497395178045050992>',
 
   LOSS_15: '<:rr_minus_15:1493259005584343080>',
   RR_RED: '<:rr_red:1493259016686538932>',
@@ -486,12 +490,21 @@ function getPlayerRRDelta(member, isWinner) {
   if (!isWinner) return RR_VALUES.LOSS;
 
   const isBooster = member?.roles?.cache?.has(BOOSTER_ROLE_ID);
-  return isBooster ? RR_VALUES.WIN_BOOSTER : RR_VALUES.WIN;
+  if (isBooster) return RR_VALUES.WIN_BOOSTER;
+
+  const hasServerTag = member?.roles?.cache?.has(SERVER_TAG_ROLE_ID);
+  if (hasServerTag) return RR_VALUES.WIN_TAG;
+
+  return RR_VALUES.WIN;
 }
 
 function formatRRDeltaEmoji(delta) {
   if (delta === RR_VALUES.WIN_BOOSTER) {
-    return ` ${RR_EMOJIS.WIN_33}${RR_EMOJIS.RR_PINK}`;
+    return ` ${RR_EMOJIS.WIN_36}${RR_EMOJIS.RR_ROSE}`;
+  }
+
+  if (delta === RR_VALUES.WIN_TAG) {
+    return ` ${RR_EMOJIS.WIN_33}${RR_EMOJIS.RR_GOLD}`;
   }
 
   if (delta === RR_VALUES.WIN) {
