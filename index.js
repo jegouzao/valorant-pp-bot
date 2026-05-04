@@ -1189,12 +1189,10 @@ const sorted = Object.entries(pointsData)
 
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
-      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
-      .setDescription(
-  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`
-)
+      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀɪ")
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
       .setColor(0x242429);
+      //.setDescription(`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`)
 
     await msg.edit({ embeds: [emptyEmbed] }).catch(() => {});
     return;
@@ -1242,10 +1240,10 @@ const sorted = Object.entries(pointsData)
   }));
 
   const embed = new EmbedBuilder()
-    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
+    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀɪ")
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
     .setDescription(
-  `**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
+  //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
   (lines.join("\n") || "*Calcul en cours...*")
 )
     .setColor(0x242429);
@@ -2607,8 +2605,8 @@ return;
     if (interaction.isChatInputCommand() && interaction.commandName === 'top15'){
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
-        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴠʀɪʟ")
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493323778237927554/960_x_540_px_24.png?ex=69de8da5&is=69dd3c25&hm=95aebc984021c991dfff8b13d7cdb97890a468691fde98c88fcbf73f933b7f87&')
+        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴍᴀɪ")
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
       const msg = await interaction.channel.send({ embeds:[embed] });
