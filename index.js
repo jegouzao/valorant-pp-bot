@@ -3030,9 +3030,9 @@ client.on('guildMemberAdd', async member => {
         .setColor(0xe70019)
         .setDescription(
           `## <:Roles:1493073492856406156> ACCÈS RESTREINT\n\n` +
-          `> ${member}\n` +
-          `> Ton compte Discord a seulement **${accountAgeDays} jours**.\n` +
-          `> Tu pourras toujours ouvrir un ticket.`
+          `-# ${member}\n` +
+          `-# Ton compte Discord a seulement **${accountAgeDays} jours**.\n` +
+          `-# Tu pourras toujours ouvrir un ticket.`
         )
         .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
@@ -3146,9 +3146,9 @@ const embed = new EmbedBuilder()
   .setColor(0xc5b174)
   .setDescription(
     `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n\n` +
-    `> **${member.user.tag}** (<@${member.id}>)\n` +
-    `> Invité par **${inviterTag}**\n` +
-    `> Sur Discord depuis **${accountAge} jours**`
+    `-# **${member.user.tag}** (<@${member.id}>)\n` +
+    `-# Invité par **${inviterTag}**\n` +
+    `-# Sur Discord depuis **${accountAge} jours**`
   )
   .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
   .setTimestamp();
@@ -3239,9 +3239,9 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         .setColor(0xff73fa)
         .setDescription(
           `## <:Roles:1492125876437913641> NOUVEAU BOOST\n\n` +
-          `> <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
-          `> **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +
-          `> Tiens : <:Boost:1488893206887403520> ʀʀ pour toutes tes prochaines victoires`
+          `-# <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
+          `-# **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +
+          `-# Tiens : <:Boost:1488893206887403520> ʀʀ pour toutes tes prochaines victoires`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
@@ -3329,8 +3329,8 @@ client.on('guildBanAdd', async (ban) => {
       .setColor(0xe70019)
       .setDescription(
         `## <:Roles:1493073492856406156> BANNISSEMENT\n\n` +
-        `> **${user.tag}** (<@${user.id}>)\n` +
-        `> Raison : **${reason}**`
+        `-# **${user.tag}** (<@${user.id}>)\n` +
+        `-# Raison : **${reason}**`
       )
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 128 }))
       .setTimestamp();
