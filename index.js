@@ -3215,7 +3215,7 @@ client.on('guildMemberRemove', async member => {
       .setColor(0xe70019)
       .setDescription(
         `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n\n` +
-        `> **${member.user.tag}** (<@${member.id}>) aura tenu **${serverDuration}**.\n`
+        `-# **${member.user.tag}** (<@${member.id}>) aura tenu **${serverDuration}**.\n`
       )
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 128 }))
       .setTimestamp();
@@ -3284,9 +3284,9 @@ if (timeoutApplied) {
     .setColor(0xe70019)
     .setDescription(
       `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
-      `> **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-      `> Temps restant : <t:${endUnix}:R>\n` +
-      `> Raison : **${reason}**`
+      `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+      `-# Temps restant : <t:${endUnix}:R>\n` +
+      `-# Raison : **${reason}**`
     )
     .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
     .setTimestamp();
