@@ -2493,7 +2493,7 @@ if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') 
         .setCustomId('verify_riot')
         .setLabel(`Me renommer pour débloquer l'accès`)
         .setEmoji({ id: '1493378334326001816' })
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Primary)
         .setDisabled(false);
 
       await renameMessage.edit({
@@ -3079,7 +3079,7 @@ client.on('guildMemberAdd', async member => {
     .setCustomId('verify_riot')
     .setLabel(`Me renommer pour débloquer l'accès`)
     .setEmoji({ id: '1493378334326001816' })
-    .setStyle(ButtonStyle.Primary)
+    .setStyle(ButtonStyle.Secondary)
     .setDisabled(true);
 
 await thread.send({
