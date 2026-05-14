@@ -3061,7 +3061,7 @@ client.on('guildMemberAdd', async member => {
         await thread.send(
   `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**\n\n` +
   `Pour débloquer l'accès, suis ces étapes :\n` +
-  `-# 1. Choisis ton **PEAK RANK 2025**\n`
+  `-# Choisis ton **PEAK RANK 2025**\n`
 );
 
 
@@ -3083,8 +3083,8 @@ client.on('guildMemberAdd', async member => {
     .setDisabled(true);
 
 await thread.send({
-  content: `-# 2. Attends que le **bouton** se débloque\n` +
-  `-# 3. Entre ton pseudo in-game`,
+  content: `-# Attends que le **bouton** se débloque\n` +
+  `-# Entre ton pseudo in-game`,
   components: [new ActionRowBuilder().addComponents(riotButton)]
 });
     }
