@@ -2491,18 +2491,18 @@ if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') 
     if (renameMessage) {
       const enabledButton = new ButtonBuilder()
         .setCustomId('verify_riot')
-        .setLabel('┃Me renommer')
-        .setEmoji({ id: '1466470349351686194' })
-        .setStyle(ButtonStyle.Success)
+        .setLabel(`Me renommer pour débloquer l'accès`)
+        .setEmoji({ id: '1493378334326001816' })
+        .setStyle(ButtonStyle.Premium)
         .setDisabled(false);
 
       await renameMessage.edit({
-        content: '> ✅ Rank sélectionné. Tu peux maintenant te renommer.',
+        content: '-# Rank sélectionné. Tu peux maintenant te renommer.',
         components: [new ActionRowBuilder().addComponents(enabledButton)]
       });
     }
   } catch (err) {
-    console.error('Erreur activation bouton Me renommer :', err);
+    console.error('Erreur activation bouton :', err);
   }
 
   return;
@@ -3079,11 +3079,11 @@ client.on('guildMemberAdd', async member => {
     .setCustomId('verify_riot')
     .setLabel(`Me renommer pour débloquer l'accès`)
     .setEmoji({ id: '1493378334326001816' })
-    .setStyle(ButtonStyle.Success)
+    .setStyle(ButtonStyle.Premium)
     .setDisabled(true);
 
 await thread.send({
-  content: `-# 2. Attends que le **bouton vert** se débloque\n` +
+  content: `-# 2. Attends que le **bouton** se débloque\n` +
   `-# 3. Entre ton pseudo in-game`,
   components: [new ActionRowBuilder().addComponents(riotButton)]
 });
