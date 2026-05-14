@@ -3238,10 +3238,10 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       const embed = new EmbedBuilder()
         .setColor(0xff73fa)
         .setDescription(
-          `## <:Roles:1492125876437913641> NOUVEAU BOOST\n\n` +
-          `-# <:Roles:1493254831819985048> <:Roles:1493255158593753419> AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH\n` +
+          `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
+          `-# <:ALERTE:1493254831819985048> <:ULTRAZE:1493255158593753419> AAAAAAAAAAAAAAAAAAHHHHHHHHH\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +
-          `-# Tiens : <:Boost:1488893206887403520> ʀʀ pour toutes tes prochaines victoires`
+          `-# Tiens : <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208> ʀʀ pour toutes tes prochaines victoires`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
