@@ -3239,9 +3239,9 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         .setColor(0xff73fa)
         .setDescription(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
-          `-# <:ALERTE:1493254831819985048> <:ULTRAZE:1493255158593753419> AAAAAAAAAAAAAAAAAAHHHHHHHHH\n` +
-          `-# **${newMember.user.tag}** (<@${newMember.id}>) MERCI pour le <@&1134168535866806314> !\n` +
-          `-# Tiens : <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208> ʀʀ pour toutes tes prochaines victoires`
+          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+          `-# MERCI pour le <@&1134168535866806314> !\n` +
+          `-# Tiens : <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208> ʀʀ pour toutes tes prochaines victoires.`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
