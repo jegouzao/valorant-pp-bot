@@ -3230,17 +3230,17 @@ client.on('guildMemberRemove', async member => {
 
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   try {
-    const oldBoost = oldMember.premiumSince;
-    const newBoost = newMember.premiumSince;
+    const wasBooster = oldMember.roles.cache.has(BOOSTER_ROLE_ID);
+    const isBooster = newMember.roles.cache.has(BOOSTER_ROLE_ID);
 
     // ── BOOST ─────────────────────────────────────
-    if (!oldBoost && newBoost) {
+    if (!wasBooster && isBooster) {
       const embed = new EmbedBuilder()
         .setColor(0xff73fa)
         .setDescription(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# MERCI pour le <@&1134168535866806314> !\n` +
+          `-# MERCI pour le <@&${BOOSTER_ROLE_ID}> !\n` +
           `-# Tiens : <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208> ʀʀ pour toutes tes prochaines victoires.`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
