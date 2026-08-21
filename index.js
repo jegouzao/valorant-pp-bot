@@ -1189,7 +1189,7 @@ const sorted = Object.entries(pointsData)
 
   if (!sorted.length) {
     const emptyEmbed = new EmbedBuilder()
-      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴊᴜɪʟʟᴇᴛ")
+      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
       .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
       .setColor(0x242429);
       //.setDescription(`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`)
@@ -1240,7 +1240,7 @@ const sorted = Object.entries(pointsData)
   }));
 
   const embed = new EmbedBuilder()
-    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴊᴜɪʟʟᴇᴛ")
+    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
     .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
     .setDescription(
   //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
@@ -2605,7 +2605,7 @@ return;
     if (interaction.isChatInputCommand() && interaction.commandName === 'top15'){
       await interaction.deferReply({ ephemeral: true });
       const embed = new EmbedBuilder()
-        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴊᴜɪʟʟᴇᴛ")
+        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
         .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
         .setDescription("*Calcul en cours...*")
         .setColor(0x242429);
