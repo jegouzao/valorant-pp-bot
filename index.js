@@ -1578,9 +1578,8 @@ function buildRulesEmbed() {
     .setDescription(
       '## <:36:1493046369076777110> **RÈGLEMENT — VALORANT PP**\n' +
       'Merci de ne pas mentir sur vos rangs, c\'est juste big relou.\n' +
-      'No AFK/Leave non plus.\n' +
-      'Sinon **NO RULES**\n' +
-      'Ça ne plaira pas à tout le monde, mais à la plus grande majorité.\n' +
+      'No AFK/Leave non plus. Sinon **NO RULES**\n' +
+      'Ça ne plaira pas à tout le monde, *mais à la plus grande majorité*.\n' +
       'No limit au niveau de l\'équipement, ni de décibels dans le VC \n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
 
@@ -1589,8 +1588,8 @@ function buildRulesEmbed() {
       '-# Si vous améliorez votre rang, @taggez quelqu\'un.\n\n' +
 
       '__Voici le fonctionnement de l\'attribution des points__ :\n' +
-      '- Partie gagnée : <:36:1497395169224556686><:RR:1497395178045050992>avec <:boost:1488545490189549629>\n' +
-      '- Partie gagnée : <:33:1497395187415126127><:RR:1497395194289455114>avec <:tag:1497390943928586300>\n' +
+      '- Partie gagnée : <:36:1497395169224556686><:RR:1497395178045050992>(<:boost:1488545490189549629> Boost de serveur)\n' +
+      '- Partie gagnée : <:33:1497395187415126127><:RR:1497395194289455114>(<:tag:1497390943928586300> Tag de serveur)\n' +
       '- Partie gagnée : <:30:1493259044893360200><:RR:1493259054804369408>\n' +
       '- Partie perdue : <:15:1493259005584343080><:RR:1493259016686538932>\n' +
       '-# Les membres qui aident le serveur sont avantagés, simple.\n\n' +
@@ -1598,8 +1597,7 @@ function buildRulesEmbed() {
       '__Les cashprizes seront attribués mensuellement aux__ :\n' +
       '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
       '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n' +
-      '-# Bienvenue sur VALORANT PP !\n' 
+      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n'
     )
     .setColor(EMBED_COLOR);
   }
