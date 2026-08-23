@@ -1516,7 +1516,7 @@ function buildRulesEmbed() {
       '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
 
       '> **Le serveur équilibre intelligemment et instantanément**\n' +
-      '> grâce au peak rank que vous fournissez à l\'arrivée.\n' +
+      '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
       '> Si vous améliorez votre rang, @taggez quelqu\'un.'
     )
     .setColor(EMBED_COLOR);
