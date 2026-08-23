@@ -1026,18 +1026,29 @@ function buildResultEmbed({ attackersText, defendersText, footerIcon, footerText
     .setTimestamp();
 }
 
-// ── Embed Leaderboard (style "Classement Clutch") ──
-function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCache, playerCount, seasonLabel = 'Saison 1' }) {
+// ── Embed Leaderboard ──
+function buildLeaderboardEmbed({
+  sorted,
+  totalInvitesPerMember,
+  guildMembersCache,
+  playerCount,
+  seasonLabel = 'Saison 1'
+}) {
   if (!sorted.length) {
     return new EmbedBuilder()
       .setDescription('## 🏆 Classement — Valorant PP')
       .setImage(BANNERS.leaderboard)
-      .addFields({ name: '🔎 Informations', value: '*Calcul en cours...*' })
+      .addFields({
+        name: '🔎 Informations',
+        value: '*Calcul en cours...*'
+      })
       .setColor(EMBED_COLOR);
   }
 
+  // ── TOP INVITER ──
   let topInviterId = null;
   let maxInvites = -1;
+
   for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
     if (invites > maxInvites) {
       maxInvites = invites;
@@ -1045,131 +1056,66 @@ function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCach
     }
   }
 
-
-  function getSpamPenalty(strike) {
-  if (strike === 0) {
-    return {
-      limit: 7, // plus de 7 => 8e message déclenche
-      durationMs: 60 * 1000,
-      label: '60 secondes'
-    };
-  }
-
-  if (strike === 1) {
-    return {
-      limit: 5, // plus de 5 => 6e message déclenche
-      durationMs: 5 * 60 * 1000,
-      label: '5 minutes'
-    };
-  }
-
-  return {
-    limit: 4, // plus de 4 => 5e message déclenche
-    durationMs: 60 * 60 * 1000,
-    label: '1 heure'
-  };
-}
-
-// ── TOP INVITER ──
-  const allInvites = await getAllInvites();
-  let topInviterId = null;
-  let maxInvites = -1;
-
-  for (const [id, data] of Object.entries(allInvites)) {
-    const invites = data.invites || 0;
-
-    if (invites > maxInvites) {
-      maxInvites = invites;
-      topInviterId = id;
-    }
-  }
-
-  // ── BADGE DE RANK ──
-const rankEmoji = getRankEmojiFromMember(member);
-
-  // ── BADGES ──
-  const badgeTop1 =
-    position === 1
-      ? BADGES.TOP1
-      : '';
-
-  const badgeTopInviter =
-    member.id === topInviterId && maxInvites > 0
-      ? BADGES.TOP_INVITER
-      : '';
-
-  let badgesLine = '';
-
-  if (badgeTop1 || badgeTopInviter) {
-    badgesLine = `${badgeTop1}${badgeTopInviter}`;
-  } else {
-    badgesLine = '<:VIDE:1465704930160410847>';
-  }
-
-  const winrate = stats.games
-    ? ((stats.wins / stats.games) * 100).toFixed(1)
-    : 0;
-
-  const joinedTs = member.joinedTimestamp
-    ? Math.floor(member.joinedTimestamp / 1000)
-    : null;
-
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 25;
 
-const lines = sorted.map(([id, data], idx) => {
-  const medal = medalFor(idx);
+  const lines = sorted.map(([id, data], idx) => {
+    const invites = totalInvitesPerMember[id] || 0;
 
-  const invites = totalInvitesPerMember[id] || 0;
+    const wins = data.wins || 0;
+    const games = data.games || 0;
+    const timeouts = data.timeouts || 0;
 
-  const wins = data.wins || 0;
-  const games = data.games || 0;
+    const winrate = games
+      ? Math.round((wins / games) * 100)
+      : 0;
 
-  const losses = Math.max(0, games - wins);
+    const rawBars = (data.rr / maxRR) * barLength;
 
-  const winrate = games
-    ? Math.round((wins / games) * 100)
-    : 0;
+    const filledBars = Math.max(
+      0,
+      Math.min(barLength, Math.round(rawBars))
+    );
 
-  const rawBars = (data.rr / maxRR) * barLength;
+    const bar =
+      '▰'.repeat(filledBars) +
+      '▱'.repeat(barLength - filledBars);
 
-  const filledBars = Math.max(
-    0,
-    Math.min(barLength, Math.round(rawBars))
-  );
-
-  const bar =
-    "▰".repeat(filledBars) +
-    "▱".repeat(barLength - filledBars);
-
-  // suite de ton code...
-
+    // ── RANK ──
     const member = guildMembersCache?.get(id) || null;
-const rankEmoji = getRankEmojiFromMember(member);
+    const rankEmoji = getRankEmojiFromMember(member);
 
-
-
+    // ── BADGES ──
     let badges = '';
-    if (idx === 0) badges += ` ${BADGES.TOP1}`;
-    if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
+
+    if (idx === 0) {
+      badges += ` ${BADGES.TOP1}`;
+    }
+
+    if (id === topInviterId && maxInvites > 0) {
+      badges += ` ${BADGES.TOP_INVITER}`;
+    }
 
     return (
-      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}  •  <:VIDE:1466957289813442721>${data.rr} ʀʀ  •  <:VIDE:1493266372954820741>${stats.wins}  •  <:VIDE:1493266679504048148>${winrate}  •  <:VIDE:1472667823875559708>${invitesData.invites}  •  <:VIDE:1472667823875559708>${stats.timeouts}` +
-      `\n> ${bar}`     );
+      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
+      `  •  <:VIDE:1466957289813442721>${data.rr || 0} ʀʀ` +
+      `  •  <:VIDE:1493266372954820741>${wins}` +
+      `  •  <:VIDE:1493266679504048148>${winrate}%` +
+      `  •  <:VIDE:1472667823875559708>${invites}` +
+      `  •  <:VIDE:1472667823875559708>${timeouts}` +
+      `\n> ${bar}`
+    );
   });
 
-
-
-
-return new EmbedBuilder()
-  .setDescription(
-    `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n\n` +
-    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n` +
-    (lines.join('\n') || '*Calcul en cours...*')
-  )
-  .setImage(BANNERS.onboarding)
-  .setColor(EMBED_COLOR);
+  return new EmbedBuilder()
+    .setDescription(
+      `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
+      `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+      `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n\n` +
+      (lines.join('\n') || '*Calcul en cours...*')
+    )
+    .setImage(BANNERS.onboarding)
+    .setColor(EMBED_COLOR)
 }
 
 
