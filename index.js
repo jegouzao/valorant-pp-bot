@@ -125,13 +125,6 @@ const SPAM_INTERVAL = 5000; // 5 secondes
 
 
 
-const TRACKER_CHANNEL_ID = '1474064338431250482';
-
-const trackerSpamMap = new Map();
-const trackerSpamStrikeMap = new Map();
-
-const TRACKER_SPAM_INTERVAL = 5000; // 5 secondes
-
 const STRIKE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
 const ALLOWED_CLIP_DOMAINS = [
@@ -332,16 +325,6 @@ function scheduleRegistrationUpdate(guild, game) {
 
 
 
-
-
-
-
-
-
-
-
-
-
 // ===== BUILD PLAYER LIST =====
 async function buildPlayerList(guild, playerIds) {
   if (!playerIds.length) return '*en attente de participants...*';
@@ -386,7 +369,7 @@ async function updateRegistrationEmbed(guild, game) {
 
     const playersText = await buildPlayerList(guild, game.players);
     const spectatorCount = game.spectators ? Object.keys(game.spectators).length : 0;
-const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
+    const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
 
     const votes = game.changeMapVotes?.length || 0;
     const needed = 6;
@@ -394,22 +377,18 @@ const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
     const creatorMember = guild.members.cache.get(game.creatorId);
     const creatorDisplayName = creatorMember?.displayName || game.creatorName || 'Inconnu';
 
-const embed = new EmbedBuilder()
-  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
-  .setDescription(
-    `## <#${game.waitingVC}>\n` +
-    `*${remaining} slots restants*\n` +
-    `*${votes}/${needed} next map votes*`
-  )
-  .addFields({ name: 'ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ', value: playersText })
-  .setFooter({
-    iconURL: game.creatorAvatar || guild.iconURL({ dynamic: true, size: 32 }),
-    text: `Partie organisée par ${creatorDisplayName}`
-  })
-  .setColor(0x242429)
-      
-
-    if (game.mapImage) embed.setImage(game.mapImage);
+    const embed = buildAnnounceEmbed({
+      waitingVCId: game.waitingVC,
+      mode: '5v5',
+      code: game.valorantCode,
+      organisateur: creatorDisplayName,
+      remaining,
+      votes,
+      needed,
+      playersText,
+      mapImage: game.mapImage,
+      footerIcon: game.creatorAvatar || guild.iconURL({ dynamic: true, size: 32 })
+    });
 
     await registrationMsg.edit({ embeds: [embed] });
 
@@ -598,7 +577,8 @@ async function getPlayerPoints(userId) {
       userId,
       rr: 0,
       games: 0,
-      wins: 0
+      wins: 0,
+      timeouts: 0
     });
   }
 
@@ -606,7 +586,8 @@ async function getPlayerPoints(userId) {
     userId: doc.userId,
     rr: doc.rr,
     games: doc.games,
-    wins: doc.wins
+    wins: doc.wins,
+    timeouts: doc.timeouts || 0
   };
 }
 
@@ -617,9 +598,18 @@ async function setPlayerPoints(userId, data) {
       $set: {
         rr: data.rr ?? 0,
         games: data.games ?? 0,
-        wins: data.wins ?? 0
+        wins: data.wins ?? 0,
+        timeouts: data.timeouts ?? 0
       }
     },
+    { upsert: true }
+  );
+}
+
+async function incrementPlayerTimeouts(userId) {
+  await Points.updateOne(
+    { userId },
+    { $inc: { timeouts: 1 } },
     { upsert: true }
   );
 }
@@ -664,7 +654,8 @@ async function getAllPoints() {
     result[doc.userId] = {
       rr: doc.rr,
       games: doc.games,
-      wins: doc.wins
+      wins: doc.wins,
+      timeouts: doc.timeouts || 0
     };
   }
 
@@ -917,22 +908,148 @@ async function migrateGamesJsonToMongo() {
 
 
 
+// ============================================================
+// ===== STYLE COMMUN DES EMBEDS (inspiré du style "Clutch") ====
+// ============================================================
 
+const EMBED_COLOR = 0x242429;
+
+// 🖼️ Remplace ces URLs par tes propres bannières une fois prêtes
+const BANNERS = {
+  leaderboard: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png',
+  regles: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png',
+  onboarding: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png',
+};
+
+function medalFor(index) {
+  if (index === 0) return '🥇';
+  if (index === 1) return '🥈';
+  if (index === 2) return '🥉';
+  return `#${String(index + 1).padStart(2, '0')}`;
+}
+
+// ── Embed "Annonce Custom" (partie créée / inscription) ──
+function buildAnnounceEmbed({ waitingVCId, mode, code, organisateur, remaining, votes, needed, playersText, mapImage, footerIcon }) {
+  return new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setDescription(
+      `## <:Annonce:1472840875708252192> Annonce Custom\n` +
+      `### <#${waitingVCId}>`
+    )
+    .addFields(
+      {
+        name: '🔍 Informations',
+        value:
+          `**Mode :** ${mode}\n` +
+          `**Code :** \`${code}\`\n` +
+          `**Organisateur :** ${organisateur}\n` +
+          `**Slots restants :** ${remaining}\n` +
+          `**Votes changement de map :** ${votes}/${needed}`
+      },
+      {
+        name: '🧩 Participants',
+        value: playersText || '*en attente de participants...*'
+      }
+    )
+    .setImage(mapImage || null)
+    .setFooter({ iconURL: footerIcon, text: `Partie organisée par ${organisateur}` })
+    .setTimestamp();
+}
+
+// ── Embed "Partie en cours" ──
+function buildInGameEmbed({ attackersText, defendersText, mapImage, footerIcon, footerText }) {
+  return new EmbedBuilder()
+    .setDescription(`## ⚔️ Partie en cours`)
+    .addFields(
+      { name: '<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline: true },
+      { name: '<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline: true }
+    )
+    .setColor(EMBED_COLOR)
+    .setImage(mapImage || null)
+    .setFooter({ iconURL: footerIcon, text: footerText })
+    .setTimestamp();
+}
+
+// ── Embed "Résultat de partie" ──
+function buildResultEmbed({ attackersText, defendersText, footerIcon, footerText, winningSide }) {
+  const title = winningSide === 'attack' ? '🏆 Victoire des Attaquants' : '🏆 Victoire des Défenseurs';
+  return new EmbedBuilder()
+    .setDescription(`## ${title}`)
+    .addFields(
+      { name: '<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline: true },
+      { name: '<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline: true }
+    )
+    .setColor(EMBED_COLOR)
+    .setFooter({ iconURL: footerIcon, text: footerText })
+    .setTimestamp();
+}
+
+// ── Embed Leaderboard (style "Classement Clutch") ──
+function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCache, playerCount, seasonLabel = 'Saison 1' }) {
+  if (!sorted.length) {
+    return new EmbedBuilder()
+      .setDescription('## 🏆 Classement — Valorant PP')
+      .setImage(BANNERS.leaderboard)
+      .addFields({ name: '🔎 Informations', value: '*Calcul en cours...*' })
+      .setColor(EMBED_COLOR);
+  }
+
+  let topInviterId = null;
+  let maxInvites = -1;
+  for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
+    if (invites > maxInvites) {
+      maxInvites = invites;
+      topInviterId = id;
+    }
+  }
+
+  const lines = sorted.map(([id, data], idx) => {
+    const medal = medalFor(idx);
+    const invites = totalInvitesPerMember[id] || 0;
+    const losses = Math.max(0, (data.games || 0) - (data.wins || 0));
+    const winrate = data.games ? Math.round((data.wins / data.games) * 100) : 0;
+
+    let badges = '';
+    if (idx === 0) badges += ` ${BADGES.TOP1}`;
+    if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
+
+    return (
+      `${medal} <@${id}>${badges} — **${data.rr}** RR\n` +
+      `> 🏅 ${data.wins} | ❌ ${losses} | 📈 ${winrate}% | 🎟️ ${invites} invites`
+    );
+  });
+
+  return new EmbedBuilder()
+    .setDescription(`## 🏆 Classement — Valorant PP`)
+    .setImage(BANNERS.leaderboard)
+    .addFields(
+      { name: '🏅 Top 10 du serveur', value: lines.join('\n\n') },
+      {
+        name: '🔎 Informations',
+        value:
+          `**Saison :** ${seasonLabel}\n` +
+          `**Dernière mise à jour :** <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+          `**Joueurs :** ${playerCount}`
+      }
+    )
+    .setColor(EMBED_COLOR);
+}
 
 
 
 // ===== Slash Commands =====
 const commands = [
   {
-  name: 'resetseason',
-  description: 'Réinitialiser toute la saison compétitive',
-  default_member_permissions: PermissionFlagsBits.Administrator.toString()
-},
+    name: 'resetseason',
+    description: 'Réinitialiser toute la saison compétitive',
+    default_member_permissions: PermissionFlagsBits.Administrator.toString()
+  },
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'top15', description: 'Créer l\'embed TOP 15', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'regles', description: 'Afficher l\'embed des règles', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'invites', description: 'Afficher le top des invitations', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
-  { name: 'manage', description: 'Gérer les RR d\'un joueur', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{name: 'joueur', description: 'Le joueur à gérer', type: 6, required: true}]}
+  { name: 'manage', description: 'Gérer les RR d\'un joueur', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Le joueur à gérer', type: 6, required: true }] },
+  { name: 'onboarding', description: 'Afficher le menu d\'aide et d\'informations du serveur', default_member_permissions: PermissionFlagsBits.Administrator.toString() }
 ];
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands })
@@ -974,66 +1091,28 @@ async function syncServerTagRole(userId, user = null) {
 }
 
 client.once(Events.ClientReady, async () => {
-  
-  // 🎨 Message de démarrage stylé avec couleurs ANSI
+
   const colors = {
-    reset: '\x1b[0m',
-    bright: '\x1b[1m',
-    dim: '\x1b[2m',
-    red: '\x1b[31m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
-    blue: '\x1b[34m',
-    magenta: '\x1b[35m',
-    cyan: '\x1b[36m',
-    white: '\x1b[37m',
-    bgRed: '\x1b[41m',
-    bgGreen: '\x1b[42m',
-    bgYellow: '\x1b[43m',
-    bgBlue: '\x1b[44m',
-    bgMagenta: '\x1b[45m',
-    bgCyan: '\x1b[46m'
+    reset: '\x1b[0m', bright: '\x1b[1m', red: '\x1b[31m', green: '\x1b[32m',
+    yellow: '\x1b[33m', blue: '\x1b[34m', magenta: '\x1b[35m', cyan: '\x1b[36m'
   };
 
-  console.log('\n');
-  console.log(`${colors.cyan}${colors.bright}╔═══════════════════════════════════════════════════════════════════════════╗${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                                                                           ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright}██╗   ██╗ █████╗ ██╗      ██████╗ ██████╗  █████╗ ███╗   ██╗████████╗${colors.reset}   ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright}██║   ██║██╔══██╗██║     ██╔═══██╗██╔══██╗██╔══██╗████╗  ██║╚══██╔══╝${colors.reset}   ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright}██║   ██║███████║██║     ██║   ██║██████╔╝███████║██╔██╗ ██║   ██║${colors.reset}      ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright}╚██╗ ██╔╝██╔══██║██║     ██║   ██║██╔══██╗██╔══██║██║╚██╗██║   ██║${colors.reset}      ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright} ╚████╔╝ ██║  ██║███████╗╚██████╔╝██║  ██║██║  ██║██║ ╚████║   ██║${colors.reset}      ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}   ${colors.red}${colors.bright}  ╚═══╝  ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝${colors.reset}      ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                                                                           ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}██████╗ ██████╗     ██████╗  ██████╗ ████████╗${colors.reset}              ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}██╔══██╗██╔══██╗    ██╔══██╗██╔═══██╗╚══██╔══╝${colors.reset}              ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}██████╔╝██████╔╝    ██████╔╝██║   ██║   ██║${colors.reset}                 ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}██╔═══╝ ██╔═══╝     ██╔══██╗██║   ██║   ██║${colors.reset}                 ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}██║     ██║         ██████╔╝╚██████╔╝   ██║${colors.reset}                 ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}               ${colors.magenta}${colors.bright}╚═╝     ╚═╝         ╚═════╝  ╚═════╝    ╚═╝${colors.reset}                 ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                                                                           ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                              ${colors.yellow}${colors.bright}VERSION 2.4.0${colors.reset}                                ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                             ${colors.green}Dev by ${colors.bright}Jegouzão${colors.reset}                               ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}║${colors.reset}                                                                           ${colors.cyan}║${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bright}╚═══════════════════════════════════════════════════════════════════════════╝${colors.reset}`);
-  console.log('\n');
+  console.log(`${colors.cyan}${colors.bright}=== BOOMBOT — VERSION 3.0.0 (Dev by Jegouzão) ===${colors.reset}`);
 
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
-if (!guild) return;
+  if (!guild) return;
 
-await initMongo();
-gamesData.games = await getAllGames();
-console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
+  await initMongo();
+  gamesData.games = await getAllGames();
+  console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
 
   await guild.members.fetch();
-console.log('✅ Tous les membres du serveur ont été chargés en cache');
-for (const member of guild.members.cache.values()) {
-  await syncServerTagRole(member.id, member.user);
-}
+  console.log('✅ Tous les membres du serveur ont été chargés en cache');
+  for (const member of guild.members.cache.values()) {
+    await syncServerTagRole(member.id, member.user);
+  }
+  console.log('✅ Rôles tag serveur synchronisés');
 
-console.log('✅ Rôles tag serveur synchronisés');
-
-  // Récupérer toutes les invites du serveur
   const guildInvites = await guild.invites.fetch();
   const allInvites = new Map();
   guildInvites.forEach(inv => {
@@ -1047,29 +1126,19 @@ console.log('✅ Rôles tag serveur synchronisés');
     });
   });
 
-  // Stocker en cache
   invitesCache.set(guild.id, allInvites);
   console.log(`${colors.green}✅ Invites initialisées en cache (y compris temporaires)${colors.reset}`);
   console.log(`${colors.green}✅ ${colors.bright}${client.user.tag}${colors.reset}${colors.green} est maintenant en ligne !${colors.reset}`);
   console.log(`${colors.blue}✅ Connecté sur le serveur: ${colors.bright}${guild.name}${colors.reset}`);
   console.log(`${colors.blue}✅ ${colors.bright}${guild.memberCount}${colors.reset}${colors.blue} membres${colors.reset}`);
 
-
-
-  // 🎮 Définir le statut du bot
   client.user.setPresence({
-    activities: [{
-      name: 'by @jegouzao',
-      type: 1,
-      url: 'https://www.twitch.tv/jegouzao' // peut être factice
-    }],
-    status: 'online' // online, idle, dnd, invisible, EN STREAMING.
+    activities: [{ name: '/onboarding pour t\'aider', type: 1, url: 'https://www.twitch.tv/jegouzao' }],
+    status: 'online'
   });
-  console.log(`${colors.magenta}✅ Statut du bot défini + statut violet${colors.reset}`);
+  console.log(`${colors.magenta}✅ Statut du bot défini${colors.reset}`);
 
-  // 🎫 Création automatique de la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ et du rôle Administrateur
   try {
-    // Vérifier/Créer le rôle Administrateur
     let staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
     if (!staffRole) {
       staffRole = await guild.roles.create({
@@ -1085,87 +1154,43 @@ console.log('✅ Rôles tag serveur synchronisés');
         reason: 'Création automatique du rôle Administrateur pour le système de tickets'
       });
       console.log(`✅ Rôle Administrateur créé automatiquement`);
-    } else {
-      console.log(`✅ Rôle Administrateur déjà existant`);
     }
 
-    // Vérifier/Créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ
-    let ticketCategory = guild.channels.cache.find(
-      c => c.type === 4 && c.name === 'ᴍᴏᴅᴇʀᴀᴛɪᴏɴ'
-    );
-    
+    let ticketCategory = guild.channels.cache.find(c => c.type === 4 && c.name === 'ᴍᴏᴅᴇʀᴀᴛɪᴏɴ');
+
     if (!ticketCategory) {
       ticketCategory = await guild.channels.create({
         name: 'ᴍᴏᴅᴇʀᴀᴛɪᴏɴ',
-        type: 4, // Catégorie
+        type: 4,
         permissionOverwrites: [
-          {
-            id: guild.id, // @everyone
-            deny: [PermissionsBitField.Flags.ViewChannel]
-          },
-          {
-            id: staffRole.id, // Administrateur
-            allow: [
-              PermissionsBitField.Flags.ViewChannel,
-              PermissionsBitField.Flags.ManageChannels
-            ]
-          }
+          { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+          { id: staffRole.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ManageChannels] }
         ],
         reason: 'Création automatique de la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ'
       });
-      console.log(`${colors.red}✅ Catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ créée automatiquement ${colors.bright}(ID: ${ticketCategory.id})${colors.reset}`);
-      
-      // Sauvegarder l'ID dans un fichier pour référence future
-      const configFile = path.join(__dirname, 'data', 'config.json');
-      const config = fs.existsSync(configFile) 
-        ? JSON.parse(fs.readFileSync(configFile, 'utf8'))
-        : {};
-      config.ticketCategoryId = ticketCategory.id;
-      config.staffRoleId = staffRole.id;
-      fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
-      console.log(`${colors.yellow}✅ Configuration sauvegardée dans data/config.json${colors.reset}`);
-    } else {
-      console.log(`${colors.cyan}✅ Catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ déjà existante ${colors.bright}(ID: ${ticketCategory.id})${colors.reset}`);
-      
-      // Sauvegarder quand même l'ID
-      const configFile = path.join(__dirname, 'data', 'config.json');
-      const config = fs.existsSync(configFile) 
-        ? JSON.parse(fs.readFileSync(configFile, 'utf8'))
-        : {};
-      config.ticketCategoryId = ticketCategory.id;
-      config.staffRoleId = staffRole.id;
-      fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
+      console.log(`${colors.red}✅ Catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ créée automatiquement (ID: ${ticketCategory.id})${colors.reset}`);
     }
+
+    const configFile = path.join(__dirname, 'data', 'config.json');
+    const config = fs.existsSync(configFile) ? JSON.parse(fs.readFileSync(configFile, 'utf8')) : {};
+    config.ticketCategoryId = ticketCategory.id;
+    config.staffRoleId = staffRole.id;
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`${colors.red}❌ Erreur lors de la création automatique:${colors.reset}`, error);
   }
 
-
-// 🟢 Premier update immédiat du leaderboard
-await updateTop15Embed();
-console.log(`${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.reset}`);
-
+  await updateTop15Embed();
+  console.log(`${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.reset}`);
 });
 
 client.on(Events.UserUpdate, async (oldUser, newUser) => {
   await syncServerTagRole(newUser.id, newUser);
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
 async function updateTop15Embed() {
   const top15Data = await getConfigValue('top15Data', {});
-if (!top15Data.messageId || !top15Data.channelId) return;
+  if (!top15Data.messageId || !top15Data.channelId) return;
 
   const channel = client.channels.cache.get(top15Data.channelId)
     || await client.channels.fetch(top15Data.channelId).catch(() => null);
@@ -1175,1467 +1200,283 @@ if (!top15Data.messageId || !top15Data.channelId) return;
   if (!msg) return console.log('❌ Message leaderboard introuvable');
 
   const invitesData = await getAllInvites();
-
-const totalInvitesPerMember = {};
-for (const inviterId in invitesData) {
-  totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
-}
-
-const pointsData = await getAllPoints();
-
-const sorted = Object.entries(pointsData)
-  .sort((a, b) => b[1].rr - a[1].rr)
-  .slice(0, 10);
-
-  if (!sorted.length) {
-    const emptyEmbed = new EmbedBuilder()
-      .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
-      .setColor(0x242429);
-      //.setDescription(`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n*Calcul en cours...*`)
-
-    await msg.edit({ embeds: [emptyEmbed] }).catch(() => {});
-    return;
+  const totalInvitesPerMember = {};
+  for (const inviterId in invitesData) {
+    totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
   }
 
-  const maxRR = sorted[0][1].rr || 1;
-  const barLength = 25;
+  const pointsData = await getAllPoints();
+  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
+  const playerCount = Object.keys(pointsData).length;
 
-  let topInviterId = null;
-  let maxInvites = -1;
-  for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
-    if (invites > maxInvites) {
-      maxInvites = invites;
-      topInviterId = id;
-    }
-  }
-
-  const guild = client.guilds.cache.get(process.env.GUILD_ID);
-
-  const lines = await Promise.all(sorted.map(async ([id, data], idx) => {
-    const rawBars = (data.rr / maxRR) * barLength;
-    const filledBars = Math.max(0, Math.min(barLength, Math.round(rawBars)));
-    const bar = "▰".repeat(filledBars) + "▱".repeat(barLength - filledBars);
-    const invites = totalInvitesPerMember[id] || 0;
-
-    let rankEmoji = '';
-
-    let member = guild?.members?.cache?.get(id) || null;
-    if (!member && guild) {
-      member = await guild.members.fetch(id).catch(() => null);
-    }
-
-    if (member) {
-      const rankName = member.roles.cache.find(r => rankEmojis[r.name])?.name;
-      if (rankName) rankEmoji = rankEmojis[rankName] + ' ';
-    }
-
-    let badges = '';
-    if (idx === 0) badges += BADGES.TOP1;
-    if (id === topInviterId) badges += BADGES.TOP_INVITER;
-
-    return `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}` +
-           `\n> ${bar}` +
-           `\n> *${data.rr} ʀʀ  &  ${invites} invites*`;
-  }));
-
-  const embed = new EmbedBuilder()
-    .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
-    .setDescription(
-  //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
-  (lines.join("\n") || "*Calcul en cours...*")
-)
-    .setColor(0x242429);
+  const embed = buildLeaderboardEmbed({
+    sorted,
+    totalInvitesPerMember,
+    guildMembersCache: null,
+    playerCount
+  });
 
   await msg.edit({ embeds: [embed] }).catch(() => {});
 }
 
 function getSpamPenalty(strike) {
   if (strike === 0) {
-    return {
-      limit: 7, // plus de 7 => 8e message déclenche
-      durationMs: 60 * 1000,
-      label: '60 secondes'
-    };
+    return { limit: 7, durationMs: 60 * 1000, label: '60 secondes' };
   }
-
   if (strike === 1) {
-    return {
-      limit: 5, // plus de 5 => 6e message déclenche
-      durationMs: 5 * 60 * 1000,
-      label: '5 minutes'
-    };
+    return { limit: 5, durationMs: 5 * 60 * 1000, label: '5 minutes' };
   }
-
-  return {
-    limit: 4, // plus de 4 => 5e message déclenche
-    durationMs: 60 * 60 * 1000,
-    label: '1 heure'
-  };
-}
-
-function getTrackerSpamPenalty(strike) {
-  if (strike === 0) {
-    return {
-      limit: 7,
-      durationMs: 60 * 1000,
-      label: '60 secondes'
-    };
-  }
-
-  if (strike === 1) {
-    return {
-      limit: 5,
-      durationMs: 5 * 60 * 1000,
-      label: '5 minutes'
-    };
-  }
-
-  return {
-    limit: 4,
-    durationMs: 60 * 60 * 1000,
-    label: '1 heure'
-  };
+  return { limit: 4, durationMs: 60 * 60 * 1000, label: '1 heure' };
 }
 
 
 
+// ===== Contenu de la commande /onboarding =====
+const ONBOARDING_TOPICS = [
+  { value: 'stats', label: 'Mes statistiques', emoji: '📊', description: 'RR, classement, invitations, parties, winrate...' },
+  { value: 'notifs', label: 'Notifications', emoji: '🔔', description: 'Activer/désactiver les notifications de parties' },
+  { value: 'classement', label: 'Classement', emoji: '🏆', description: 'Voir le top 10 du serveur' },
+  { value: 'verification', label: 'Comment se vérifier', emoji: '✅', description: 'Débloquer l\'accès au serveur' },
+  { value: 'jouer', label: 'Comment jouer', emoji: '🎮', description: 'Le déroulement d\'une partie personnalisée' },
+  { value: 'roles', label: 'Rôles du serveur', emoji: '🏷️', description: 'À quoi servent les différents rôles' },
+  { value: 'rr', label: 'Système de RR expliqué', emoji: '📈', description: 'Comment sont calculés les gains/pertes de RR' },
+  { value: 'recompenses', label: 'Récompenses', emoji: '🎁', description: 'Cashprizes et avantages du classement' },
+  { value: 'signaler', label: 'Signaler un joueur', emoji: '🚨', description: 'Faux peak rank, AFK, comportement toxique...' },
+  { value: 'reglement', label: 'Règlement', emoji: '📜', description: 'Les règles du serveur' },
+  { value: 'faq', label: 'FAQ', emoji: '❓', description: 'Questions fréquentes' },
+];
 
-
-
-
-
-
-
-// ===== Interaction Handler =====
-client.on('interactionCreate', async (interaction) => {
-  try {
-
-    const MOD_ROLE_ID = '1461348856100028439';
-    const VERIFIED_ROLE_ID = '1461354176931041312';
-
-    const isMod = interaction.member?.roles?.cache?.has(MOD_ROLE_ID);
-    const isVerified = interaction.member?.roles?.cache?.has(VERIFIED_ROLE_ID);
-
-    // ✅ Fonction pour retrouver une game
-    function findGame(interaction) {
-  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
-    const gameId = interaction.customId.replace('spectate_select_', '');
-    return gamesData.games.find(g =>
-      g.id === gameId ||
-      g.messageId === gameId ||
-      g.manageMessageId === gameId ||
-      g.betMessageId === gameId
-    );
-  }
-
-  if (interaction.message?.id) {
-    const mid = interaction.message.id;
-    return gamesData.games.find(g =>
-      g.id === mid ||
-      g.messageId === mid ||
-      g.manageMessageId === mid ||
-      g.betMessageId === mid
-    );
-  }
-
-  return null;
+function buildOnboardingEmbed() {
+  return new EmbedBuilder()
+    .setDescription(
+      `## <:Roles:1493046347337699499> CENTRE D'AIDE — VALORANT PP\n\n` +
+      `Sélectionne une rubrique dans le menu ci-dessous pour obtenir une réponse détaillée, visible uniquement par toi.`
+    )
+    .setImage(BANNERS.onboarding)
+    .setColor(EMBED_COLOR)
+    .setFooter({ text: 'Centre d\'aide • Valorant PP' });
 }
 
-    // ✅ UNE seule variable game
-    let game = findGame(interaction);
-    const isGameOwner = game?.creatorId === interaction.user.id;
-    const canManageThisGame = interaction.user.id === BOT_OWNER_ID || isGameOwner;
+function buildOnboardingSelectRow() {
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId('onboarding_select')
+    .setPlaceholder('Choisis une rubrique...')
+    .addOptions(ONBOARDING_TOPICS.map(t => ({
+      label: t.label,
+      value: t.value,
+      description: t.description,
+      emoji: t.emoji
+    })));
 
-
-  // ✅ Boutons hors "game" (doivent répondre vite)
-if (interaction.isButton()) {
-
-
-  // OPEN TICKET
-  if (interaction.customId === 'open_ticket') {
-    const modal = new ModalBuilder()
-      .setCustomId('ticket_reason_modal')
-      .setTitle('Ouvrir un ticket');
-
-    const reasonInput = new TextInputBuilder()
-      .setCustomId('ticket_reason')
-      .setLabel('Motif (ex: report, question, reset, etc.)')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false);
-
-    modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
-    return interaction.showModal(modal);
-  }
-
-  // CLOSE TICKET
-  if (interaction.customId === 'close_ticket') {
-    await interaction.deferReply({ ephemeral: true });
-    const ch = interaction.channel;
-    if (!ch) return interaction.editReply('❌ Salon introuvable.');
-    await ch.delete().catch(() => {});
-    return;
-  }
-
-  // MANAGE RR (ADD / REMOVE)
-  if (interaction.customId.startsWith('manage_add_') || interaction.customId.startsWith('manage_remove_')) {
-    const isAdd = interaction.customId.startsWith('manage_add_');
-    const userId = interaction.customId.split('_').pop();
-
-    const modal = new ModalBuilder()
-      .setCustomId(`manage_modal_${isAdd ? 'add' : 'remove'}_${userId}`)
-      .setTitle(isAdd ? 'Ajouter des RR' : 'Retirer des RR');
-
-    const rrInput = new TextInputBuilder()
-      .setCustomId('rr_amount')
-      .setLabel('Combien de RR ?')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true);
-
-    modal.addComponents(new ActionRowBuilder().addComponents(rrInput));
-    return interaction.showModal(modal);
-  }
-
-  // MANAGE RESET
-  if (interaction.customId.startsWith('manage_reset_')) {
-    await interaction.deferReply({ ephemeral: true });
-    const userId = interaction.customId.split('_').pop();
-
-    await setPlayerPoints(userId, { rr: 0, games: 0, wins: 0 });
-await updateTop15Embed();
-
-    return interaction.editReply(`🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`);
-  }
+  return new ActionRowBuilder().addComponents(menu);
 }
 
-
-if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
-  const roleId = ROLE_NOTIF_PP;
-  const member = interaction.member;
-
-  if (!member || !member.roles) {
-    return interaction.reply({ content: '❌ Membre introuvable.', ephemeral: true });
-  }
-
-  const hasRole = member.roles.cache.has(roleId);
-
-  try {
-    if (hasRole) {
-      await member.roles.remove(roleId);
-      return interaction.reply({
-        content: '🔕 Tu ne recevras plus les notifications PP.',
-        ephemeral: true
-      });
-    } else {
-      await member.roles.add(roleId);
-      return interaction.reply({
-        content: '🔔 Tu recevras désormais les notifications PP.',
-        ephemeral: true
-      });
-    }
-  } catch (err) {
-    console.error(err);
-    return interaction.reply({
-      content: '❌ Impossible de modifier ton rôle de notification.',
-      ephemeral: true
-    });
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-// ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
-if (interaction.isButton()) {
-
-  const gameButtons = [
-    'change_map',
-    'start',
-    'cancel_registration',
-    'spectate',
-    'attack_win',
-    'defense_win',
-    'cancel_game'
-  ];
-
-  if (gameButtons.includes(interaction.customId) && !game) {
-    return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-  }
-
-  // ✅ Boutons de gestion de partie = uniquement créateur du /pp ou toi
-  const ownerOnlyButtons = [
-    'start',
-    'cancel_registration',
-    'attack_win',
-    'defense_win',
-    'cancel_game'
-  ];
-
-  if (ownerOnlyButtons.includes(interaction.customId) && !canManageThisGame) {
-    return interaction.reply({
-      content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.',
-      ephemeral: true
-    });
-  }
-
-  // 👀 Vérifiés seulement pour spectate
-  const verifiedOnly = ['spectate'];
-  if (verifiedOnly.includes(interaction.customId) && !isVerified) {
-    return interaction.reply({ content: '⛔ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
-  }
-}
-
-
-
-  const waitingVC = game ? interaction.guild.channels.cache.get(game.waitingVC) : null;
-
-  async function moveVerifiedToVC(member, vc) {
-  if (!member || !vc) return;
-
-  const originalLimit = vc.userLimit;
-
-  try {
-    // ✅ Si le salon a une limite (>0) et qu'il est plein, on augmente temporairement
-    if (vc.userLimit > 0 && vc.members.size >= vc.userLimit) {
-      await vc.edit({ userLimit: vc.members.size + 1 });
-    }
-
-    await member.voice.setChannel(vc).catch(() => {});
-  } finally {
-    // ✅ On remet la limite d'origine
-    if (vc.editable) {
-      await vc.edit({ userLimit: originalLimit }).catch(() => {});
-    }
-  }
-}
-
-  // ── COMMANDES SLASH ──
- if (interaction.isChatInputCommand() && interaction.commandName === 'pp') {
-  if (!isMod) {
-  return interaction.reply({ content: '⛔ Seuls les Organisateur de parties peuvent créer une partie.', ephemeral: true });
-}
-
-  const modal = new ModalBuilder()
-    .setCustomId('pp_create_modal')
-    .setTitle('Créer une partie personnalisée');
-
-  const valorantCodeInput = new TextInputBuilder()
-    .setCustomId('valorant_code')
-    .setLabel('Code de groupe Valorant')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true)
-    .setMinLength(6)
-    .setMaxLength(6);
-
-  modal.addComponents(new ActionRowBuilder().addComponents(valorantCodeInput));
-  return interaction.showModal(modal);
-}
-
-if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
-  await interaction.deferReply({ ephemeral: true });
-
-  try {
-    const result = await Points.updateMany(
-      {},
-      {
-        $set: {
-          rr: 0,
-          games: 0,
-          wins: 0
-        }
-      }
-    );
-
-    await updateTop15Embed();
-
-    return interaction.editReply(
-      `✅ Nouvelle saison initialisée.\n` +
-      `Joueurs reset : **${result.modifiedCount ?? 0}**`
-    );
-  } catch (err) {
-    console.error('Erreur resetseason :', err);
-    return interaction.editReply('❌ Impossible de réinitialiser la saison.');
-  }
-}
-
-  // ── MODAL SUBMIT ──
-  if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
-    await interaction.deferReply({ ephemeral: true });
-    const valorantCode = interaction.fields.getTextInputValue('valorant_code');
-    const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
-    if (!verifiedRole) return interaction.editReply("⚠️ Le rôle Vérifié n'existe pas.");
-
-    const category = await interaction.guild.channels.create({
-      name: 'ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ',
-      type: 4,
-      permissionOverwrites: [
-  {
-  id: interaction.guild.id,
-  deny: [
-    PermissionsBitField.Flags.ViewChannel,
-    PermissionsBitField.Flags.Connect,
-  ],
-},
-  {
-    id: verifiedRole.id,
-    allow: [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.Connect,
-    ],
-  },
-  ...(MOD_ROLE_ID
-    ? [
-        {
-          id: MOD_ROLE_ID,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-              PermissionsBitField.Flags.Connect,
-              PermissionsBitField.Flags.MoveMembers,
-            ],
-          },
-        ]
-      : [])
-  ]
-});
-
-// ✅ placer la catégorie juste sous ᴄᴏᴍᴍᴜɴᴀᴜᴛᴇᴇ
-const communityCategory = interaction.guild.channels.cache.get(COMMUNITY_CATEGORY_ID)
-  || await interaction.guild.channels.fetch(COMMUNITY_CATEGORY_ID).catch(() => null);
-
-if (communityCategory) {
-  await category.setPosition(communityCategory.position + 1).catch(console.error);
-}
-
-    const waitingVC = await interaction.guild.channels.create({
-  name: `┃préparation ${valorantCode}`,
-  type: 2,
-  parent: category.id,
-  userLimit: 10,
-  permissionOverwrites: [
-  {
-  id: interaction.guild.id,
-  deny: [
-    PermissionsBitField.Flags.ViewChannel,
-    PermissionsBitField.Flags.Connect,
-  ],
-},
-  {
-    id: verifiedRole.id, // rôle Vérifié
-    allow: [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.Connect,
-      PermissionsBitField.Flags.Speak,
-    ],
-  },
-  ...(MOD_ROLE_ID
-    ? [{
-        id: MOD_ROLE_ID, // rôle orga/mod
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.MoveMembers,
-        ],
-      }]
-    : []),
-],
-});
-
-    const map = maps[Math.floor(Math.random() * maps.length)];
-
-const embed = new EmbedBuilder()
-  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴄʀᴇᴇᴇ`)
-  .setDescription(`## <#${waitingVC.id}>\n*10 slots restants*\n*en attente de participants...*`)
-  .setImage(map?.image || 'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif')
-  .setColor(0x242429)
-  .setFooter({
-    iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-    text: `Partie organisée par ${interaction.member.displayName}`
-  });
-
-    const row = new ActionRowBuilder().addComponents(
-  new ButtonBuilder().setCustomId('change_map').setLabel('Map rotation').setStyle(ButtonStyle.Secondary),
-  new ButtonBuilder().setCustomId('start').setLabel('Lancer la partie').setStyle(ButtonStyle.Primary),
-  new ButtonBuilder().setCustomId('cancel_registration').setLabel('Annuler').setStyle(ButtonStyle.Primary)
-);
-
-
-// Stocke l'ID du channel dans la partie
-const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
-const newGame = {
-  id: msg.id,
-  messageId: msg.id,
-  channelId: interaction.channel.id,
-  valorantCode,
-  categoryId: category.id,
-  waitingVC: waitingVC.id,
-  players: [],
-  spectators: {},
-  mapName: map.name,
-  mapImage: map.image,
-  changeMapVotes: [],
-  locks: {},
-  creatorId: interaction.user.id,
-  creatorName: interaction.member.displayName,
-  creatorAvatar: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-};
-
-gamesData.games.push(newGame);
-await saveGame(newGame);
-    return interaction.editReply('✅ Partie créée.');
-  }
-
-  // ── SELECT MENU OBSERVER ──
-  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
-  if (!isVerified) {
-    return interaction.reply({ content: '⛔ Seuls les Vérifiés peuvent observer.', ephemeral: true });
-  }
-
-  if (!game) {
-    return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-  }
-
-  await interaction.deferUpdate();
-
+async function handleOnboardingSelect(interaction) {
   const choice = interaction.values[0];
-  const att = interaction.guild.channels.cache.get(game.attVC);
-  const def = interaction.guild.channels.cache.get(game.defVC);
-  const vc = (choice === 'attack' ? att : def) || waitingVC;
-
-  if (!vc) {
-    return interaction.editReply({
-      content: '❌ Aucun salon disponible.',
-      components: []
-    });
-  }
-
-  await moveVerifiedToVC(interaction.member, vc);
-
-  if (!game.spectators) game.spectators = {};
-  game.spectators[interaction.user.id] = choice;
-
-  saveGameDebounced(game); // ✅ remplace
-  await updateRegistrationEmbed(interaction.guild, game);
-
-  return interaction.editReply({
-    content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
-    components: []
-  });
-}
-
-
-
-
-
-// ensuite ton switch
-if (interaction.isButton()) {
-  switch (interaction.customId) {
-
-case 'change_map': {
-  if (!game) return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-
-  const voterId = interaction.user.id;
-
-  const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
-  const inPrepVC = prepVC?.members?.has(voterId);
-
-  if (!inPrepVC) {
-    return interaction.reply({ content: "❌ Tu dois être dans le vocal de préparation pour voter.", ephemeral: true });
-  }
-
-  if (!game.changeMapVotes) game.changeMapVotes = [];
-
-  if (game.changeMapVotes.includes(voterId)) {
-    return interaction.reply({ content: "✅ Tu as déjà voté pour changer la map.", ephemeral: true });
-  }
-
-  game.changeMapVotes.push(voterId);
-
-  const needed = 6;
-  const votes = game.changeMapVotes.length;
-
-  if (votes >= needed) {
-    const currentName = game.mapName;
-    const pool = maps.filter(m => m.name !== currentName);
-    const newMap = pool.length
-      ? pool[Math.floor(Math.random() * pool.length)]
-      : maps[Math.floor(Math.random() * maps.length)];
-
-    game.mapName = newMap.name;
-    game.mapImage = newMap.image;
-
-    game.changeMapVotes = [];
-    saveGameDebounced(game); // ✅ remplace
-
-    await updateRegistrationEmbed(interaction.guild, game);
-
-    return interaction.reply({
-      content: `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`,
-      ephemeral: true
-    });
-  }
-
-  await saveGame(game);
-  await updateRegistrationEmbed(interaction.guild, game);
-
-  return interaction.reply({ content: `✅ Vote enregistré (${votes}/${needed}).`, ephemeral: true });
-}
-
-
-
-    case 'cancel_registration': {
-  const WAITING_ROOM_ID = '1474562499897594071';
-  const lobbyVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
-
-  if (!lobbyVC) {
-    return interaction.reply({ content: "❌ Salon 'salle d'attente' introuvable.", ephemeral: true });
-  }
-
-  // Déplacer joueurs
-  if (game.players?.length) {
-    await Promise.all(game.players.map(async (id) => {
-      const member = interaction.guild.members.cache.get(id) || null;
-      if (member?.voice?.channel) {
-        await member.voice.setChannel(lobbyVC).catch(() => {});
-      }
-    }));
-  }
-
-  // Déplacer spectateurs
-  if (game.spectators) {
-    await Promise.all(Object.keys(game.spectators).map(async (id) => {
-      const member = interaction.guild.members.cache.get(id) || null;
-      if (member?.voice?.channel) {
-        await member.voice.setChannel(lobbyVC).catch(() => {});
-      }
-    }));
-  }
-
-  // Supprimer les channels de la partie
-  const toDelete = [game.attVC, game.defVC, game.waitingVC, game.categoryId].filter(Boolean);
-
-await Promise.all(toDelete.map(async (id) => {
-  const ch = interaction.guild.channels.cache.get(id);
-  if (ch) await ch.delete().catch(() => {});
-}));
-
-  // Supprimer le message d'inscription
-  const registrationMsg = await interaction.channel.messages
-  .fetch(game.messageId || game.id)
-  .catch(() => null);
-
-if (registrationMsg?.deletable) {
-  registrationMsg.delete().catch(() => {});
-}
-
-  // Supprimer la partie du json
-  gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-  await deleteGame(game.id);
-
-  // Réponse
-  try {
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
-    } else {
-      await interaction.followUp({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
-    }
-  } catch {}
-
-  if (gameLocks[game.id]) delete gameLocks[game.id];
-  break;
-}
-
-    case 'start': {
-  await interaction.deferReply({ ephemeral: true });
-
-  const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
-  if (!verifiedRole) {
-    return interaction.editReply({ content: '⚠️ Rôle Vérifié introuvable.' });
-  }
-
-  if (game.players.length !== 10) {
-  return interaction.editReply({
-    content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
-  });
-}
-
-  const registrationMsg = await interaction.channel.messages
-  .fetch(game.messageId || game.id)
-  .catch(() => null);
-
-if (registrationMsg?.deletable) {
-  registrationMsg.delete().catch(() => {});
-}
-
-
-  // ─────────────── ÉQUILIBRAGE DES ÉQUIPES ───────────────
-  function balanceTeams(players) {
-  if (players.length !== 10) {
-    throw new Error(`Équilibrage impossible : ${players.length} joueurs au lieu de 10.`);
-  }
-
-  players.sort((a, b) => b.rankValue - a.rankValue);
-
-  let best = null;
-
-  function combinations(arr, k, start = 0, combo = [], result = []) {
-    if (combo.length === k) {
-      result.push([...combo]);
-      return result;
-    }
-
-    for (let i = start; i < arr.length; i++) {
-      combo.push(arr[i]);
-      combinations(arr, k, i + 1, combo, result);
-      combo.pop();
-    }
-
-    return result;
-  }
-
-  const allAttackCombinations = combinations(players, 5);
-
-  for (const attackers of allAttackCombinations) {
-    const attackerIds = new Set(attackers.map(p => p.id));
-    const defenders = players.filter(p => !attackerIds.has(p.id));
-
-    const sumA = attackers.reduce((sum, p) => sum + p.rankValue, 0);
-    const sumB = defenders.reduce((sum, p) => sum + p.rankValue, 0);
-    const diff = Math.abs(sumA - sumB);
-
-    if (!best || diff < best.diff) {
-      best = { attackers, defenders, diff };
-    }
-  }
-
-  return {
-    attackers: best.attackers,
-    defenders: best.defenders
-  };
-}
-
-
-
-  
-  // Valeurs de rank par roleId
-  const RANK_VALUES_BY_ID = {
-    '1114187578866933790': 70, '1114182691550658650': 61, '1461352160850870427': 55,
-    '1461352201267188046': 46, '1114186784574812332': 44, '1461352272075292844': 36,
-    '1461352294237868222': 32, '1114187919662522429': 30, '1461352361355378688': 29,
-    '1461352408788762738': 28, '1113191909876318268': 27, '1461352440132800768': 25,
-    '1461352460227580111': 23, '1113191866888884274': 22, '1461352488623014026': 21,
-    '1461352505257754888': 20, '1113191838657020074': 19, '1461352528250933369': 18,
-    '1461352567647768729': 18, '1113191790967799889': 17, '1461352629182529740': 17,
-    '1461352645309759508': 16, '1461352661684064309': 14, '1461352687777091666': 12,
-    '1461352715631460516': 10
-  };
-  
-  const sortedPlayers = game.players.map(userId => {
-    const member = interaction.guild.members.cache.get(userId);
-    const rankValue = member
-      ? member.roles.cache.reduce((val, role) => val || RANK_VALUES_BY_ID[role.id], 0)
-      : 0;
-    return { id: userId, member, rankValue };
-  });
-
-  const balanced = balanceTeams(sortedPlayers);
-  if (balanced.attackers.length !== 5 || balanced.defenders.length !== 5) {
-  return interaction.editReply({
-    content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.'
-  });
-}
-  game.attackers = balanced.attackers.map(p => ({ id: p.id, member: p.member }));
-  game.defenders = balanced.defenders.map(p => ({ id: p.id, member: p.member }));
-
-  // ─────────────── LOGS ───────────────
-  const attSum = balanced.attackers.reduce((sum, p) => sum + p.rankValue, 0);
-  const defSum = balanced.defenders.reduce((sum, p) => sum + p.rankValue, 0);
-  console.log(`┌─────────────────────────────┐`);
-  console.log(`│ ÉQUIPE ATTAQUANTS :     ${attSum.toString().padStart(3)} │`);
-  console.log(`│ ÉQUIPE DÉFENSEURS :     ${defSum.toString().padStart(3)} │`);
-  console.log(`│ DIFFÉRENCE :            ${Math.abs(attSum - defSum).toString().padStart(3)} │`);
-  console.log(`└─────────────────────────────┘`);
-
-
-
-  // ─────────────── CRÉATION VOCAUX ───────────────
-  const everyoneRole = interaction.guild.roles.everyone;
-  const category = interaction.guild.channels.cache.get(game.categoryId);
-
-// ❌ Ne JAMAIS supprimer par nom globalement
-// for (const name of ['┃attaquants','┃défenseurs']) ...
-
-// ✅ Si jamais tu veux nettoyer une ancienne instance de la même game (re-start), fais-le par ID
-for (const id of [game.attVC, game.defVC]) {
-  const ch = interaction.guild.channels.cache.get(id);
-  if (ch) await ch.delete().catch(() => {});
-}
-
-
-const attVC = await interaction.guild.channels.create({
-  name: '┃attaquants',
-  type: 2,
-  parent: category?.id,
-  userLimit: 5,
-  permissionOverwrites: [
-    // Cache le vocal à tout le monde
-    {
-      id: everyoneRole.id,
-      deny: [
-        PermissionsBitField.Flags.ViewChannel,
-        PermissionsBitField.Flags.Connect,
-      ],
-    },
-
-    // ✅ Tous les vérifiés voient, mais ne peuvent pas se co
-    {
-      id: VERIFIED_ROLE_ID,
-      allow: [
-        PermissionsBitField.Flags.ViewChannel,
-      ],
-      deny: [
-        PermissionsBitField.Flags.Connect,
-      ],
-    },
-
-    // ✅ Les attaquants peuvent voir + se co + parler
-    ...game.attackers.map(p => ({
-      id: p.id,
-      allow: [
-        PermissionsBitField.Flags.ViewChannel,
-        PermissionsBitField.Flags.Connect,
-        PermissionsBitField.Flags.Speak,
-      ],
-    })),
-  ],
-});
-
-const defVC = await interaction.guild.channels.create({
-  name: '┃défenseurs',
-  type: 2,
-  parent: category?.id,
-  userLimit: 5,
-  permissionOverwrites: [
-    {
-      id: everyoneRole.id,
-      deny: [
-        PermissionsBitField.Flags.ViewChannel,
-        PermissionsBitField.Flags.Connect,
-      ],
-    },
-    {
-      id: VERIFIED_ROLE_ID,
-      allow: [
-        PermissionsBitField.Flags.ViewChannel,
-      ],
-      deny: [
-        PermissionsBitField.Flags.Connect,
-      ],
-    },
-    ...game.defenders.map(p => ({
-      id: p.id,
-      allow: [
-        PermissionsBitField.Flags.ViewChannel,
-        PermissionsBitField.Flags.Connect,
-        PermissionsBitField.Flags.Speak,
-      ],
-    })),
-  ],
-});
-
-  game.attVC = attVC.id;
-  game.defVC = defVC.id;
-
-await saveGame(game);
-
-// ✅ Déplacement parallèle des joueurs
-const movePromises = [];
-
-// Joueurs
-for (const p of game.attackers) {
-  if (p.member?.voice?.channel) {
-    movePromises.push(p.member.voice.setChannel(attVC).catch(() => {}));
-  }
-}
-
-for (const p of game.defenders) {
-  if (p.member?.voice?.channel) {
-    movePromises.push(p.member.voice.setChannel(defVC).catch(() => {}));
-  }
-}
-
-// Spectateurs
-if (game.spectators) {
-  for (const [id, choice] of Object.entries(game.spectators)) {
-    const member = interaction.guild.members.cache.get(id) || null;
-    const vc = choice === 'attack' ? attVC : defVC;
-    if (member?.voice?.channel) {
-      movePromises.push(member.voice.setChannel(vc).catch(() => {}));
-    }
-  }
-}
-
-await Promise.all(movePromises);
-
-  // Supprimer le salon de préparation
-  const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
-  if (prepVC) await prepVC.delete().catch(() => {});
-
-  // ─────────────── EMBED PARTIE EN COURS ───────────────
-  // 🔥 Fonction pour trier une équipe par rank (du plus fort au plus faible)
-const sortTeamByRank = (team) => {
-
-  let data = [];
-
-  for (const player of team) {
-
-    const member = interaction.guild.members.cache.get(player.id) || null;
-    if (!member) continue;
-
-    const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-    const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-    const rankEmoji = rankRole ? rankEmojis[rankRole.name] : '<:Unranked:1465744234182086789>';
-
-    data.push({
-      id: player.id,
-      rankValue,
-      rankEmoji
-    });
-  }
-
-  // 👇 Plus petit = plus fort (Radiant=1), donc ascendant
-  data.sort((a, b) => a.rankValue - b.rankValue);
-
-  return data.map(p => `${p.rankEmoji} <@${p.id}>`).join('\n') || 'Aucun';
-};
-
-// 🔹 On génère le texte des équipes
-const attackersText = sortTeamByRank(game.attackers);
-const defendersText = sortTeamByRank(game.defenders);
-
-
-const gameEmbed = new EmbedBuilder()
-  //.setTitle(`ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ`)
-  .addFields(
-    { name:'<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline:true },
-    { name:'<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline:true }
-  )
-  .setColor(0x242429)
-  .setFooter({
-    iconURL: interaction.user.displayAvatarURL({ dynamic:true, size:32 }),
-    text:`Partie lancée par ${interaction.member.displayName}`
-  });
-
-// ✅ Image de la map de la game (celle tirée au /pp ou changée par votes)
-if (game.mapImage) {
-  gameEmbed.setImage(game.mapImage);
-}
-
-  const buttons = new ActionRowBuilder()
-    .addComponents(
-      new ButtonBuilder().setCustomId('spectate').setLabel('Spectate').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('attack_win').setLabel('Attaquants').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('defense_win').setLabel('Défenseurs').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('cancel_game').setLabel('Annuler').setStyle(ButtonStyle.Danger)
-    );
-
-  const inGameMsg = await interaction.channel.send({ embeds: [gameEmbed], components: [buttons] });
-
-// ✅ on stocke l'id du message "PARTIE EN COURS"
-game.manageMessageId = inGameMsg.id;
-await saveGame(game);
-
-await interaction.editReply('✅ Partie lancée');
-break;
-}
-
-case 'spectate': {
-  const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
-  if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
-    return interaction.reply({ content: '❌ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
-  }
-
-  if (game.players.includes(interaction.user.id)) {
-    return interaction.reply({ content: '❌ Tu es déjà inscrit à la partie.', ephemeral: true });
-  }
-
-  // Créer le select menu pour choisir l'équipe
-  const selectMenu = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId(`spectate_select_${game.id}`)
-      .setPlaceholder('Assure toi d\'être dans un salon vocal !')
-      .addOptions([
-        { label: 'Observer les attaquants', value: 'attack'},
-        { label: 'Observer les défenseurs', value: 'defense'}
-      ])
-  );
-
-  return interaction.reply({ content: '', components: [selectMenu], ephemeral: true });
-}
-
-case 'attack_win':
-case 'defense_win':
-case 'cancel_game': {
-  await interaction.deferUpdate();
-  if (!game) return;
-
-  if (gameLocks[game.id]) {
-    return;
-  }
-  gameLocks[game.id] = true;
-
-  try {
-    const WAITING_ROOM_ID = '1474562499897594071';
-    const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
-
-    if (!waitingVC) {
-      console.log("❌ Lobby principal introuvable.");
-      return;
-    }
-
-    // ✅ Désactive immédiatement les boutons pour éviter un 2e clic
-    try {
-      if (interaction.message?.editable) {
-        const disabledRows = interaction.message.components.map(row =>
-          new ActionRowBuilder().addComponents(
-            row.components.map(component =>
-              ButtonBuilder.from(component).setDisabled(true)
-            )
-          )
-        );
-
-        await interaction.message.edit({ components: disabledRows }).catch(() => {});
-      }
-    } catch (err) {
-      console.error('Erreur désactivation boutons fin de partie :', err);
-    }
-
-    const attChannel = interaction.guild.channels.cache.get(game.attVC);
-    const defChannel = interaction.guild.channels.cache.get(game.defVC);
-
-    const attackers = game.attackers.map(p => p.id);
-    const defenders = game.defenders.map(p => p.id);
-    const allPlayers = [...attackers, ...defenders];
-
-    const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
-    const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
-    const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
-
-    const everyoneInGameVCs = [...new Set([
-      ...liveAttackers,
-      ...liveDefenders,
-      ...allPlayers,
-      ...spectatorIds
-    ])];
-
-    const moveMembersToVC = async (ids, vc) => {
-      await Promise.all(
-        ids.map(async (id) => {
-          const member = interaction.guild.members.cache.get(id) || null;
-          if (member?.voice?.channel) {
-            await member.voice.setChannel(vc).catch(() => {});
-          }
-        })
-      );
-    };
-
-    await moveMembersToVC(everyoneInGameVCs, waitingVC);
-
-    if (game.manageMessageId) {
-      const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
-      if (inGameMsg?.deletable) {
-        await inGameMsg.delete().catch(() => {});
-      }
-    }
-
-    if (interaction.customId === 'cancel_game') {
-      for (const id of [game.attVC, game.defVC, game.categoryId]) {
-        const ch = interaction.guild.channels.cache.get(id);
-        if (ch) await ch.delete().catch(() => {});
-      }
-
-      gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-      await deleteGame(game.id);
-      return;
-    }
-
-    const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
-    const matchRR = {};
-
-    for (const playerId of allPlayers) {
-      const currentStats = await getPlayerPoints(playerId);
-
-      const member =
-        interaction.guild.members.cache.get(playerId) ||
-        await interaction.guild.members.fetch(playerId).catch(() => null);
-
-      const isWinner =
-        (winningSide === 'attack' && attackers.includes(playerId)) ||
-        (winningSide === 'defense' && defenders.includes(playerId));
-
-      const delta = getPlayerRRDelta(member, isWinner);
-
-      currentStats.rr = Math.max(0, currentStats.rr + delta);
-      currentStats.games += 1;
-
-      if (isWinner) {
-        currentStats.wins += 1;
-      }
-
-      await setPlayerPoints(playerId, currentStats);
-      matchRR[playerId] = delta;
-    }
-
-    await updateTop15Embed();
-
-    for (const id of [game.attVC, game.defVC, game.categoryId]) {
-      const ch = interaction.guild.channels.cache.get(id);
-      if (ch) await ch.delete().catch(() => {});
-    }
-
-    gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-    await deleteGame(game.id);
-
-    const formatPlayers = async (ids) => {
-      let data = [];
-
-      for (const id of ids) {
-        const member =
-          interaction.guild.members.cache.get(id) ||
-          await interaction.guild.members.fetch(id).catch(() => null);
-
-        if (!member) continue;
-
-        const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-        const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-        const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
-
-        const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
-
-        data.push({
-          id,
-          rankValue,
-          rankEmoji,
-          rrDisplay
-        });
-      }
-
-      data.sort((a, b) => a.rankValue - b.rankValue);
-
-      return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
-    };
+  const member = interaction.member;
+  const guild = interaction.guild;
+
+  // ── Mes statistiques ──
+  if (choice === 'stats') {
+    const stats = await getPlayerPoints(member.id);
+    const allPoints = await getAllPoints();
+    const sorted = Object.entries(allPoints).sort((a, b) => b[1].rr - a[1].rr);
+    const position = sorted.findIndex(([id]) => id === member.id) + 1 || '—';
+
+    const invitesData = await getInviteData(member.id);
+    const winrate = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
+
+    const joinedTs = member.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : null;
+
+    const roleNames = member.roles.cache
+      .filter(r => r.id !== guild.id)
+      .sort((a, b) => b.position - a.position)
+      .map(r => `<@&${r.id}>`)
+      .join(', ') || 'Aucun';
 
     const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(`## 📊 Mes statistiques — ${member.displayName}`)
+      .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: '<:VIDE:1465704930160410847>  ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: await formatPlayers(attackers), inline: true },
-        { name: '<:VIDE:1465704930160410847>  ᴅᴇꜰᴇɴsᴇᴜʀs', value: await formatPlayers(defenders), inline: true }
-      )
-      .setColor(0x242429)
-      .setFooter({
-        iconURL: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-        text: `Partie validée par ${interaction.member.displayName}`
-      });
+        { name: 'Classement', value: `#${position}`, inline: true },
+        { name: 'RR', value: `${stats.rr} ʀʀ`, inline: true },
+        { name: 'Winrate', value: `${winrate}%`, inline: true },
+        { name: 'Parties jouées', value: `${stats.games}`, inline: true },
+        { name: 'Victoires', value: `${stats.wins}`, inline: true },
+        { name: 'Invitations', value: `${invitesData.invites}`, inline: true },
+        { name: 'Arrivée sur le serveur', value: joinedTs ? `<t:${joinedTs}:D>` : 'Inconnue', inline: true },
+        { name: 'Exclusions temporaires', value: `${stats.timeouts || 0}`, inline: true },
+        { name: 'Rôles attribués', value: roleNames, inline: false }
+      );
 
-    await interaction.channel.send({ embeds: [embed] }).catch(console.error);
-  } finally {
-    delete gameLocks[game.id];
+    return interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
-  break;
-}
-}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if (interaction.isChatInputCommand() && interaction.commandName === 'manage') {
-  const targetUser = interaction.options.getUser('joueur');
-  const userStats = await getPlayerPoints(targetUser.id);
-
-  const embed = new EmbedBuilder()
-    .setTitle(`⚙️ GESTION DE ${targetUser.tag}`)
-    .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
-    .setColor(0x242429)
-    .addFields(
-      { name: 'RR actuel', value: `${userStats.rr} ʀʀ`, inline: true },
-      { name: 'Parties jouées', value: `${userStats.games}`, inline: true },
-      { name: 'Victoires', value: `${userStats.wins}`, inline: true }
-    )
-    .setFooter({ text: 'Utilisez les boutons ci-dessous pour gérer ce joueur' });
-
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`manage_add_${targetUser.id}`)
-      .setLabel('+ Ajouter RR')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`manage_remove_${targetUser.id}`)
-      .setLabel('- Retirer RR')
-      .setStyle(ButtonStyle.Danger),
-    new ButtonBuilder()
-      .setCustomId(`manage_reset_${targetUser.id}`)
-      .setLabel('🔄 Reset Complet')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-}
-
-
-
-
-
-
-
-
-
-
-
-const RANK_ROLES = {
-    Radiant: '1114187578866933790',
-    Immortal3: '1114182691550658650',
-    Immortal2: '1461352160850870427',
-    Immortal1: '1461352201267188046',
-    Ascendant3: '1114186784574812332',
-    Ascendant2: '1461352272075292844',
-    Ascendant1: '1461352294237868222',
-    Diamond3: '1114187919662522429',
-    Diamond2: '1461352361355378688',
-    Diamond1: '1461352408788762738',
-    Platinum3: '1113191909876318268',
-    Platinum2: '1461352440132800768',
-    Platinum1: '1461352460227580111',
-    Gold3: '1113191866888884274',
-    Gold2: '1461352488623014026',
-    Gold1: '1461352505257754888',
-    Silver3: '1113191838657020074',
-    Silver2: '1461352528250933369',
-    Silver1: '1461352567647768729',
-    Bronze3: '1113191790967799889',
-    Bronze2: '1461352629182529740',
-    Bronze1: '1461352645309759508',
-    Iron3: '1461352661684064309',
-    Iron2: '1461352687777091666',
-    Iron1: '1461352715631460516'
-  };
-
-  function memberHasSelectedRank(member) {
-  if (!member?.roles?.cache) return false;
-  return Object.values(RANK_ROLES).some(roleId => member.roles.cache.has(roleId));
-}
-
-
-  // --------------------------------------
-  // MENU RANK
-  // --------------------------------------
-if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') {
-  if (interaction.replied || interaction.deferred) return;
-
-  await interaction.reply({
-    content: 'Mise à jour du rank…',
-    ephemeral: true,
-  });
-
-  const thread = interaction.channel;
-  if (thread?.isThread()) await thread.sendTyping();
-  await new Promise(r => setTimeout(r, 250));
-
-  for (const roleId of Object.values(RANK_ROLES)) {
-    if (interaction.member.roles.cache.has(roleId)) {
-      await interaction.member.roles.remove(roleId).catch(() => {});
-    }
-  }
-
-  const selectedRank = interaction.values[0];
-  const roleIdToAdd = RANK_ROLES[selectedRank];
-
-  await interaction.member.roles.add(roleIdToAdd).catch(() => {});
-
-  const role = interaction.guild.roles.cache.get(roleIdToAdd);
-
-  const rankEmbed = new EmbedBuilder()
-    .setColor(0x242429)
-    .setDescription(
-      `### Ton peak rank 2025 a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`
-    )
-    .setFooter({ text: 'Tu peux maintenant utiliser le bouton "Me renommer" ci-dessous.' });
-
-  await interaction.editReply({ content: null, embeds: [rankEmbed] });
-
-  // ✅ Active le bouton "Me renommer" dans le thread
-  try {
-    const messages = await thread.messages.fetch({ limit: 10 });
-    const renameMessage = messages.find(msg =>
-      msg.author.id === client.user.id &&
-      msg.components?.some(row =>
-        row.components?.some(component => component.customId === 'verify_riot')
-      )
+  // ── Notifications ──
+  if (choice === 'notifs') {
+    const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('toggle_notif_pp')
+        .setLabel(hasRole ? 'Désactiver les notifications' : 'Activer les notifications')
+        .setStyle(hasRole ? ButtonStyle.Danger : ButtonStyle.Success)
     );
 
-    if (renameMessage) {
-      const enabledButton = new ButtonBuilder()
-        .setCustomId('verify_riot')
-        .setLabel(`Me renommer pour débloquer l'accès`)
-        .setEmoji({ id: '1493378334326001816' })
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(false);
-
-      await renameMessage.edit({
-        content: '-# Rank sélectionné. Tu peux maintenant te renommer.',
-        components: [new ActionRowBuilder().addComponents(enabledButton)]
-      });
-    }
-  } catch (err) {
-    console.error('Erreur activation bouton :', err);
-  }
-
-  return;
-}
-
-  // --------------------------------------
-  // BOUTON RIOT
-  // --------------------------------------
-  if (interaction.isButton() && interaction.customId === 'verify_riot') {
-  if (interaction.replied || interaction.deferred) return;
-
-  if (!memberHasSelectedRank(interaction.member)) {
     return interaction.reply({
-      content: '❌ Tu dois d’abord sélectionner ton **peak rank 2025** avant de pouvoir te renommer.',
+      content: hasRole
+        ? '🔔 Tu reçois actuellement les notifications de parties.'
+        : '🔕 Tu ne reçois pas les notifications de parties.',
+      components: [row],
       ephemeral: true
     });
   }
 
-  const modal = new ModalBuilder()
-    .setCustomId('riot_modal')
-    .setTitle('Vérification Riot ID');
+  // ── Classement ──
+  if (choice === 'classement') {
+    const invitesData = await getAllInvites();
+    const totalInvitesPerMember = {};
+    for (const inviterId in invitesData) {
+      totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
+    }
 
-  const pseudoInput = new TextInputBuilder()
-    .setCustomId('riot_pseudo')
-    .setLabel('Pseudo sur VALORANT, sans le #TAG')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
+    const pointsData = await getAllPoints();
+    const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
+    const playerCount = Object.keys(pointsData).length;
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(pseudoInput)
-  );
+    const embed = buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCache: null, playerCount });
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
 
-  await interaction.showModal(modal);
-  return;
+  // ── Comment se vérifier ──
+  if (choice === 'verification') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## ✅ Comment se vérifier ?\n\n` +
+        `1️⃣ À ton arrivée, un fil privé s'ouvre automatiquement dans <#${ACCUEIL_CHANNEL_ID}>.\n` +
+        `2️⃣ Sélectionne ton **peak rank 2025** dans le menu déroulant.\n` +
+        `3️⃣ Clique sur **Me renommer pour débloquer l'accès** et renseigne ton pseudo Valorant (sans le #TAG).\n` +
+        `4️⃣ Le rôle Vérifié te sera attribué automatiquement, tu as alors accès à tout le serveur.\n\n` +
+        `-# Si tu ne retrouves plus ton fil de bienvenue, ouvre un ticket via /regles.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Comment jouer ──
+  if (choice === 'jouer') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## 🎮 Comment jouer une partie personnalisée ?\n\n` +
+        `1️⃣ Un Organisateur crée une partie avec \`/pp\` et un code de groupe Valorant.\n` +
+        `2️⃣ Rejoins le vocal **┃préparation** indiqué dans l'annonce pour t'inscrire automatiquement.\n` +
+        `3️⃣ Une fois 10 joueurs réunis, l'Organisateur lance la partie : les équipes sont équilibrées par rank et déplacées dans **┃attaquants** / **┃défenseurs**.\n` +
+        `4️⃣ À la fin, l'Organisateur valide le résultat : tes RR sont mis à jour automatiquement.\n\n` +
+        `-# 🎬 Vidéo de démonstration à venir ici.`
+      );
+    // TODO: une fois ta vidéo prête, ajoute par exemple .setImage('URL_DE_TA_VIDEO_OU_GIF')
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Rôles du serveur ──
+  if (choice === 'roles') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## 🏷️ Rôles du serveur\n\n` +
+        `- **Vérifié** : accès complet au serveur, obtenu après vérification.\n` +
+        `- **Organisateur** : peut créer des parties personnalisées avec \`/pp\`.\n` +
+        `- **Administrateur** : gère la modération et la configuration du serveur.\n` +
+        `- **Rangs (Iron → Radiant)** : reflètent ton peak rank déclaré, utilisés pour l'équilibrage des équipes.\n` +
+        `- **Booster** : bonus de RR sur les victoires en remerciement du boost.\n` +
+        `- **Tag serveur** : bonus de RR pour les membres arborant le tag du serveur sur leur profil Discord.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Système de RR expliqué ──
+  if (choice === 'rr') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## 📈 Système de RR\n\n` +
+        `- Victoire standard : **+${RR_VALUES.WIN} RR**\n` +
+        `- Victoire avec le tag du serveur actif : **+${RR_VALUES.WIN_TAG} RR**\n` +
+        `- Victoire en tant que Booster : **+${RR_VALUES.WIN_BOOSTER} RR**\n` +
+        `- Défaite : **${RR_VALUES.LOSS} RR**\n\n` +
+        `Ton RR ne peut jamais descendre en dessous de 0. Le classement est remis à zéro à chaque nouvelle saison.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Récompenses ──
+  if (choice === 'recompenses') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## 🎁 Récompenses\n\n` +
+        `- 🥇 **Cashprize mensuel** pour le TOP 1 du classement RR.\n` +
+        `- 🎟️ **Cashprize mensuel** pour le TOP 1 des invitations.\n` +
+        `- 💎 Bonus de RR pour les Boosters et les membres avec le tag serveur actif.\n\n` +
+        `-# Les montants et modalités exactes sont annoncés en début de saison.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Signaler un joueur ──
+  if (choice === 'signaler') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## 🚨 Signaler un joueur\n\n` +
+        `Un joueur triche, ment sur son rank, est AFK ou toxique en partie ?\n\n` +
+        `1️⃣ Ouvre un ticket via le bouton **Ouvrir un ticket** sous \`/regles\`.\n` +
+        `2️⃣ Précise le pseudo concerné, la partie et le motif.\n` +
+        `3️⃣ L'équipe de modération traite chaque signalement individuellement.\n\n` +
+        `-# Rappel : faux peak rank ou AFK répété = bannissement.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  // ── Règlement ──
+  if (choice === 'reglement') {
+    return interaction.reply({ embeds: [buildRulesEmbed()], ephemeral: true });
+  }
+
+  // ── FAQ ──
+  if (choice === 'faq') {
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR)
+      .setDescription(
+        `## ❓ FAQ\n\n` +
+        `**Puis-je changer mon peak rank déclaré ?**\n` +
+        `> Ouvre un ticket, un membre du staff pourra l'ajuster.\n\n` +
+        `**Pourquoi je ne peux pas créer de partie avec /pp ?**\n` +
+        `> Seuls les membres avec le rôle Organisateur peuvent créer une partie.\n\n` +
+        `**Le vocal de préparation est plein, que faire ?**\n` +
+        `> Attends qu'une place se libère ou qu'une nouvelle partie soit créée.\n\n` +
+        `**Comment observer une partie en tant que spectateur ?**\n` +
+        `> Une fois la partie lancée, clique sur **Spectate** puis choisis un camp.`
+      );
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  }
+
+  return interaction.reply({ content: '❌ Rubrique inconnue.', ephemeral: true });
 }
-  // --------------------------------------
-  // MODAL RIOT
-  // --------------------------------------
-if (interaction.isModalSubmit() && interaction.customId === 'riot_modal') {
-  if (interaction.replied || interaction.deferred) return;
 
-  const pseudo = interaction.fields.getTextInputValue('riot_pseudo');
-
-  // 📁 Sauvegarde des données
-  await setRiotUser(interaction.user.id, { pseudo });
-
-  // 🏷️ Changement de pseudo
-  await interaction.member.setNickname(pseudo).catch(() => {});
-
-  // ⏳ Réponse immédiate
-  await interaction.reply({ content: 'Vérification en cours…', ephemeral: true });
-
-  const thread = interaction.channel;
-
-  if (thread?.isThread?.()) await thread.sendTyping();
-  await new Promise(r => setTimeout(r, 250));
-
-  // 📦 Embed de vérification
-const verifyEmbed = new EmbedBuilder()
-  .setColor(0x242429)
-  .setDescription(
-    `# ${interaction.user.tag} <:DISCORD:1472201746246799451><:DEBUT:1472199399382978672><:MILIEU:1472199381854847109><:FIN:1472199414155051172><:RIOT:1472201753306071217> ${pseudo}`
-  )
-  .setFooter({ text: 'Ton compte est vérifié, amuse-toi bien !' });
-
-await interaction.editReply({ content: null, embeds: [verifyEmbed] });
-
-// 🧵 Fermer + supprimer le thread APRES 3 secondes
-if (thread?.isThread?.()) {
-
-  // attendre 3 secondes
-  await new Promise(resolve => setTimeout(resolve, 5000));
-  await thread.setLocked(true).catch(() => {});
-  await thread.setArchived(true).catch(() => {});
-  await thread.delete().catch(() => {});
-}
-
-// ✅ DONNER LE ROLE EN DERNIER (après suppression)
-await interaction.member.roles.add(ROLE_VERIFIE).catch(() => {});
-await interaction.member.roles.add(ROLE_NOTIF_PP).catch(() => {});
-
-return;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if (interaction.isChatInputCommand() && interaction.commandName === 'top15'){
-      await interaction.deferReply({ ephemeral: true });
-      const embed = new EmbedBuilder()
-        .setTitle("ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ ᴀᴏᴜᴛ")
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png?ex=69f90904&is=69f7b784&hm=26f24ee303b032d7a51a0e23eeabb9b91af02c247e6dc13e9206ab86530e053e&')
-        .setDescription("*Calcul en cours...*")
-        .setColor(0x242429);
-      const msg = await interaction.channel.send({ embeds:[embed] });
-      await setConfigValue('top15Data', {
-  messageId: msg.id,
-  channelId: interaction.channel.id
-});
-      await updateTop15Embed();
-      return interaction.editReply({ content: "✅ TOP15 créé dans ce salon", ephemeral: true });
-}
-
-
-
-
-
-
-
-if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
-  const embed = new EmbedBuilder()
+function buildRulesEmbed() {
+  return new EmbedBuilder()
     .setDescription(
       '### ***RÈGLES DU SERVEUR***\n' +
       '- <:Automate:1466470349351686194>      **Faux peak rank** / **AFK**   →   **BAN**\n' +
       '- <:Armes:1466470377327825028>      Aucune limite d\'armes\n' +
       '- <:TopInviterCashprize:1465709888729776296>      Cashprize mensuel pour le **TOP 1   Leaderboard**\n' +
       '- <:TopLeaderboardCashprize:1465747415670984862>      Cashprize mensuel pour le **TOP 1   Invitations**\n' +
-      '- <:Performance:1466957289813442721>      Pour afficher votre classement   →   `!tracker`\n' +
+      '- <:Performance:1466957289813442721>      Pour afficher ton classement   →   `/onboarding`\n' +
       '\n' +
       '### ***COMMENT JOUER ?***\n' +
-      '- <:VC:1466608491861901362>** ┃file d’attente**\n' +
+      '- <:VC:1466608491861901362>** ┃file d\u2019attente**\n' +
       '- <:Annonce:1472840875708252192>** ┃jouer**\n' +
       '>   <:ENTRY2:1466591986382278831> *Nouvelle partie vocale créée*\n' +
       '>   <:ENTRY:1466591997874929876> *Connexion manuelle*\n' +
@@ -2651,230 +1492,1110 @@ if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
       '>   <:ENTRY2:1466591986382278831> *Mise à jour du classement*\n' +
       '>   <:ENTRY:1466591997874929876> *Redirection auto*\n' +
       '> <:VIDE:1465704930160410847>\n' +
-      '- <:VC:1466608491861901362>** ┃file d’attente**\n' +
+      '- <:VC:1466608491861901362>** ┃file d\u2019attente**\n' +
       '<:VIDE:1465704930160410847>\n'
     )
-    .setColor(0x242429)
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png?ex=69de4b28&is=69dcf9a8&hm=667bc612badd1e6395e61f6e17c1f04b4a8dfcd319cee276f90d9dfb7cf45826&');
-
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('open_ticket')
-      .setLabel('┃Ouvrir un ticket')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji({ id: '1466470365269070026' }),
-
-    new ButtonBuilder()
-      .setCustomId('toggle_notif_pp')
-      .setLabel('┃Notifications PP')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji({ id: '1466608491861901362' })
-  );
-
-  await interaction.channel.send({
-    embeds: [embed],
-    components: [row]
-  });
-
-  return interaction.reply({ content: '✅ Règles envoyées', ephemeral: true });
+    .setColor(EMBED_COLOR)
+    .setImage(BANNERS.regles)
+    .setFooter({ text: 'Règlement • Valorant PP' });
 }
 
 
 
+// ===== Interaction Handler =====
+client.on('interactionCreate', async (interaction) => {
+  try {
 
+    const MOD_ROLE_ID = '1461348856100028439';
+    const VERIFIED_ROLE_ID = '1461354176931041312';
 
+    const isMod = interaction.member?.roles?.cache?.has(MOD_ROLE_ID);
+    const isVerified = interaction.member?.roles?.cache?.has(VERIFIED_ROLE_ID);
 
-
-
-
-
-
-
-
-
-// ── Gestion du modal TICKET REASON ──
-if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
-  await interaction.deferReply({ ephemeral: true });
-
-  const guild = interaction.guild;
-  const member = interaction.member;
-  const reason = interaction.fields.getTextInputValue('ticket_reason') || '';
-
-  // ✅ Sanitize pour éviter les erreurs Discord (caractères interdits / trop long / vide)
-  const safeReason = reason
-    .toLowerCase()
-    .trim()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève accents
-    .replace(/[^a-z0-9-]/g, '-')                      // remplace tout le reste
-    .replace(/-+/g, '-')                              // évite les --- 
-    .replace(/(^-|-$)/g, '')                          // enlève - au début/fin
-    .slice(0, 30);
-
-  const finalReason = safeReason || 'demande';
-
-  // Charger la configuration
-  const configFile = path.join(__dirname, 'data', 'config.json');
-  if (!fs.existsSync(configFile)) {
-    return interaction.editReply({
-      content: '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.',
-      ephemeral: true
-    });
-  }
-
-  const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-  const ticketCategoryId = config.ticketCategoryId;
-
-  // ✅ Vérifier si l'utilisateur a déjà un ticket ouvert (1 ticket max)
-  // On check dans la catégorie + un salon ticket- + permissions qui contiennent le membre
-  const existingTicket = guild.channels.cache.find(ch =>
-    ch.parentId === ticketCategoryId &&
-    ch.name.startsWith('┃ticket-') &&
-    ch.permissionOverwrites?.cache?.has(member.id)
-  );
-
-  if (existingTicket) {
-    return interaction.editReply({
-      content: `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`,
-      ephemeral: true
-    });
-  }
-
-  // Récupérer le rôle STAFF
-  const staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
-  if (!staffRole) {
-    return interaction.editReply({
-      content: '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.',
-      ephemeral: true
-    });
-  }
-
-  // Créer le salon ticket
-  const ticketChannel = await guild.channels.create({
-    name: `┃ticket-${finalReason}`,
-    type: 0, // Text channel
-    parent: ticketCategoryId,
-    permissionOverwrites: [
-      {
-        id: guild.id, // @everyone
-        deny: [PermissionsBitField.Flags.ViewChannel]
-      },
-      {
-        id: member.id, // L'utilisateur
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory,
-          PermissionsBitField.Flags.AttachFiles
-        ]
-      },
-      {
-        id: staffRole.id, // Staff
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory,
-          PermissionsBitField.Flags.AttachFiles,
-          PermissionsBitField.Flags.ManageMessages
-        ]
+    function findGame(interaction) {
+      if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
+        const gameId = interaction.customId.replace('spectate_select_', '');
+        return gamesData.games.find(g =>
+          g.id === gameId || g.messageId === gameId || g.manageMessageId === gameId || g.betMessageId === gameId
+        );
       }
-    ]
-  });
 
-  // Embed de bienvenue dans le ticket avec la raison (non-sanitized = joli)
-  const ticketEmbed = new EmbedBuilder()
-    .setDescription(
-      `- Motif : **${reason || 'Demande'}**\n` +
-      `> Merci de nous expliquer la raison de ta demande.\n` +
-      `> L'équipe a été notifiée et viendra t'aider.\n\n`
-    )
-    .setColor(0x242429)
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png?ex=69de4b16&is=69dcf996&hm=411df224452401aaed73e1538a5a44c744e38587f0a76a864b91d6878cee6647&');
+      if (interaction.message?.id) {
+        const mid = interaction.message.id;
+        return gamesData.games.find(g =>
+          g.id === mid || g.messageId === mid || g.manageMessageId === mid || g.betMessageId === mid
+        );
+      }
 
-  const closeButton = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('close_ticket')
-      .setEmoji({ id: '1466470349351686194' })
-      .setLabel('┃Clôturer la discussion')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  await ticketChannel.send({
-    content: `${member} ${staffRole}`,
-    embeds: [ticketEmbed],
-    components: [closeButton]
-  });
-
-  return interaction.editReply({
-    content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`,
-    ephemeral: true
-  });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// ── Gestion du modal MANAGE ──
-if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const [, , type, userId] = interaction.customId.split('_');
-  const amount = parseInt(interaction.fields.getTextInputValue('rr_amount'));
-
-  if (isNaN(amount) || amount <= 0) {
-    return interaction.editReply('❌ Montant invalide. Veuillez entrer un nombre positif.');
-  }
-
-  const currentStats = await getPlayerPoints(userId);
-
-  if (type === 'add') {
-    currentStats.rr += amount;
-  } else if (type === 'remove') {
-    currentStats.rr -= amount;
-    if (currentStats.rr < 0) {
-      currentStats.rr = 0;
+      return null;
     }
-  }
 
-  await setPlayerPoints(userId, currentStats);
-  await updateTop15Embed();
+    let game = findGame(interaction);
+    const isGameOwner = game?.creatorId === interaction.user.id;
+    const canManageThisGame = interaction.user.id === BOT_OWNER_ID || isGameOwner;
 
-  const actionText = type === 'add' ? 'ajouté' : 'retiré';
-  return interaction.editReply(
-    `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`
-  );
-}
+    // ── /onboarding ──
+    if (interaction.isChatInputCommand() && interaction.commandName === 'onboarding') {
+      return interaction.reply({
+        embeds: [buildOnboardingEmbed()],
+        components: [buildOnboardingSelectRow()]
+      });
+    }
 
+    if (interaction.isStringSelectMenu() && interaction.customId === 'onboarding_select') {
+      return handleOnboardingSelect(interaction);
+    }
 
+    // ✅ Boutons hors "game" (doivent répondre vite)
+    if (interaction.isButton()) {
 
+      if (interaction.customId === 'open_ticket') {
+        const modal = new ModalBuilder().setCustomId('ticket_reason_modal').setTitle('Ouvrir un ticket');
+        const reasonInput = new TextInputBuilder()
+          .setCustomId('ticket_reason')
+          .setLabel('Motif (ex: report, question, reset, etc.)')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false);
+        modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
+        return interaction.showModal(modal);
+      }
 
+      if (interaction.customId === 'close_ticket') {
+        await interaction.deferReply({ ephemeral: true });
+        const ch = interaction.channel;
+        if (!ch) return interaction.editReply('❌ Salon introuvable.');
+        await ch.delete().catch(() => {});
+        return;
+      }
 
+      if (interaction.customId.startsWith('manage_add_') || interaction.customId.startsWith('manage_remove_')) {
+        const isAdd = interaction.customId.startsWith('manage_add_');
+        const userId = interaction.customId.split('_').pop();
 
+        const modal = new ModalBuilder()
+          .setCustomId(`manage_modal_${isAdd ? 'add' : 'remove'}_${userId}`)
+          .setTitle(isAdd ? 'Ajouter des RR' : 'Retirer des RR');
 
+        const rrInput = new TextInputBuilder()
+          .setCustomId('rr_amount')
+          .setLabel('Combien de RR ?')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
+        modal.addComponents(new ActionRowBuilder().addComponents(rrInput));
+        return interaction.showModal(modal);
+      }
 
+      if (interaction.customId.startsWith('manage_reset_')) {
+        await interaction.deferReply({ ephemeral: true });
+        const userId = interaction.customId.split('_').pop();
 
-} catch (err) {
+        await setPlayerPoints(userId, { rr: 0, games: 0, wins: 0, timeouts: 0 });
+        await updateTop15Embed();
+
+        return interaction.editReply(`🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`);
+      }
+    }
+
+    if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
+      const roleId = ROLE_NOTIF_PP;
+      const member = interaction.member;
+
+      if (!member || !member.roles) {
+        return interaction.reply({ content: '❌ Membre introuvable.', ephemeral: true });
+      }
+
+      const hasRole = member.roles.cache.has(roleId);
+
+      try {
+        if (hasRole) {
+          await member.roles.remove(roleId);
+          return interaction.reply({ content: '🔕 Tu ne recevras plus les notifications PP.', ephemeral: true });
+        } else {
+          await member.roles.add(roleId);
+          return interaction.reply({ content: '🔔 Tu recevras désormais les notifications PP.', ephemeral: true });
+        }
+      } catch (err) {
+        console.error(err);
+        return interaction.reply({ content: '❌ Impossible de modifier ton rôle de notification.', ephemeral: true });
+      }
+    }
+
+    // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
+    if (interaction.isButton()) {
+
+      const gameButtons = ['change_map', 'start', 'cancel_registration', 'spectate', 'attack_win', 'defense_win', 'cancel_game'];
+
+      if (gameButtons.includes(interaction.customId) && !game) {
+        return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
+      }
+
+      const ownerOnlyButtons = ['start', 'cancel_registration', 'attack_win', 'defense_win', 'cancel_game'];
+
+      if (ownerOnlyButtons.includes(interaction.customId) && !canManageThisGame) {
+        return interaction.reply({ content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.', ephemeral: true });
+      }
+
+      const verifiedOnly = ['spectate'];
+      if (verifiedOnly.includes(interaction.customId) && !isVerified) {
+        return interaction.reply({ content: '⛔ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
+      }
+    }
+
+    const waitingVC = game ? interaction.guild.channels.cache.get(game.waitingVC) : null;
+
+    async function moveVerifiedToVC(member, vc) {
+      if (!member || !vc) return;
+      const originalLimit = vc.userLimit;
+
+      try {
+        if (vc.userLimit > 0 && vc.members.size >= vc.userLimit) {
+          await vc.edit({ userLimit: vc.members.size + 1 });
+        }
+        await member.voice.setChannel(vc).catch(() => {});
+      } finally {
+        if (vc.editable) {
+          await vc.edit({ userLimit: originalLimit }).catch(() => {});
+        }
+      }
+    }
+
+    // ── COMMANDES SLASH ──
+    if (interaction.isChatInputCommand() && interaction.commandName === 'pp') {
+      if (!isMod) {
+        return interaction.reply({ content: '⛔ Seuls les Organisateur de parties peuvent créer une partie.', ephemeral: true });
+      }
+
+      const modal = new ModalBuilder().setCustomId('pp_create_modal').setTitle('Créer une partie personnalisée');
+      const valorantCodeInput = new TextInputBuilder()
+        .setCustomId('valorant_code')
+        .setLabel('Code de groupe Valorant')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setMinLength(6)
+        .setMaxLength(6);
+
+      modal.addComponents(new ActionRowBuilder().addComponents(valorantCodeInput));
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        const result = await Points.updateMany({}, { $set: { rr: 0, games: 0, wins: 0 } });
+        await updateTop15Embed();
+
+        return interaction.editReply(
+          `✅ Nouvelle saison initialisée.\n` +
+          `Joueurs reset : **${result.modifiedCount ?? 0}**`
+        );
+      } catch (err) {
+        console.error('Erreur resetseason :', err);
+        return interaction.editReply('❌ Impossible de réinitialiser la saison.');
+      }
+    }
+
+    // ── MODAL SUBMIT ──
+    if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
+      await interaction.deferReply({ ephemeral: true });
+      const valorantCode = interaction.fields.getTextInputValue('valorant_code');
+      const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
+      if (!verifiedRole) return interaction.editReply("⚠️ Le rôle Vérifié n'existe pas.");
+
+      const category = await interaction.guild.channels.create({
+        name: 'ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ',
+        type: 4,
+        permissionOverwrites: [
+          { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+          { id: verifiedRole.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+          ...(MOD_ROLE_ID ? [{
+            id: MOD_ROLE_ID,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.MoveMembers]
+          }] : [])
+        ]
+      });
+
+      const communityCategory = interaction.guild.channels.cache.get(COMMUNITY_CATEGORY_ID)
+        || await interaction.guild.channels.fetch(COMMUNITY_CATEGORY_ID).catch(() => null);
+
+      if (communityCategory) {
+        await category.setPosition(communityCategory.position + 1).catch(console.error);
+      }
+
+      const waitingVC = await interaction.guild.channels.create({
+        name: `┃préparation ${valorantCode}`,
+        type: 2,
+        parent: category.id,
+        userLimit: 10,
+        permissionOverwrites: [
+          { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+          { id: verifiedRole.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak] },
+          ...(MOD_ROLE_ID ? [{
+            id: MOD_ROLE_ID,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.MoveMembers]
+          }] : [])
+        ]
+      });
+
+      const map = maps[Math.floor(Math.random() * maps.length)];
+
+      const embed = buildAnnounceEmbed({
+        waitingVCId: waitingVC.id,
+        mode: '5v5',
+        code: valorantCode,
+        organisateur: interaction.member.displayName,
+        remaining: 10,
+        votes: 0,
+        needed: 6,
+        playersText: '*en attente de participants...*',
+        mapImage: map?.image || 'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
+        footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 })
+      });
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('change_map').setLabel('Map rotation').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('start').setLabel('Lancer la partie').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('cancel_registration').setLabel('Annuler').setStyle(ButtonStyle.Primary)
+      );
+
+      const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
+      const newGame = {
+        id: msg.id,
+        messageId: msg.id,
+        channelId: interaction.channel.id,
+        valorantCode,
+        categoryId: category.id,
+        waitingVC: waitingVC.id,
+        players: [],
+        spectators: {},
+        mapName: map.name,
+        mapImage: map.image,
+        changeMapVotes: [],
+        locks: {},
+        creatorId: interaction.user.id,
+        creatorName: interaction.member.displayName,
+        creatorAvatar: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+      };
+
+      gamesData.games.push(newGame);
+      await saveGame(newGame);
+      return interaction.editReply('✅ Partie créée.');
+    }
+
+    // ── SELECT MENU OBSERVER ──
+    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
+      if (!isVerified) {
+        return interaction.reply({ content: '⛔ Seuls les Vérifiés peuvent observer.', ephemeral: true });
+      }
+
+      if (!game) {
+        return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
+      }
+
+      await interaction.deferUpdate();
+
+      const choice = interaction.values[0];
+      const att = interaction.guild.channels.cache.get(game.attVC);
+      const def = interaction.guild.channels.cache.get(game.defVC);
+      const vc = (choice === 'attack' ? att : def) || waitingVC;
+
+      if (!vc) {
+        return interaction.editReply({ content: '❌ Aucun salon disponible.', components: [] });
+      }
+
+      await moveVerifiedToVC(interaction.member, vc);
+
+      if (!game.spectators) game.spectators = {};
+      game.spectators[interaction.user.id] = choice;
+
+      saveGameDebounced(game);
+      await updateRegistrationEmbed(interaction.guild, game);
+
+      return interaction.editReply({
+        content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
+        components: []
+      });
+    }
+
+    if (interaction.isButton()) {
+      switch (interaction.customId) {
+
+        case 'change_map': {
+          if (!game) return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
+
+          const voterId = interaction.user.id;
+          const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
+          const inPrepVC = prepVC?.members?.has(voterId);
+
+          if (!inPrepVC) {
+            return interaction.reply({ content: "❌ Tu dois être dans le vocal de préparation pour voter.", ephemeral: true });
+          }
+
+          if (!game.changeMapVotes) game.changeMapVotes = [];
+
+          if (game.changeMapVotes.includes(voterId)) {
+            return interaction.reply({ content: "✅ Tu as déjà voté pour changer la map.", ephemeral: true });
+          }
+
+          game.changeMapVotes.push(voterId);
+
+          const needed = 6;
+          const votes = game.changeMapVotes.length;
+
+          if (votes >= needed) {
+            const currentName = game.mapName;
+            const pool = maps.filter(m => m.name !== currentName);
+            const newMap = pool.length ? pool[Math.floor(Math.random() * pool.length)] : maps[Math.floor(Math.random() * maps.length)];
+
+            game.mapName = newMap.name;
+            game.mapImage = newMap.image;
+            game.changeMapVotes = [];
+            saveGameDebounced(game);
+
+            await updateRegistrationEmbed(interaction.guild, game);
+
+            return interaction.reply({
+              content: `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`,
+              ephemeral: true
+            });
+          }
+
+          await saveGame(game);
+          await updateRegistrationEmbed(interaction.guild, game);
+
+          return interaction.reply({ content: `✅ Vote enregistré (${votes}/${needed}).`, ephemeral: true });
+        }
+
+        case 'cancel_registration': {
+          const WAITING_ROOM_ID = '1474562499897594071';
+          const lobbyVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
+
+          if (!lobbyVC) {
+            return interaction.reply({ content: "❌ Salon 'salle d'attente' introuvable.", ephemeral: true });
+          }
+
+          if (game.players?.length) {
+            await Promise.all(game.players.map(async (id) => {
+              const member = interaction.guild.members.cache.get(id) || null;
+              if (member?.voice?.channel) {
+                await member.voice.setChannel(lobbyVC).catch(() => {});
+              }
+            }));
+          }
+
+          if (game.spectators) {
+            await Promise.all(Object.keys(game.spectators).map(async (id) => {
+              const member = interaction.guild.members.cache.get(id) || null;
+              if (member?.voice?.channel) {
+                await member.voice.setChannel(lobbyVC).catch(() => {});
+              }
+            }));
+          }
+
+          const toDelete = [game.attVC, game.defVC, game.waitingVC, game.categoryId].filter(Boolean);
+
+          await Promise.all(toDelete.map(async (id) => {
+            const ch = interaction.guild.channels.cache.get(id);
+            if (ch) await ch.delete().catch(() => {});
+          }));
+
+          const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
+          if (registrationMsg?.deletable) {
+            registrationMsg.delete().catch(() => {});
+          }
+
+          gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+          await deleteGame(game.id);
+
+          try {
+            if (!interaction.replied && !interaction.deferred) {
+              await interaction.reply({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
+            } else {
+              await interaction.followUp({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
+            }
+          } catch {}
+
+          if (gameLocks[game.id]) delete gameLocks[game.id];
+          break;
+        }
+
+        case 'start': {
+          await interaction.deferReply({ ephemeral: true });
+
+          const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
+          if (!verifiedRole) {
+            return interaction.editReply({ content: '⚠️ Rôle Vérifié introuvable.' });
+          }
+
+          if (game.players.length !== 10) {
+            return interaction.editReply({
+              content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
+            });
+          }
+
+          const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
+          if (registrationMsg?.deletable) {
+            registrationMsg.delete().catch(() => {});
+          }
+
+          function balanceTeams(players) {
+            if (players.length !== 10) {
+              throw new Error(`Équilibrage impossible : ${players.length} joueurs au lieu de 10.`);
+            }
+
+            players.sort((a, b) => b.rankValue - a.rankValue);
+            let best = null;
+
+            function combinations(arr, k, start = 0, combo = [], result = []) {
+              if (combo.length === k) { result.push([...combo]); return result; }
+              for (let i = start; i < arr.length; i++) {
+                combo.push(arr[i]);
+                combinations(arr, k, i + 1, combo, result);
+                combo.pop();
+              }
+              return result;
+            }
+
+            const allAttackCombinations = combinations(players, 5);
+
+            for (const attackers of allAttackCombinations) {
+              const attackerIds = new Set(attackers.map(p => p.id));
+              const defenders = players.filter(p => !attackerIds.has(p.id));
+
+              const sumA = attackers.reduce((sum, p) => sum + p.rankValue, 0);
+              const sumB = defenders.reduce((sum, p) => sum + p.rankValue, 0);
+              const diff = Math.abs(sumA - sumB);
+
+              if (!best || diff < best.diff) {
+                best = { attackers, defenders, diff };
+              }
+            }
+
+            return { attackers: best.attackers, defenders: best.defenders };
+          }
+
+          const RANK_VALUES_BY_ID = {
+            '1114187578866933790': 70, '1114182691550658650': 61, '1461352160850870427': 55,
+            '1461352201267188046': 46, '1114186784574812332': 44, '1461352272075292844': 36,
+            '1461352294237868222': 32, '1114187919662522429': 30, '1461352361355378688': 29,
+            '1461352408788762738': 28, '1113191909876318268': 27, '1461352440132800768': 25,
+            '1461352460227580111': 23, '1113191866888884274': 22, '1461352488623014026': 21,
+            '1461352505257754888': 20, '1113191838657020074': 19, '1461352528250933369': 18,
+            '1461352567647768729': 18, '1113191790967799889': 17, '1461352629182529740': 17,
+            '1461352645309759508': 16, '1461352661684064309': 14, '1461352687777091666': 12,
+            '1461352715631460516': 10
+          };
+
+          const sortedPlayers = game.players.map(userId => {
+            const member = interaction.guild.members.cache.get(userId);
+            const rankValue = member
+              ? member.roles.cache.reduce((val, role) => val || RANK_VALUES_BY_ID[role.id], 0)
+              : 0;
+            return { id: userId, member, rankValue };
+          });
+
+          const balanced = balanceTeams(sortedPlayers);
+          if (balanced.attackers.length !== 5 || balanced.defenders.length !== 5) {
+            return interaction.editReply({ content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.' });
+          }
+
+          game.attackers = balanced.attackers.map(p => ({ id: p.id, member: p.member }));
+          game.defenders = balanced.defenders.map(p => ({ id: p.id, member: p.member }));
+
+          const attSum = balanced.attackers.reduce((sum, p) => sum + p.rankValue, 0);
+          const defSum = balanced.defenders.reduce((sum, p) => sum + p.rankValue, 0);
+          console.log(`Équilibrage — Attaquants: ${attSum} | Défenseurs: ${defSum} | Diff: ${Math.abs(attSum - defSum)}`);
+
+          const everyoneRole = interaction.guild.roles.everyone;
+          const category = interaction.guild.channels.cache.get(game.categoryId);
+
+          for (const id of [game.attVC, game.defVC]) {
+            const ch = interaction.guild.channels.cache.get(id);
+            if (ch) await ch.delete().catch(() => {});
+          }
+
+          const attVC = await interaction.guild.channels.create({
+            name: '┃attaquants',
+            type: 2,
+            parent: category?.id,
+            userLimit: 5,
+            permissionOverwrites: [
+              { id: everyoneRole.id, deny: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+              { id: VERIFIED_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel], deny: [PermissionsBitField.Flags.Connect] },
+              ...game.attackers.map(p => ({
+                id: p.id,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak]
+              })),
+            ],
+          });
+
+          const defVC = await interaction.guild.channels.create({
+            name: '┃défenseurs',
+            type: 2,
+            parent: category?.id,
+            userLimit: 5,
+            permissionOverwrites: [
+              { id: everyoneRole.id, deny: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+              { id: VERIFIED_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel], deny: [PermissionsBitField.Flags.Connect] },
+              ...game.defenders.map(p => ({
+                id: p.id,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.Speak]
+              })),
+            ],
+          });
+
+          game.attVC = attVC.id;
+          game.defVC = defVC.id;
+
+          await saveGame(game);
+
+          const movePromises = [];
+
+          for (const p of game.attackers) {
+            if (p.member?.voice?.channel) movePromises.push(p.member.voice.setChannel(attVC).catch(() => {}));
+          }
+          for (const p of game.defenders) {
+            if (p.member?.voice?.channel) movePromises.push(p.member.voice.setChannel(defVC).catch(() => {}));
+          }
+          if (game.spectators) {
+            for (const [id, choice] of Object.entries(game.spectators)) {
+              const member = interaction.guild.members.cache.get(id) || null;
+              const vc = choice === 'attack' ? attVC : defVC;
+              if (member?.voice?.channel) movePromises.push(member.voice.setChannel(vc).catch(() => {}));
+            }
+          }
+
+          await Promise.all(movePromises);
+
+          const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
+          if (prepVC) await prepVC.delete().catch(() => {});
+
+          const sortTeamByRank = (team) => {
+            let data = [];
+            for (const player of team) {
+              const member = interaction.guild.members.cache.get(player.id) || null;
+              if (!member) continue;
+              const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+              const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+              const rankEmoji = rankRole ? rankEmojis[rankRole.name] : '<:Unranked:1465744234182086789>';
+              data.push({ id: player.id, rankValue, rankEmoji });
+            }
+            data.sort((a, b) => a.rankValue - b.rankValue);
+            return data.map(p => `${p.rankEmoji} <@${p.id}>`).join('\n') || 'Aucun';
+          };
+
+          const attackersText = sortTeamByRank(game.attackers);
+          const defendersText = sortTeamByRank(game.defenders);
+
+          const gameEmbed = buildInGameEmbed({
+            attackersText,
+            defendersText,
+            mapImage: game.mapImage,
+            footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+            footerText: `Partie lancée par ${interaction.member.displayName}`
+          });
+
+          const buttons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('spectate').setLabel('Spectate').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('attack_win').setLabel('Attaquants').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('defense_win').setLabel('Défenseurs').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('cancel_game').setLabel('Annuler').setStyle(ButtonStyle.Danger)
+          );
+
+          const inGameMsg = await interaction.channel.send({ embeds: [gameEmbed], components: [buttons] });
+
+          game.manageMessageId = inGameMsg.id;
+          await saveGame(game);
+
+          await interaction.editReply('✅ Partie lancée');
+          break;
+        }
+
+        case 'spectate': {
+          const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
+          if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
+            return interaction.reply({ content: '❌ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
+          }
+
+          if (game.players.includes(interaction.user.id)) {
+            return interaction.reply({ content: '❌ Tu es déjà inscrit à la partie.', ephemeral: true });
+          }
+
+          const selectMenu = new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId(`spectate_select_${game.id}`)
+              .setPlaceholder('Assure toi d\'être dans un salon vocal !')
+              .addOptions([
+                { label: 'Observer les attaquants', value: 'attack' },
+                { label: 'Observer les défenseurs', value: 'defense' }
+              ])
+          );
+
+          return interaction.reply({ content: '', components: [selectMenu], ephemeral: true });
+        }
+
+        case 'attack_win':
+        case 'defense_win':
+        case 'cancel_game': {
+          await interaction.deferUpdate();
+          if (!game) return;
+
+          if (gameLocks[game.id]) return;
+          gameLocks[game.id] = true;
+
+          try {
+            const WAITING_ROOM_ID = '1474562499897594071';
+            const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
+
+            if (!waitingVC) {
+              console.log("❌ Lobby principal introuvable.");
+              return;
+            }
+
+            try {
+              if (interaction.message?.editable) {
+                const disabledRows = interaction.message.components.map(row =>
+                  new ActionRowBuilder().addComponents(
+                    row.components.map(component => ButtonBuilder.from(component).setDisabled(true))
+                  )
+                );
+                await interaction.message.edit({ components: disabledRows }).catch(() => {});
+              }
+            } catch (err) {
+              console.error('Erreur désactivation boutons fin de partie :', err);
+            }
+
+            const attChannel = interaction.guild.channels.cache.get(game.attVC);
+            const defChannel = interaction.guild.channels.cache.get(game.defVC);
+
+            const attackers = game.attackers.map(p => p.id);
+            const defenders = game.defenders.map(p => p.id);
+            const allPlayers = [...attackers, ...defenders];
+
+            const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
+            const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
+            const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
+
+            const everyoneInGameVCs = [...new Set([...liveAttackers, ...liveDefenders, ...allPlayers, ...spectatorIds])];
+
+            const moveMembersToVC = async (ids, vc) => {
+              await Promise.all(ids.map(async (id) => {
+                const member = interaction.guild.members.cache.get(id) || null;
+                if (member?.voice?.channel) await member.voice.setChannel(vc).catch(() => {});
+              }));
+            };
+
+            await moveMembersToVC(everyoneInGameVCs, waitingVC);
+
+            if (game.manageMessageId) {
+              const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
+              if (inGameMsg?.deletable) await inGameMsg.delete().catch(() => {});
+            }
+
+            if (interaction.customId === 'cancel_game') {
+              for (const id of [game.attVC, game.defVC, game.categoryId]) {
+                const ch = interaction.guild.channels.cache.get(id);
+                if (ch) await ch.delete().catch(() => {});
+              }
+              gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+              await deleteGame(game.id);
+              return;
+            }
+
+            const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
+            const matchRR = {};
+
+            for (const playerId of allPlayers) {
+              const currentStats = await getPlayerPoints(playerId);
+              const member = interaction.guild.members.cache.get(playerId) || await interaction.guild.members.fetch(playerId).catch(() => null);
+              const isWinner = (winningSide === 'attack' && attackers.includes(playerId)) || (winningSide === 'defense' && defenders.includes(playerId));
+              const delta = getPlayerRRDelta(member, isWinner);
+
+              currentStats.rr = Math.max(0, currentStats.rr + delta);
+              currentStats.games += 1;
+              if (isWinner) currentStats.wins += 1;
+
+              await setPlayerPoints(playerId, currentStats);
+              matchRR[playerId] = delta;
+            }
+
+            await updateTop15Embed();
+
+            for (const id of [game.attVC, game.defVC, game.categoryId]) {
+              const ch = interaction.guild.channels.cache.get(id);
+              if (ch) await ch.delete().catch(() => {});
+            }
+
+            gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+            await deleteGame(game.id);
+
+            const formatPlayers = async (ids) => {
+              let data = [];
+              for (const id of ids) {
+                const member = interaction.guild.members.cache.get(id) || await interaction.guild.members.fetch(id).catch(() => null);
+                if (!member) continue;
+
+                const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+                const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+                const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
+                const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+
+                data.push({ id, rankValue, rankEmoji, rrDisplay });
+              }
+              data.sort((a, b) => a.rankValue - b.rankValue);
+              return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
+            };
+
+            const embed = buildResultEmbed({
+              attackersText: await formatPlayers(attackers),
+              defendersText: await formatPlayers(defenders),
+              footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+              footerText: `Partie validée par ${interaction.member.displayName}`,
+              winningSide
+            });
+
+            await interaction.channel.send({ embeds: [embed] }).catch(console.error);
+          } finally {
+            delete gameLocks[game.id];
+          }
+
+          break;
+        }
+      }
+    }
+
+    if (interaction.isChatInputCommand() && interaction.commandName === 'manage') {
+      const targetUser = interaction.options.getUser('joueur');
+      const userStats = await getPlayerPoints(targetUser.id);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`⚙️ GESTION DE ${targetUser.tag}`)
+        .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
+        .setColor(EMBED_COLOR)
+        .addFields(
+          { name: 'RR actuel', value: `${userStats.rr} ʀʀ`, inline: true },
+          { name: 'Parties jouées', value: `${userStats.games}`, inline: true },
+          { name: 'Victoires', value: `${userStats.wins}`, inline: true }
+        )
+        .setFooter({ text: 'Utilisez les boutons ci-dessous pour gérer ce joueur' });
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`manage_add_${targetUser.id}`).setLabel('+ Ajouter RR').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`manage_remove_${targetUser.id}`).setLabel('- Retirer RR').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`manage_reset_${targetUser.id}`).setLabel('🔄 Reset Complet').setStyle(ButtonStyle.Secondary)
+      );
+
+      return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    }
+
+    const RANK_ROLES = {
+      Radiant: '1114187578866933790',
+      Immortal3: '1114182691550658650',
+      Immortal2: '1461352160850870427',
+      Immortal1: '1461352201267188046',
+      Ascendant3: '1114186784574812332',
+      Ascendant2: '1461352272075292844',
+      Ascendant1: '1461352294237868222',
+      Diamond3: '1114187919662522429',
+      Diamond2: '1461352361355378688',
+      Diamond1: '1461352408788762738',
+      Platinum3: '1113191909876318268',
+      Platinum2: '1461352440132800768',
+      Platinum1: '1461352460227580111',
+      Gold3: '1113191866888884274',
+      Gold2: '1461352488623014026',
+      Gold1: '1461352505257754888',
+      Silver3: '1113191838657020074',
+      Silver2: '1461352528250933369',
+      Silver1: '1461352567647768729',
+      Bronze3: '1113191790967799889',
+      Bronze2: '1461352629182529740',
+      Bronze1: '1461352645309759508',
+      Iron3: '1461352661684064309',
+      Iron2: '1461352687777091666',
+      Iron1: '1461352715631460516'
+    };
+
+    function memberHasSelectedRank(member) {
+      if (!member?.roles?.cache) return false;
+      return Object.values(RANK_ROLES).some(roleId => member.roles.cache.has(roleId));
+    }
+
+    // --------------------------------------
+    // MENU RANK
+    // --------------------------------------
+    if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') {
+      if (interaction.replied || interaction.deferred) return;
+
+      await interaction.reply({ content: 'Mise à jour du rank…', ephemeral: true });
+
+      const thread = interaction.channel;
+      if (thread?.isThread()) await thread.sendTyping();
+      await new Promise(r => setTimeout(r, 250));
+
+      for (const roleId of Object.values(RANK_ROLES)) {
+        if (interaction.member.roles.cache.has(roleId)) {
+          await interaction.member.roles.remove(roleId).catch(() => {});
+        }
+      }
+
+      const selectedRank = interaction.values[0];
+      const roleIdToAdd = RANK_ROLES[selectedRank];
+
+      await interaction.member.roles.add(roleIdToAdd).catch(() => {});
+
+      const role = interaction.guild.roles.cache.get(roleIdToAdd);
+
+      const rankEmbed = new EmbedBuilder()
+        .setColor(EMBED_COLOR)
+        .setDescription(`### Ton peak rank 2025 a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`)
+        .setFooter({ text: 'Tu peux maintenant utiliser le bouton "Me renommer" ci-dessous.' });
+
+      await interaction.editReply({ content: null, embeds: [rankEmbed] });
+
+      try {
+        const messages = await thread.messages.fetch({ limit: 10 });
+        const renameMessage = messages.find(msg =>
+          msg.author.id === client.user.id &&
+          msg.components?.some(row => row.components?.some(component => component.customId === 'verify_riot'))
+        );
+
+        if (renameMessage) {
+          const enabledButton = new ButtonBuilder()
+            .setCustomId('verify_riot')
+            .setLabel(`Me renommer pour débloquer l'accès`)
+            .setEmoji({ id: '1493378334326001816' })
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false);
+
+          await renameMessage.edit({
+            content: '-# Rank sélectionné. Tu peux maintenant te renommer.',
+            components: [new ActionRowBuilder().addComponents(enabledButton)]
+          });
+        }
+      } catch (err) {
+        console.error('Erreur activation bouton :', err);
+      }
+
+      return;
+    }
+
+    // --------------------------------------
+    // BOUTON RIOT
+    // --------------------------------------
+    if (interaction.isButton() && interaction.customId === 'verify_riot') {
+      if (interaction.replied || interaction.deferred) return;
+
+      if (!memberHasSelectedRank(interaction.member)) {
+        return interaction.reply({
+          content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank 2025** avant de pouvoir te renommer.',
+          ephemeral: true
+        });
+      }
+
+      const modal = new ModalBuilder().setCustomId('riot_modal').setTitle('Vérification Riot ID');
+
+      const pseudoInput = new TextInputBuilder()
+        .setCustomId('riot_pseudo')
+        .setLabel('Pseudo sur VALORANT, sans le #TAG')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      modal.addComponents(new ActionRowBuilder().addComponents(pseudoInput));
+      await interaction.showModal(modal);
+      return;
+    }
+
+    // --------------------------------------
+    // MODAL RIOT
+    // --------------------------------------
+    if (interaction.isModalSubmit() && interaction.customId === 'riot_modal') {
+      if (interaction.replied || interaction.deferred) return;
+
+      const pseudo = interaction.fields.getTextInputValue('riot_pseudo');
+
+      await setRiotUser(interaction.user.id, { pseudo });
+      await interaction.member.setNickname(pseudo).catch(() => {});
+
+      await interaction.reply({ content: 'Vérification en cours…', ephemeral: true });
+
+      const thread = interaction.channel;
+      if (thread?.isThread?.()) await thread.sendTyping();
+      await new Promise(r => setTimeout(r, 250));
+
+      const verifyEmbed = new EmbedBuilder()
+        .setColor(EMBED_COLOR)
+        .setDescription(
+          `# ${interaction.user.tag} <:DISCORD:1472201746246799451><:DEBUT:1472199399382978672><:MILIEU:1472199381854847109><:FIN:1472199414155051172><:RIOT:1472201753306071217> ${pseudo}`
+        )
+        .setFooter({ text: 'Ton compte est vérifié, amuse-toi bien !' });
+
+      await interaction.editReply({ content: null, embeds: [verifyEmbed] });
+
+      if (thread?.isThread?.()) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        await thread.setLocked(true).catch(() => {});
+        await thread.setArchived(true).catch(() => {});
+        await thread.delete().catch(() => {});
+      }
+
+      await interaction.member.roles.add(ROLE_VERIFIE).catch(() => {});
+      await interaction.member.roles.add(ROLE_NOTIF_PP).catch(() => {});
+
+      return;
+    }
+
+    if (interaction.isChatInputCommand() && interaction.commandName === 'top15') {
+      await interaction.deferReply({ ephemeral: true });
+      const embed = buildLeaderboardEmbed({ sorted: [], totalInvitesPerMember: {}, guildMembersCache: null, playerCount: 0 });
+      const msg = await interaction.channel.send({ embeds: [embed] });
+      await setConfigValue('top15Data', { messageId: msg.id, channelId: interaction.channel.id });
+      await updateTop15Embed();
+      return interaction.editReply({ content: "✅ TOP15 créé dans ce salon", ephemeral: true });
+    }
+
+    if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('open_ticket')
+          .setLabel('┃Ouvrir un ticket')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji({ id: '1466470365269070026' }),
+        new ButtonBuilder()
+          .setCustomId('toggle_notif_pp')
+          .setLabel('┃Notifications PP')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji({ id: '1466608491861901362' })
+      );
+
+      await interaction.channel.send({ embeds: [buildRulesEmbed()], components: [row] });
+      return interaction.reply({ content: '✅ Règles envoyées', ephemeral: true });
+    }
+
+    // ── Gestion du modal TICKET REASON ──
+    if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
+      await interaction.deferReply({ ephemeral: true });
+
+      const guild = interaction.guild;
+      const member = interaction.member;
+      const reason = interaction.fields.getTextInputValue('ticket_reason') || '';
+
+      const safeReason = reason
+        .toLowerCase()
+        .trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 30);
+
+      const finalReason = safeReason || 'demande';
+
+      const configFile = path.join(__dirname, 'data', 'config.json');
+      if (!fs.existsSync(configFile)) {
+        return interaction.editReply({ content: '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.', ephemeral: true });
+      }
+
+      const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+      const ticketCategoryId = config.ticketCategoryId;
+
+      const existingTicket = guild.channels.cache.find(ch =>
+        ch.parentId === ticketCategoryId &&
+        ch.name.startsWith('┃ticket-') &&
+        ch.permissionOverwrites?.cache?.has(member.id)
+      );
+
+      if (existingTicket) {
+        return interaction.editReply({ content: `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`, ephemeral: true });
+      }
+
+      const staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
+      if (!staffRole) {
+        return interaction.editReply({ content: '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.', ephemeral: true });
+      }
+
+      const ticketChannel = await guild.channels.create({
+        name: `┃ticket-${finalReason}`,
+        type: 0,
+        parent: ticketCategoryId,
+        permissionOverwrites: [
+          { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+          {
+            id: member.id,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory,
+              PermissionsBitField.Flags.AttachFiles
+            ]
+          },
+          {
+            id: staffRole.id,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory,
+              PermissionsBitField.Flags.AttachFiles,
+              PermissionsBitField.Flags.ManageMessages
+            ]
+          }
+        ]
+      });
+
+      const ticketEmbed = new EmbedBuilder()
+        .setDescription(
+          `- Motif : **${reason || 'Demande'}**\n` +
+          `> Merci de nous expliquer la raison de ta demande.\n` +
+          `> L'équipe a été notifiée et viendra t'aider.\n\n`
+        )
+        .setColor(EMBED_COLOR)
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png');
+
+      const closeButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('close_ticket')
+          .setEmoji({ id: '1466470349351686194' })
+          .setLabel('┃Clôturer la discussion')
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      await ticketChannel.send({ content: `${member} ${staffRole}`, embeds: [ticketEmbed], components: [closeButton] });
+
+      return interaction.editReply({ content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`, ephemeral: true });
+    }
+
+    // ── Gestion du modal MANAGE ──
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const [, , type, userId] = interaction.customId.split('_');
+      const amount = parseInt(interaction.fields.getTextInputValue('rr_amount'));
+
+      if (isNaN(amount) || amount <= 0) {
+        return interaction.editReply('❌ Montant invalide. Veuillez entrer un nombre positif.');
+      }
+
+      const currentStats = await getPlayerPoints(userId);
+
+      if (type === 'add') {
+        currentStats.rr += amount;
+      } else if (type === 'remove') {
+        currentStats.rr -= amount;
+        if (currentStats.rr < 0) currentStats.rr = 0;
+      }
+
+      await setPlayerPoints(userId, currentStats);
+      await updateTop15Embed();
+
+      const actionText = type === 'add' ? 'ajouté' : 'retiré';
+      return interaction.editReply(`✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`);
+    }
+
+  } catch (err) {
     console.error(err);
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2882,107 +2603,79 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   const guild = newState.guild || oldState.guild;
   if (!guild) return;
 
-
-  // ─────────────────────────────
-  // Gestion des parties PP
-  // ─────────────────────────────
   const affectedGame = gamesData.games.find(game =>
-  game.waitingVC === newState.channelId || game.waitingVC === oldState.channelId
-);
+    game.waitingVC === newState.channelId || game.waitingVC === oldState.channelId
+  );
 
-if (affectedGame) {
-  if (newState.channelId === affectedGame.waitingVC) {
-    if (!affectedGame.players.includes(newState.member.id)) {
-      if (affectedGame.players.length >= 10) {
-        await newState.member.voice.disconnect().catch(() => {});
-        return;
+  if (affectedGame) {
+    if (newState.channelId === affectedGame.waitingVC) {
+      if (!affectedGame.players.includes(newState.member.id)) {
+        if (affectedGame.players.length >= 10) {
+          await newState.member.voice.disconnect().catch(() => {});
+          return;
+        }
+
+        affectedGame.players.push(newState.member.id);
+        saveGameDebounced(affectedGame);
+        scheduleRegistrationUpdate(guild, affectedGame);
       }
+    }
 
-      affectedGame.players.push(newState.member.id);
-      saveGameDebounced(affectedGame); // ✅ CORRECT
+    if (oldState.channelId === affectedGame.waitingVC && oldState.channelId !== newState.channelId) {
+      affectedGame.players = affectedGame.players.filter(id => id !== oldState.member.id);
+      saveGameDebounced(affectedGame);
       scheduleRegistrationUpdate(guild, affectedGame);
     }
   }
 
-  if (oldState.channelId === affectedGame.waitingVC && oldState.channelId !== newState.channelId) {
-    affectedGame.players = affectedGame.players.filter(id => id !== oldState.member.id);
-    saveGameDebounced(affectedGame); // ✅
-    scheduleRegistrationUpdate(guild, affectedGame);
-  }
-}
-
-  // ─────────────────────────────
-  // Auto-création de vocal
-  // ─────────────────────────────
   if (newState.channelId === AUTO_CREATE_VC_ID) {
-  const member = newState.member;
-  if (!member) return;
+    const member = newState.member;
+    if (!member) return;
 
-  if (autoCreateLocks.has(member.id)) return;
-  autoCreateLocks.set(member.id, true);
+    if (autoCreateLocks.has(member.id)) return;
+    autoCreateLocks.set(member.id, true);
 
-  try {
-    // ✅ Si entre-temps il a déjà été déplacé, on stoppe
-    if (member.voice.channelId !== AUTO_CREATE_VC_ID) return;
+    try {
+      if (member.voice.channelId !== AUTO_CREATE_VC_ID) return;
 
-    const verifiedRoleId = ROLE_VERIFIE;
-    const everyoneRoleId = guild.id;
+      const verifiedRoleId = ROLE_VERIFIE;
+      const everyoneRoleId = guild.id;
 
-    const channel = await guild.channels.create({
-      name: `${member.displayName}`,
-      type: 2,
-      parent: TEMP_VOCAL_CATEGORY_ID,
-      permissionOverwrites: [
-        {
-          id: everyoneRoleId,
-          deny: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.Connect
-          ]
-        },
-        {
-          id: verifiedRoleId,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.Connect
-          ],
-          deny: [
-            PermissionsBitField.Flags.ManageChannels
-          ]
-        },
-        {
-          id: member.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.Connect,
-            PermissionsBitField.Flags.ManageChannels
-          ]
-        }
-      ]
-    });
+      const channel = await guild.channels.create({
+        name: `${member.displayName}`,
+        type: 2,
+        parent: TEMP_VOCAL_CATEGORY_ID,
+        permissionOverwrites: [
+          { id: everyoneRoleId, deny: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect] },
+          {
+            id: verifiedRoleId,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect],
+            deny: [PermissionsBitField.Flags.ManageChannels]
+          },
+          {
+            id: member.id,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect, PermissionsBitField.Flags.ManageChannels]
+          }
+        ]
+      });
 
-    const createVC = guild.channels.cache.get(AUTO_CREATE_VC_ID);
+      const createVC = guild.channels.cache.get(AUTO_CREATE_VC_ID);
+      if (createVC && createVC.parentId === TEMP_VOCAL_CATEGORY_ID) {
+        await channel.setPosition(createVC.rawPosition + 1).catch(() => {});
+      }
 
-if (createVC && createVC.parentId === TEMP_VOCAL_CATEGORY_ID) {
-  await channel.setPosition(createVC.rawPosition + 1).catch(() => {});
-}
-
-    // ✅ Recheck avant move
-    if (member.voice.channelId === AUTO_CREATE_VC_ID) {
-      await member.voice.setChannel(channel).catch(() => {});
-    } else {
-      await channel.delete().catch(() => {});
+      if (member.voice.channelId === AUTO_CREATE_VC_ID) {
+        await member.voice.setChannel(channel).catch(() => {});
+      } else {
+        await channel.delete().catch(() => {});
+      }
+    } finally {
+      setTimeout(() => autoCreateLocks.delete(member.id), 2000);
     }
-  } finally {
-    setTimeout(() => autoCreateLocks.delete(member.id), 2000);
+
+    return;
   }
 
-  return;
-}
-
-  // ─────────────────────────────
-  // Suppression des vocaux vides de la catégorie
-  // ─────────────────────────────
   const leftChannel = oldState.channel;
 
   if (
@@ -2990,7 +2683,7 @@ if (createVC && createVC.parentId === TEMP_VOCAL_CATEGORY_ID) {
     leftChannel.type === 2 &&
     leftChannel.parentId === TEMP_VOCAL_CATEGORY_ID &&
     leftChannel.members.size === 0 &&
-    !EXEMPT_VC_IDS.includes(leftChannel.id) // ✅ dérogation
+    !EXEMPT_VC_IDS.includes(leftChannel.id)
   ) {
     try {
       await leftChannel.delete().catch(() => {});
@@ -3001,27 +2694,11 @@ if (createVC && createVC.parentId === TEMP_VOCAL_CATEGORY_ID) {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 client.on('guildMemberAdd', async member => {
-    console.log(`Nouveau membre détecté : ${member.displayName}`);
+  console.log(`Nouveau membre détecté : ${member.displayName}`);
 
-    const accountAgeDays = Math.floor((Date.now() - member.user.createdAt) / (1000 * 60 * 60 * 24));
+  const accountAgeDays = Math.floor((Date.now() - member.user.createdAt) / (1000 * 60 * 60 * 24));
 
-  // ❌ Compte trop récent = pas de thread privé
   if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
     const welcomeChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
 
@@ -3043,169 +2720,160 @@ client.on('guildMemberAdd', async member => {
     return;
   }
 
-    // =======================
-    // THREAD BIENVENUE PRIVÉ
-    // =======================
-    try {
-      const accueilChannel = member.guild.channels.cache.get(ACCUEIL_CHANNEL_ID);
+  try {
+    const accueilChannel = member.guild.channels.cache.get(ACCUEIL_CHANNEL_ID);
     if (accueilChannel) {
-        const thread = await accueilChannel.threads.create({
-            name: `${member.displayName}`,
-            autoArchiveDuration: 1440,
-            type: ChannelType.PrivateThread
-        });
+      const thread = await accueilChannel.threads.create({
+        name: `${member.displayName}`,
+        autoArchiveDuration: 1440,
+        type: ChannelType.PrivateThread
+      });
 
-        await thread.members.add(member.id);
+      await thread.members.add(member.id);
 
+      await thread.send(
+        `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**\n\n` +
+        `Pour débloquer l'accès, suis ces étapes :\n` +
+        `-# Choisis ton **PEAK RANK 2025**\n`
+      );
 
-        await thread.send(
-  `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**\n\n` +
-  `Pour débloquer l'accès, suis ces étapes :\n` +
-  `-# Choisis ton **PEAK RANK 2025**\n`
-);
+      const rankMenu = new StringSelectMenuBuilder()
+        .setCustomId('rank_select')
+        .setPlaceholder('Sélectionner')
+        .setMinValues(1)
+        .setMaxValues(1)
+        .addOptions([
+          { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } },
+          { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } },
+          { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } },
+          { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } },
+          { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } },
+          { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } },
+          { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } },
+          { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } },
+          { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } },
+          { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } },
+          { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } },
+          { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } },
+          { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } },
+          { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } },
+          { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } },
+          { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } },
+          { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } },
+          { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } },
+          { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } },
+          { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } },
+          { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } },
+          { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } },
+          { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } },
+          { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } },
+          { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } }
+        ]);
 
+      await thread.send({ components: [new ActionRowBuilder().addComponents(rankMenu)] });
 
-        const rankMenu = new StringSelectMenuBuilder()
-            .setCustomId('rank_select')
-            .setPlaceholder('Sélectionner') // 👈 ton "titre"
-            .setMinValues(1)
-            .setMaxValues(1)
-            .addOptions([ { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } }, { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } }, { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } }, { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } }, { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } }, { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } }, { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } }, { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } }, { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } }, { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } }, { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } }, { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } }, { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } }, { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } }, { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } }, { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } }, { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } }, { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } }, { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } }, { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } }, { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } }, { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } }, { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } }, { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } }, { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } } ]);
+      const riotButton = new ButtonBuilder()
+        .setCustomId('verify_riot')
+        .setLabel(`Me renommer pour débloquer l'accès`)
+        .setEmoji({ id: '1493378334326001816' })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
 
-        await thread.send({ components: [new ActionRowBuilder().addComponents(rankMenu)] });
-
-
-        const riotButton = new ButtonBuilder()
-    .setCustomId('verify_riot')
-    .setLabel(`Me renommer pour débloquer l'accès`)
-    .setEmoji({ id: '1493378334326001816' })
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(true);
-
-await thread.send({
-  content: `-# Attends que le **bouton** se débloque\n` +
-  `-# Entre ton pseudo in-game`,
-  components: [new ActionRowBuilder().addComponents(riotButton)]
-});
+      await thread.send({
+        content: `-# Attends que le **bouton** se débloque\n-# Entre ton pseudo in-game`,
+        components: [new ActionRowBuilder().addComponents(riotButton)]
+      });
     }
-    } catch (err) {
-  console.error('Erreur thread bienvenue :', err);
-}
+  } catch (err) {
+    console.error('Erreur thread bienvenue :', err);
+  }
 
-    // =======================
-    // EMBED DE BIENVENUE PUBLIC
-    // =======================
-const guild = member.guild;
+  const guild = member.guild;
+  const cachedInvites = invitesCache.get(guild.id) || new Map();
+  const guildInvites = await guild.invites.fetch();
+  const newInvites = new Map();
 
-// Récupérer les invites en cache
-const cachedInvites = invitesCache.get(guild.id) || new Map();
-
-// Récupérer les invites actuelles
-const guildInvites = await guild.invites.fetch();
-const newInvites = new Map();
-
-// Transformer en map par code pour comparer
-guildInvites.forEach(inv => {
-  newInvites.set(inv.code, {
-    code: inv.code,
-    inviter: inv.inviter || null,
-    uses: inv.uses,
-    maxAge: inv.maxAge,
-    temporary: inv.temporary
+  guildInvites.forEach(inv => {
+    newInvites.set(inv.code, {
+      code: inv.code,
+      inviter: inv.inviter || null,
+      uses: inv.uses,
+      maxAge: inv.maxAge,
+      temporary: inv.temporary
+    });
   });
-});
 
-// Trouver l'invite utilisée
-let usedInvite;
-for (const [code, invite] of newInvites.entries()) {
-  const oldUses = cachedInvites.get(code)?.uses || 0;
-  if (invite.uses > oldUses) {
-    usedInvite = invite;
-    break;
+  let usedInvite;
+  for (const [code, invite] of newInvites.entries()) {
+    const oldUses = cachedInvites.get(code)?.uses || 0;
+    if (invite.uses > oldUses) {
+      usedInvite = invite;
+      break;
+    }
   }
-}
 
-// Mettre à jour le cache
-invitesCache.set(guild.id, newInvites);
+  invitesCache.set(guild.id, newInvites);
 
-// ✅ Moyen d'invitation
-let inviterTag = '.gg/valorant-pp';
-if (usedInvite?.inviter) {
-  inviterTag = usedInvite.inviter.tag;
-}
-
-// ✅ Ancienneté du compte
-const memberJoinDate = member.user.createdAt;
-const accountAge = Math.floor((Date.now() - memberJoinDate) / (1000 * 60 * 60 * 24)); // en jours
-
-
-const welcomeChannel = guild.channels.cache.get(WELCOME_CHANNEL_ID);
-if (!welcomeChannel) return;
-
-const embed = new EmbedBuilder()
-  .setColor(0xc5b174)
-  .setDescription(
-    `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n\n` +
-    `-# **${member.user.tag}** (<@${member.id}>)\n` +
-    `-# Invité par **${inviterTag}**\n` +
-    `-# Sur Discord depuis **${accountAge} jours**`
-  )
-  .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
-  .setTimestamp();
-
-await welcomeChannel.send({ embeds: [embed] });
-
-if (usedInvite) {
-  const inviterId = usedInvite.inviter?.id;
-  if (inviterId) {
-    const currentInviteData = await getInviteData(inviterId);
-    currentInviteData.invites += 1;
-    currentInviteData.members.push(member.id);
-    await setInviteData(inviterId, currentInviteData);
+  let inviterTag = '.gg/valorant-pp';
+  if (usedInvite?.inviter) {
+    inviterTag = usedInvite.inviter.tag;
   }
-}
+
+  const memberJoinDate = member.user.createdAt;
+  const accountAge = Math.floor((Date.now() - memberJoinDate) / (1000 * 60 * 60 * 24));
+
+  const welcomeChannel = guild.channels.cache.get(WELCOME_CHANNEL_ID);
+  if (!welcomeChannel) return;
+
+  const embed = new EmbedBuilder()
+    .setColor(0xc5b174)
+    .setDescription(
+      `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n\n` +
+      `-# **${member.user.tag}** (<@${member.id}>)\n` +
+      `-# Invité par **${inviterTag}**\n` +
+      `-# Sur Discord depuis **${accountAge} jours**`
+    )
+    .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
+    .setTimestamp();
+
+  await welcomeChannel.send({ embeds: [embed] });
+
+  if (usedInvite) {
+    const inviterId = usedInvite.inviter?.id;
+    if (inviterId) {
+      const currentInviteData = await getInviteData(inviterId);
+      currentInviteData.invites += 1;
+      currentInviteData.members.push(member.id);
+      await setInviteData(inviterId, currentInviteData);
+    }
+  }
 });
 
 client.on('guildMemberRemove', async member => {
   try {
-    // ✅ 1) Vérifie d'abord si c'est un ban récent
     let wasBanned = false;
 
     try {
-      const logs = await member.guild.fetchAuditLogs({
-        type: 22, // MEMBER_BAN_ADD
-        limit: 10
-      });
-
+      const logs = await member.guild.fetchAuditLogs({ type: 22, limit: 10 });
       const entry = logs.entries.find(entry =>
-        entry.target?.id === member.id &&
-        Date.now() - entry.createdTimestamp < 15000
+        entry.target?.id === member.id && Date.now() - entry.createdTimestamp < 15000
       );
-
-      if (entry) {
-        wasBanned = true;
-      }
+      if (entry) wasBanned = true;
     } catch (err) {
       console.error('Erreur audit logs guildMemberRemove :', err);
     }
 
-    // ✅ Si c'est un ban, on n'envoie PAS l'embed départ
-    if (wasBanned) {
-      return;
-    }
+    if (wasBanned) return;
 
     const leaveChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!leaveChannel) return;
 
     function formatServerDuration(joinedAt) {
       if (!joinedAt) return 'une durée inconnue';
-
       const diffMs = Date.now() - joinedAt.getTime();
       const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-
-      if (totalDays < 1) return 'moins d’un jour';
+      if (totalDays < 1) return 'moins d\u2019un jour';
       if (totalDays === 1) return '1 jour';
-
       return `${totalDays} jours`;
     }
 
@@ -3226,14 +2894,11 @@ client.on('guildMemberRemove', async member => {
   }
 });
 
-
-
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   try {
     const wasBooster = oldMember.roles.cache.has(BOOSTER_ROLE_ID);
     const isBooster = newMember.roles.cache.has(BOOSTER_ROLE_ID);
 
-    // ── BOOST ─────────────────────────────────────
     if (!wasBooster && isBooster) {
       const embed = new EmbedBuilder()
         .setColor(0xff73fa)
@@ -3249,56 +2914,46 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
 
-    // ── TIMEOUT ───────────────────────────────────
-const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp ?? 0;
-const newTimeoutTs = newMember.communicationDisabledUntilTimestamp ?? 0;
+    const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp ?? 0;
+    const newTimeoutTs = newMember.communicationDisabledUntilTimestamp ?? 0;
 
-const timeoutApplied =
-  newTimeoutTs > Date.now() &&
-  newTimeoutTs !== oldTimeoutTs;
+    const timeoutApplied = newTimeoutTs > Date.now() && newTimeoutTs !== oldTimeoutTs;
 
-if (timeoutApplied) {
-  let reason = 'Non fournie';
+    if (timeoutApplied) {
+      // ✅ Compteur d'exclusions temporaires (utilisé dans /onboarding → Mes statistiques)
+      await incrementPlayerTimeouts(newMember.id).catch(err => console.error('Erreur incrementPlayerTimeouts :', err));
 
-  try {
-    const logs = await newMember.guild.fetchAuditLogs({
-      type: 24, // MemberUpdate
-      limit: 10
-    });
+      let reason = 'Non fournie';
 
-    const entry = logs.entries.find(entry =>
-      entry.target?.id === newMember.id &&
-      Date.now() - entry.createdTimestamp < 15000
-    );
+      try {
+        const logs = await newMember.guild.fetchAuditLogs({ type: 24, limit: 10 });
+        const entry = logs.entries.find(entry =>
+          entry.target?.id === newMember.id && Date.now() - entry.createdTimestamp < 15000
+        );
+        if (entry?.reason) reason = entry.reason;
+      } catch (err) {
+        console.error('Erreur audit logs timeout :', err);
+      }
 
-    if (entry?.reason) {
-      reason = entry.reason;
+      const endUnix = Math.floor(newTimeoutTs / 1000);
+
+      const embed = new EmbedBuilder()
+        .setColor(0xe70019)
+        .setDescription(
+          `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
+          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+          `-# Temps restant : <t:${endUnix}:R>\n` +
+          `-# Raison : **${reason}**`
+        )
+        .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
+        .setTimestamp();
+
+      await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
-  } catch (err) {
-    console.error('Erreur audit logs timeout :', err);
-  }
-
-  const endUnix = Math.floor(newTimeoutTs / 1000);
-
-  const embed = new EmbedBuilder()
-    .setColor(0xe70019)
-    .setDescription(
-      `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
-      `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-      `-# Temps restant : <t:${endUnix}:R>\n` +
-      `-# Raison : **${reason}**`
-    )
-    .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
-    .setTimestamp();
-
-  await sendActivityMessage(newMember.guild, { embeds: [embed] });
-}
   } catch (err) {
     console.error('Erreur guildMemberUpdate activité :', err);
   }
 });
-
-
 
 client.on('guildBanAdd', async (ban) => {
   try {
@@ -3308,19 +2963,11 @@ client.on('guildBanAdd', async (ban) => {
     let reason = ban.reason || 'Non fournie';
 
     try {
-      const logs = await guild.fetchAuditLogs({
-        type: 22, // MEMBER_BAN_ADD
-        limit: 10
-      });
-
+      const logs = await guild.fetchAuditLogs({ type: 22, limit: 10 });
       const entry = logs.entries.find(entry =>
-        entry.target?.id === user.id &&
-        Date.now() - entry.createdTimestamp < 15000
+        entry.target?.id === user.id && Date.now() - entry.createdTimestamp < 15000
       );
-
-      if (entry?.reason) {
-        reason = entry.reason;
-      }
+      if (entry?.reason) reason = entry.reason;
     } catch (err) {
       console.error('Erreur audit logs ban :', err);
     }
@@ -3343,187 +2990,6 @@ client.on('guildBanAdd', async (ban) => {
 
 
 
-
-
-
-
-
-
-
-
-client.on('messageCreate', async message => {
-  if (message.author.bot) return;
-  if (!message.guild) return;
-
-  const isTrackerCommand = message.content.startsWith('!tracker');
-  const isInTrackerChannel = message.channel.id === TRACKER_CHANNEL_ID;
-
-  // ✅ Si quelqu’un fait !tracker hors du salon tracker
-  if (isTrackerCommand && !isInTrackerChannel) {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    await message.delete().catch(() => {});
-
-    const warning = await message.channel.send(
-      `## ${message.author}, cette commande est disponible uniquement dans <#${TRACKER_CHANNEL_ID}>.`
-    ).catch(() => null);
-
-    if (warning) {
-      setTimeout(() => {
-        warning.delete().catch(() => {});
-      }, 5000);
-    }
-
-    return;
-  }
-
-  // ✅ Modération stricte du salon tracker
-  if (isInTrackerChannel) {
-    const userId = message.author.id;
-    const now = Date.now();
-
-    if (!trackerSpamMap.has(userId)) {
-      trackerSpamMap.set(userId, []);
-    }
-
-    const strike = getActiveStrike(trackerSpamStrikeMap, userId, now);
-const penalty = getTrackerSpamPenalty(strike);
-
-    let timestamps = (trackerSpamMap.get(userId) || [])
-  .filter(ts => now - ts < TRACKER_SPAM_INTERVAL);
-
-timestamps.push(now);
-trackerSpamMap.set(userId, timestamps);
-
-    if (timestamps.length > penalty.limit) {
-      const member = message.member;
-
-      if (member?.moderatable) {
-        try {
-          await member.timeout(penalty.durationMs, 'Spam dans #tracker');
-
-          addStrike(trackerSpamStrikeMap, userId, now);
-          trackerSpamMap.delete(userId);
-
-          await message.delete().catch(() => {});
-
-          const warning = await message.channel.send(
-            `⛔ ${message.author} a été timeout **${penalty.label}** pour spam dans <#${TRACKER_CHANNEL_ID}>.`
-          ).catch(() => null);
-
-          if (warning) {
-            setTimeout(() => {
-              warning.delete().catch(() => {});
-            }, 5000);
-          }
-        } catch (err) {
-          console.error('Erreur timeout anti-spam #tracker :', err);
-        }
-      }
-
-      return;
-    }
-
-    // ❌ Tout message autre que !tracker est interdit dans #tracker
-    if (!isTrackerCommand) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await message.delete().catch(() => {});
-
-      const warning = await message.channel.send(
-        `## ${message.author}, ce salon accepte uniquement la commande \`!tracker\`.`
-      ).catch(() => null);
-
-      if (warning) {
-        setTimeout(() => {
-          warning.delete().catch(() => {});
-        }, 5000);
-      }
-
-      return;
-    }
-  }
-
-  // ✅ Traitement normal de !tracker dans le bon salon
-  if (!isTrackerCommand) return;
-
-  const args = message.content.split(' ');
-  const target =
-    message.mentions.members.first() ||
-    message.guild.members.cache.get(args[1]) ||
-    message.member;
-
-  await sendStatsEmbed(message, target);
-});
-
-
-async function sendStatsEmbed(message, member) {
-
-// Total d'invites par membre
-const invitesData = await getAllInvites();
-
-const totalInvitesPerMember = {};
-for (const inviterId in invitesData) {
-  totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
-}
-
-  // 🔹 Stats
-  const stats = await getPlayerPoints(member.id);
-  const winrate = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
-
-  // 🔹 Emoji de rank
-  const rankName = member.roles.cache.find(r => rankEmojis[r.name])?.name;
-  const rankEmoji = rankName ? rankEmojis[rankName] : '<:Unranked:1465744234182086789>';
-
-  // 🔹 Classement RR
-  const allPoints = await getAllPoints();
-const sorted = Object.entries(allPoints).sort((a, b) => b[1].rr - a[1].rr);
-  const index = sorted.findIndex(([id]) => id === member.id);
-  const position = index !== -1 ? index + 1 : '0';
-
-  // Top inviter global
-let topInviterId = null;
-let maxInvites = -1;
-for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
-  if (invites > maxInvites) {
-    maxInvites = invites;
-    topInviterId = id;
-  }
-}
-
-const memberInvites = totalInvitesPerMember[member.id] || 0;
-
-  // 🔹 Badges (à droite du pseudo)
-  const badgeTop1=position===1?BADGES.TOP1:'';
-  const badgeTopInviter=member.id===topInviterId&&maxInvites>0?BADGES.TOP_INVITER:'';
-
-  // 🔹 Ligne badges
-  let badgesLine='';
-  if (badgeTop1||badgeTopInviter) {
-    badgesLine=`${badgeTop1}${badgeTop1&&badgeTopInviter?'':''}${badgeTopInviter}`;
-  } else {
-    badgesLine='<:VIDE:1465704930160410847>';
-  }
-
-  // 🔹 Largeur titres égale
-  const formatName = (text) => `**${text.padEnd(10, ' ')}**`;
-
-
-  // 🔹 Embed
-  
-  const embed = new EmbedBuilder()
-    .setColor(0x242429)
-    .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
-    .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-    .setImage('https://media.discordapp.net/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=69cd4043&is=69cbeec3&hm=c48f50d90bdfe97814e4177e6812db40624e5659ef1bf59b48763c65da0f2a8c&=&format=webp&quality=lossless&width=1032&height=44')
-      .addFields( { name: formatName('ᴘᴏꜱɪᴛɪᴏɴ'), value: position !== '<:POINTS:1493266536813690970> ' ? `<:POINTS:1493266536813690970> **#${position}**` : `<:POINTS:1493266536813690970> `, inline: true },
-                  { name: formatName('ᴘᴏɪɴᴛꜱ'), value: `<:Performance:1472667834881409181> **${stats.rr}** ʀʀ`, inline: true },
-                  { name: formatName('ɪɴᴠɪᴛᴇꜱ'), value: `<:INVITES:1472667823875559708> **${memberInvites}**`, inline: true },
-                  { name: formatName('ᴘᴀʀᴛɪᴇꜱ'), value: `<:PARTIES:1472667851239456935> **${stats.games}**`, inline: true },
-                  { name: formatName('ᴠɪᴄᴛᴏɪʀᴇꜱ'), value: `<:VICTOIRES:1493266372954820741> **${stats.wins}**`, inline: true },
-                  { name: formatName('ᴡɪɴʀᴀᴛᴇ'), value: `<:Performance:1493266679504048148> **${winrate}%**`, inline: true }  );
-    
-  await message.reply({ embeds: [embed] });
-}
-
 const JOUER_CHANNEL_ID = '1461346832591360173';
 const ROLE_ORGANISATEUR_ID = '1461348856100028439';
 const ROLE_NOTIF_PP_ID = '1468458885357502599';
@@ -3532,10 +2998,7 @@ client.on('messageCreate', async (message) => {
   try {
     if (!message.guild) return;
 
-    // 🎯 FILTRAGE SALON JOUETS
     if (message.channel.id === JOUER_CHANNEL_ID) {
-
-      // ✅ Autoriser les bots (IMPORTANT pour tes embeds auto)
       if (message.author.bot) return;
 
       const member = message.member;
@@ -3545,29 +3008,21 @@ client.on('messageCreate', async (message) => {
       const isOrganizer = member.roles.cache.has(ROLE_ORGANISATEUR_ID);
       const hasNotifMention = message.mentions.roles.has(ROLE_NOTIF_PP_ID);
 
-      // ✅ Autoriser admin (toi + staff)
       if (isAdmin) return;
-
-      // ✅ Autoriser organisateur UNIQUEMENT si mention
       if (isOrganizer && hasNotifMention) return;
 
-      // ❌ Tout le reste = suppression
       await new Promise(resolve => setTimeout(resolve, 1000));
       await message.delete().catch(() => {});
 
-      // ⚠️ Message d'avertissement
       const warning = await message.channel.send(
         `## ${message.author}, ce salon est réservé aux notifications de parties.\n` +
         `-# Utilise @NotifsPP pour poster une annonce valide.`,
       ).catch(() => null);
 
       if (warning) {
-        setTimeout(() => {
-          warning.delete().catch(() => {});
-        }, 5000);
+        setTimeout(() => { warning.delete().catch(() => {}); }, 5000);
       }
     }
-
   } catch (err) {
     console.error('Erreur modération salon jouets :', err);
   }
@@ -3588,10 +3043,9 @@ client.on('messageCreate', async (message) => {
     }
 
     const strike = getActiveStrike(spamStrikeMap, userId, now);
-const penalty = getSpamPenalty(strike);
+    const penalty = getSpamPenalty(strike);
 
-    let timestamps = (spamMap.get(userId) || [])
-      .filter(ts => now - ts < SPAM_INTERVAL);
+    let timestamps = (spamMap.get(userId) || []).filter(ts => now - ts < SPAM_INTERVAL);
 
     timestamps.push(now);
     spamMap.set(userId, timestamps);
@@ -3611,9 +3065,7 @@ const penalty = getSpamPenalty(strike);
           ).catch(() => null);
 
           if (warning) {
-            setTimeout(() => {
-              warning.delete().catch(() => {});
-            }, 5000);
+            setTimeout(() => { warning.delete().catch(() => {}); }, 5000);
           }
         } catch (err) {
           console.error('Erreur timeout anti-spam #clipfarming :', err);
@@ -3635,9 +3087,7 @@ const penalty = getSpamPenalty(strike);
       ).catch(() => null);
 
       if (warning) {
-        setTimeout(() => {
-          warning.delete().catch(() => {});
-        }, 5000);
+        setTimeout(() => { warning.delete().catch(() => {}); }, 5000);
       }
 
       return;
@@ -3648,10 +3098,6 @@ const penalty = getSpamPenalty(strike);
   }
 });
 
-
-
-
-
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason);
 });
@@ -3660,18 +3106,12 @@ process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
 });
 
-
-
-
-
-
 const token = (process.env.TOKEN || '').trim();
 
 console.log("TOKEN présent ?", !!token);
 console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
 console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
 console.log("Longueur TOKEN :", token.length);
-
 
 client.on('error', (err) => {
   console.error("❌ client error :", err);
