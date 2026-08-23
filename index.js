@@ -1093,7 +1093,7 @@ function buildLeaderboardEmbed({
     }
 
 return (
-  `\n> **${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
+  `\n- **#${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
   `   •   **${data.rr || 0}** <:VIDE:1541125087384829962>`+
   `•   **${invites}**<:VIDE:1472667823875559708>` +
   `   •   **${timeouts}**<:VIDE:1493378253446975619>` +
