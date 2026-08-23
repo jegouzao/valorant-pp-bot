@@ -1077,18 +1077,17 @@ const lines = sorted.map(([id, data], idx) => {
     if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
 
     return (
-      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}` +
-      `\n> ${bar}` +
-      `\n> *${data.rr} ʀʀ & ${invites} invites*`
+      `\n**#${idx + 1}**   <@${id}> ${rankEmoji}${badges}` +
+      `\n-# ${bar}` +
+      `\n-# *${data.rr} ʀʀ & ${invites} invites*`
     );
   });
 
 return new EmbedBuilder()
   .setDescription(
     `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
-    `-# ꜱᴀɪꜱᴏɴ : **Août**\n` +
-    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : **<t:${Math.floor(Date.now() / 1000)}:R>**\n` +
-    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : **${playerCount}**`
+    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
   )
   .setImage(BANNERS.onboarding)
   .addFields(
@@ -1098,6 +1097,9 @@ return new EmbedBuilder()
     }
   )
   .setColor(EMBED_COLOR);
+  .setFooter({
+  text: 'ꜱᴀɪꜱᴏɴ : ᴀᴏᴜᴛ'
+});
 }
 
 
