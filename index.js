@@ -1119,23 +1119,21 @@ const rankEmoji = getRankEmojiFromMember(member);
     );
   });
 
+
+
+
 return new EmbedBuilder()
   .setDescription(
-    `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n\n` +
+    `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
     `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n\n` +
+    (lines.join('\n') || '*Calcul en cours...*')
   )
   .setImage(BANNERS.onboarding)
-  .addFields(
-    {
-      name: '\u200B',
-      value: lines.join('\n') || '*Calcul en cours...*'
-    }
-  )
   .setColor(EMBED_COLOR)
   .setFooter({
   text: 'ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ'
-});
+  });
 }
 
 
