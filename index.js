@@ -1107,15 +1107,15 @@ function buildLeaderboardEmbed({
     );
   });
 
-  return new EmbedBuilder()
-    .setDescription(
-      `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
-      `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-      `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n\n` +
-      (lines.join('\n') || '*Calcul en cours...*')
-    )
-    .setImage(BANNERS.onboarding)
-    .setColor(EMBED_COLOR)
+return new EmbedBuilder()
+  .setDescription(
+    `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
+    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
+  )
+  .addFields(leaderboardFields)
+  .setImage(BANNERS.onboarding)
+  .setColor(EMBED_COLOR)
 }
 
 
