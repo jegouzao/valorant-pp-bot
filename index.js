@@ -1322,15 +1322,13 @@ const embed = buildLeaderboardEmbed({
 
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
-  { value: 'verification', label: 'Comment se vérifier', emoji: { name: '1', id: '1466470349351686194' }},
+  { value: 'verification', label: 'Accéder au serveur', emoji: { name: '1', id: '1466470349351686194' }},
   { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }},
   { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }},
   { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }},
-  { value: 'notifs', label: 'Notifications', emoji: { name: '6', id: '1466608491861901362' }},
-  { value: 'signaler', label: 'Signaler un joueur', emoji: { name: '7E', id: '1493378253446975619' }},
-  { value: 'faq', label: 'FAQ', emoji: { name: '8', id: '1493378287559512174' }}
-];
+  { value: 'notifs', label: 'Notifications PP', emoji: { name: '6', id: '1466608491861901362' }},
+  { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378253446975619' }}];
 
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
@@ -1463,12 +1461,9 @@ const rankEmoji = getRankEmojiFromMember(member);
     );
 
     return interaction.reply({
-      content: hasRole
-        ? '🔔 Tu reçois actuellement les notifications de parties.'
-        : '🔕 Tu ne reçois pas les notifications de parties.',
-      components: [row],
-      ephemeral: true
-    });
+  components: [row],
+  ephemeral: true
+});
   }
   // ── Classement ──
   if (choice === 'classement') {
@@ -1508,25 +1503,21 @@ return interaction.reply({
       // TODO: .setImage('URL_DE_TA_VIDEO_OU_GIF')
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-  // ── Signaler un joueur ──
-  if (choice === 'signaler') {
-  const embed = new EmbedBuilder()
-    .setColor(EMBED_COLOR)
-    .setDescription(
-      `## 🚨 Signaler un joueur\n\n` +
-      `Un joueur triche, ment sur son rank, est AFK ou toxique en partie ?\n\n` +
-      `1️⃣ Clique sur **Ouvrir un ticket** ci-dessous.\n` +
-      `2️⃣ Précise le pseudo concerné, la partie et le motif.\n` +
-      `3️⃣ L'équipe de modération traite chaque signalement individuellement.\n\n` +
-      `-# Rappel : faux peak rank ou AFK répété = bannissement.`
-    );
+// ── Signaler un joueur ──
+if (choice === 'signaler') {
 
   const row = new ActionRowBuilder().addComponents(
-  new ButtonBuilder()
-    .setCustomId('open_ticket')
-    .setLabel('Ouvrir un ticket')
-    .setStyle(ButtonStyle.Secondary)
-);
+    new ButtonBuilder()
+      .setCustomId('open_ticket')
+      .setLabel('Ouvrir un ticket')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return interaction.reply({
+    components: [row],
+    ephemeral: true
+  });
+}
 
   return interaction.reply({
     embeds: [embed],
@@ -1537,23 +1528,6 @@ return interaction.reply({
   // ── Règlement ──
   if (choice === 'reglement') {
     return interaction.reply({ embeds: [buildRulesEmbed()], ephemeral: true });
-  }
-  // ── FAQ ──
-  if (choice === 'faq') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setDescription(
-        `## ❓ FAQ\n\n` +
-        `**Puis-je changer mon peak rank déclaré ?**\n` +
-        `> Ouvre un ticket, un membre du staff pourra l'ajuster.\n\n` +
-        `**Pourquoi je ne peux pas créer de partie avec /pp ?**\n` +
-        `> Seuls les membres avec le rôle Organisateur peuvent créer une partie.\n\n` +
-        `**Le vocal de préparation est plein, que faire ?**\n` +
-        `> Attends qu'une place se libère ou qu'une nouvelle partie soit créée.\n\n` +
-        `**Comment observer une partie en tant que spectateur ?**\n` +
-        `> Une fois la partie lancée, clique sur **Spectate** puis choisis un camp.`
-      );
-    return interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
   return interaction.reply({ content: '❌ Rubrique inconnue.', ephemeral: true });
