@@ -1061,14 +1061,8 @@ const lines = sorted.map(([id, data], idx) => {
 
   // suite de ton code...
 
-    let rankEmoji = '';
-
- let member = guildMembersCache?.get(id) || null;
-
-    if (member) {
-      const rankName = member.roles.cache.find(r => rankEmojis[r.name])?.name;
-      if (rankName) rankEmoji = rankEmojis[rankName] + ' ';
-    }
+    const member = guildMembersCache?.get(id) || null;
+const rankEmoji = getRankEmojiFromMember(member);
 
 
 
@@ -1367,15 +1361,7 @@ if (rankRole) {
   }
 
   // ── BADGE DE RANK ──
-  let rankEmoji = '';
-
-  const rankRole = member.roles.cache.find(
-    role => rankEmojis[role.name]
-  );
-
-  if (rankRole) {
-    rankEmoji = rankEmojis[rankRole.name] + ' ';
-  }
+const rankEmoji = getRankEmojiFromMember(member);
 
   // ── BADGES ──
   const badgeTop1 =
@@ -1412,7 +1398,7 @@ if (rankRole) {
 
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
+      .setDescription(`## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: 'Classement', value: `#${position}`, inline: true },
@@ -1458,13 +1444,17 @@ if (rankRole) {
     const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
     const playerCount = Object.keys(pointsData).length;
 
-    const embed = await buildLeaderboardEmbed({
+    const embed = buildLeaderboardEmbed({
   sorted,
   totalInvitesPerMember,
-  guild,
+  guildMembersCache: guild.members.cache,
   playerCount
 });
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+
+return interaction.reply({
+  embeds: [embed],
+  ephemeral: true
+});
   }
   // ── Comment se vérifier ──
   if (choice === 'verification') {
@@ -1503,18 +1493,31 @@ if (rankRole) {
   }
   // ── Signaler un joueur ──
   if (choice === 'signaler') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setDescription(
-        `## 🚨 Signaler un joueur\n\n` +
-        `Un joueur triche, ment sur son rank, est AFK ou toxique en partie ?\n\n` +
-        `1️⃣ Ouvre un ticket via le bouton **Ouvrir un ticket** sous \`/regles\`.\n` +
-        `2️⃣ Précise le pseudo concerné, la partie et le motif.\n` +
-        `3️⃣ L'équipe de modération traite chaque signalement individuellement.\n\n` +
-        `-# Rappel : faux peak rank ou AFK répété = bannissement.`
-      );
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
+  const embed = new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setDescription(
+      `## 🚨 Signaler un joueur\n\n` +
+      `Un joueur triche, ment sur son rank, est AFK ou toxique en partie ?\n\n` +
+      `1️⃣ Clique sur **Ouvrir un ticket** ci-dessous.\n` +
+      `2️⃣ Précise le pseudo concerné, la partie et le motif.\n` +
+      `3️⃣ L'équipe de modération traite chaque signalement individuellement.\n\n` +
+      `-# Rappel : faux peak rank ou AFK répété = bannissement.`
+    );
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('open_ticket')
+      .setLabel('┃Ouvrir un ticket')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji({ id: '1466470365269070026' })
+  );
+
+  return interaction.reply({
+    embeds: [embed],
+    components: [row],
+    ephemeral: true
+  });
+}
   // ── Règlement ──
   if (choice === 'reglement') {
     return interaction.reply({ embeds: [buildRulesEmbed()], ephemeral: true });
@@ -2391,6 +2394,22 @@ client.on('interactionCreate', async (interaction) => {
       Iron2: '1461352687777091666',
       Iron1: '1461352715631460516'
     };
+
+    function getRankEmojiFromMember(member) {
+  if (!member) return rankEmojis.Unranked || '';
+
+  const rankKey = Object.entries(RANK_ROLES).find(
+    ([, roleId]) => member.roles.cache.has(roleId)
+  )?.[0];
+
+  if (!rankKey) {
+    return rankEmojis.Unranked || '';
+  }
+
+  const emojiKey = rankKey.replace(/([A-Za-z]+)(\d)$/, '$1 $2');
+
+  return rankEmojis[emojiKey] || '';
+}
 
     function memberHasSelectedRank(member) {
       if (!member?.roles?.cache) return false;
