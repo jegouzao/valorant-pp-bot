@@ -1576,7 +1576,7 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '## **RULES — VALORANT PP**\n' +
+      '## <:36:1493046369076777110> **RÈGLEMENT — VALORANT PP**\n' +
       'Merci de ne pas mentir sur vos rangs, c\'est juste big relou.\n' +
       'No AFK/Leave non plus.\n' +
       'Sinon **NO RULES**\n' +
@@ -1589,15 +1589,15 @@ function buildRulesEmbed() {
       '-# Si vous améliorez votre rang, @taggez quelqu\'un.\n\n' +
 
       '__Voici le fonctionnement de l\'attribution des points__ :\n' +
-      '- **PP gagnée** = <:36:1497395169224556686><:RR:1497395178045050992> avec <:boost:1488545490189549629>\n' +
-      '- **PP gagnée** = <:33:1497395187415126127><:RR:1497395194289455114> avec <:tag:1497390943928586300>\n' +
-      '- **PP gagnée** = <:30:1493259044893360200><:RR:1493259054804369408>\n' +
-      '- **PP perdue** = <:15:1493259005584343080><:RR:1493259016686538932>\n' +
+      '- Partie gagnée : <:36:1497395169224556686><:RR:1497395178045050992>avec <:boost:1488545490189549629>\n' +
+      '- Partie gagnée : <:33:1497395187415126127><:RR:1497395194289455114>avec <:tag:1497390943928586300>\n' +
+      '- Partie gagnée : <:30:1493259044893360200><:RR:1493259054804369408>\n' +
+      '- Partie perdue : <:15:1493259005584343080><:RR:1493259016686538932>\n' +
       '-# Les membres qui aident le serveur sont avantagés, simple.\n\n' +
 
       '__Les cashprizes seront attribués mensuellement aux__ :\n' +
-      '> <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
-      '> <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
+      '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
+      '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
       '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n' +
       '-# Bienvenue sur VALORANT PP !\n' 
     )
