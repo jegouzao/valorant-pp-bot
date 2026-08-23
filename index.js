@@ -1093,10 +1093,10 @@ function buildLeaderboardEmbed({
     }
 
 return (
-  `\n- **#${idx + 1}**   •   <@${id}> ${rankEmoji ? rankEmoji +'':''}${badges}` +
-  `   •   **${data.rr || 0}** <:VIDE:1541125087384829962>`+
-  `  •   **${invites}**<:VIDE:1472667823875559708>` +
-  `   •   **${timeouts}**<:VIDE:1493378253446975619>` +
+  `\n- **#${idx + 1}**   **•**   <@${id}> ${rankEmoji ? rankEmoji +'':''}${badges}` +
+  `   **•**   **${data.rr || 0}** <:VIDE:1541125087384829962>`+
+  `  **•**   **${invites}**<:VIDE:1472667823875559708>` +
+  `   **•**   **${timeouts}**<:VIDE:1493378253446975619>` +
   `\n-# <:VIDE:1465704930160410847>${bar}\n`
 );
 });
@@ -1334,7 +1334,7 @@ function buildOnboardingEmbed() {
 function buildOnboardingSelectRow() {
   const menu = new StringSelectMenuBuilder()
     .setCustomId('onboarding_select')
-    .setPlaceholder('Choisis une rubrique...')
+    .setPlaceholder('Demander à Boombot...')
     .addOptions(ONBOARDING_TOPICS.map(t => ({
       label: t.label,
       value: t.value,
