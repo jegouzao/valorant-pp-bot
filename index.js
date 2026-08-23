@@ -1096,7 +1096,7 @@ return new EmbedBuilder()
       value: lines.join('\n') || '*Calcul en cours...*'
     }
   )
-  .setColor(EMBED_COLOR);
+  .setColor(EMBED_COLOR)
   .setFooter({
   text: 'ꜱᴀɪꜱᴏɴ : ᴀᴏᴜᴛ'
 });
