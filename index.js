@@ -1500,7 +1500,7 @@ return interaction.reply({
       .setDescription(
         `## ✅ Comment se vérifier ?\n\n` +
         `1️⃣ À ton arrivée, un fil privé s'ouvre automatiquement dans <#${ACCUEIL_CHANNEL_ID}>.\n` +
-        `2️⃣ Sélectionne ton **peak rank 2025** dans le menu déroulant.\n` +
+        `2️⃣ Sélectionne ton **peak rank** dans le menu déroulant.\n` +
         `3️⃣ Clique sur **Me renommer pour débloquer l'accès** et renseigne ton pseudo Valorant (sans le #TAG).\n` +
         `4️⃣ Le rôle Vérifié te sera attribué automatiquement, tu as alors accès à tout le serveur.\n\n` +
         `-# Si tu ne retrouves plus ton fil de bienvenue, ouvre un ticket via /regles.`
@@ -2452,7 +2452,7 @@ client.on('interactionCreate', async (interaction) => {
 
       const rankEmbed = new EmbedBuilder()
         .setColor(EMBED_COLOR)
-        .setDescription(`### Ton peak rank 2025 a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`)
+        .setDescription(`### Ton peak rank a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`)
         .setFooter({ text: 'Tu peux maintenant utiliser le bouton "Me renommer" ci-dessous.' });
 
       await interaction.editReply({ content: null, embeds: [rankEmbed] });
@@ -2492,7 +2492,7 @@ client.on('interactionCreate', async (interaction) => {
 
       if (!memberHasSelectedRank(interaction.member)) {
         return interaction.reply({
-          content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank 2025** avant de pouvoir te renommer.',
+          content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
           ephemeral: true
         });
       }
@@ -2835,8 +2835,8 @@ client.on('guildMemberAdd', async member => {
 
       await thread.send(
         `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**\n\n` +
-        `Pour débloquer l'accès, suis ces étapes :\n` +
-        `-# Choisis ton **PEAK RANK 2025**\n`
+        `-# Pour débloquer l'accès, suis ces étapes :\n` +
+        `-# Sélectionne ton **PEAK RANK**\n`
       );
 
       const rankMenu = new StringSelectMenuBuilder()
@@ -2882,7 +2882,7 @@ client.on('guildMemberAdd', async member => {
         .setDisabled(true);
 
       await thread.send({
-        content: `-# Attends que le **bouton** se débloque\n-# Entre ton pseudo in-game`,
+        content: `-# Attends que le **bouton** se débloque, et entre ton pseudo **IN-GAME**`,
         components: [new ActionRowBuilder().addComponents(riotButton)]
       });
     }
