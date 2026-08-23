@@ -369,7 +369,7 @@ function scheduleRegistrationUpdate(guild, game) {
 
 // ===== BUILD PLAYER LIST =====
 async function buildPlayerList(guild, playerIds) {
-  if (!playerIds.length) return '*en attente de participants...*';
+  if (!playerIds.length) return '-# ᴀᴜᴄᴜɴ';
 
   const list = [];
 
@@ -975,7 +975,7 @@ function buildAnnounceEmbed({ waitingVCId, mode, code, organisateur, remaining, 
   return new EmbedBuilder()
     .setColor(EMBED_COLOR)
     .setDescription(
-      `# <#${waitingVCId}>`
+      `## <:VIDE:1493046369076777110> <#${waitingVCId}>`
     )
     .addFields(
       {
@@ -1766,7 +1766,7 @@ client.on('interactionCreate', async (interaction) => {
         remaining: 10,
         votes: 0,
         needed: 6,
-        playersText: '*en attente de participants...*',
+        playersText: '-# ᴀᴜᴄᴜɴ',
         mapImage: map?.image || 'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
         footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 })
       });
