@@ -1133,7 +1133,7 @@ client.once(Events.ClientReady, async () => {
   console.log(`${colors.blue}✅ ${colors.bright}${guild.memberCount}${colors.reset}${colors.blue} membres${colors.reset}`);
 
   client.user.setPresence({
-    activities: [{ name: '/onboarding pour t\'aider', type: 1, url: 'https://www.twitch.tv/jegouzao' }],
+    activities: [{ name: 'by @jegouzao', type: 1, url: 'https://www.twitch.tv/jegouzao' }],
     status: 'online'
   });
   console.log(`${colors.magenta}✅ Statut du bot défini${colors.reset}`);
@@ -1233,14 +1233,14 @@ function getSpamPenalty(strike) {
 
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
-  { value: 'verification', label: 'Comment se vérifier', emoji: '<:E:1466470349351686194>', description: 'Débloquer l\'accès au serveur' },
-  { value: 'jouer', label: 'Comment jouer', emoji: '<:E:1466470377327825028>', description: 'Le déroulement d\'une partie personnalisée' },
-  { value: 'reglement', label: 'Règlement', emoji: '<:E:1472840875708252192>', description: 'Les règles du serveur' },
-  { value: 'stats', label: 'Mes statistiques', emoji: '<:E:1472667834881409181>', description: 'RR, classement, invitations, parties, winrate...' },
-  { value: 'classement', label: 'Classement', emoji: '<:E:1493266536813690970>', description: 'Voir le top 10 du serveur' },
-  { value: 'notifs', label: 'Notifications', emoji: '<:E:1466608491861901362>', description: 'Activer/désactiver les notifications de parties' },
-  { value: 'signaler', label: 'Signaler un joueur', emoji: '<:E:1493378253446975619>', description: 'Faux peak rank, AFK, comportement toxique...' },
-  { value: 'faq', label: 'FAQ', emoji: '<:E:1493378287559512174>', description: 'Questions fréquentes' }
+  { value: 'verification', label: 'Comment se vérifier', emoji: { name: '1', id: '1466470349351686194' }, description: 'Débloquer l\'accès au serveur' },
+  { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }, description: 'Le déroulement d\'une partie personnalisée' },
+  { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }, description: 'Les règles du serveur' },
+  { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }, description: 'RR, classement, invitations, parties, winrate...' },
+  { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }, description: 'Voir le top 10 du serveur' },
+  { value: 'notifs', label: 'Notifications', emoji: { name: '6', id: '1466608491861901362' }, description: 'Activer/désactiver les notifications de parties' },
+  { value: 'signaler', label: 'Signaler un joueur', emoji: { name: '7E', id: '1493378253446975619' }, description: 'Faux peak rank, AFK, comportement toxique...' },
+  { value: 'faq', label: 'FAQ', emoji: { name: '8', id: '1493378287559512174' }, description: 'Questions fréquentes' }
 ];
 
 function buildOnboardingEmbed() {
@@ -1309,7 +1309,6 @@ async function handleOnboardingSelect(interaction) {
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-
   // ── Notifications ──
   if (choice === 'notifs') {
     const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
@@ -1328,7 +1327,6 @@ async function handleOnboardingSelect(interaction) {
       ephemeral: true
     });
   }
-
   // ── Classement ──
   if (choice === 'classement') {
     const invitesData = await getAllInvites();
@@ -1344,7 +1342,6 @@ async function handleOnboardingSelect(interaction) {
     const embed = buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCache: null, playerCount });
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-
   // ── Comment se vérifier ──
   if (choice === 'verification') {
     const embed = new EmbedBuilder()
@@ -1359,7 +1356,6 @@ async function handleOnboardingSelect(interaction) {
       );
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-
   // ── Comment jouer ──
   if (choice === 'jouer') {
     const embed = new EmbedBuilder()
@@ -1381,9 +1377,6 @@ async function handleOnboardingSelect(interaction) {
     // TODO: une fois ta vidéo prête, ajoute par exemple .setImage('URL_DE_TA_VIDEO_OU_GIF')
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-
-
-
   // ── Signaler un joueur ──
   if (choice === 'signaler') {
     const embed = new EmbedBuilder()
@@ -1398,12 +1391,10 @@ async function handleOnboardingSelect(interaction) {
       );
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
-
   // ── Règlement ──
   if (choice === 'reglement') {
     return interaction.reply({ embeds: [buildRulesEmbed()], ephemeral: true });
   }
-
   // ── FAQ ──
   if (choice === 'faq') {
     const embed = new EmbedBuilder()
