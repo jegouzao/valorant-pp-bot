@@ -1312,6 +1312,8 @@ async function updateTop15Embed() {
   const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
   const playerCount = Object.keys(pointsData).length;
 
+const guild = channel.guild;
+
 const embed = buildLeaderboardEmbed({
   sorted,
   totalInvitesPerMember,
