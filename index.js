@@ -411,7 +411,7 @@ async function updateRegistrationEmbed(guild, game) {
 
     const playersText = await buildPlayerList(guild, game.players);
     const spectatorCount = game.spectators ? Object.keys(game.spectators).length : 0;
-    const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
+    const remaining = Math.max(0, 15 - (game.players.length + spectatorCount));
 
     const votes = game.changeMapVotes?.length || 0;
     const needed = 6;
