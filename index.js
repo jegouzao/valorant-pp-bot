@@ -1547,12 +1547,11 @@ return interaction.reply({
     );
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('open_ticket')
-      .setLabel('┃Ouvrir un ticket')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji({ id: '1466470365269070026' })
-  );
+  new ButtonBuilder()
+    .setCustomId('open_ticket')
+    .setLabel('Ouvrir un ticket')
+    .setStyle(ButtonStyle.Secondary)
+);
 
   return interaction.reply({
     embeds: [embed],
@@ -2573,9 +2572,8 @@ client.on('interactionCreate', async (interaction) => {
           .setEmoji({ id: '1466470365269070026' }),
         new ButtonBuilder()
           .setCustomId('toggle_notif_pp')
-          .setLabel('┃Notifications PP')
+          .setLabel('Notifications PP')
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji({ id: '1466608491861901362' })
       );
 
       await interaction.channel.send({ embeds: [buildRulesEmbed()], components: [row] });
