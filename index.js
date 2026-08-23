@@ -1053,7 +1053,7 @@ function buildLeaderboardEmbed({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-  const barLength = 30;
+  const barLength = 27;
 
   const lines = sorted.map(([id, data], idx) => {
     const invites = totalInvitesPerMember[id] || 0;
@@ -1095,8 +1095,9 @@ function buildLeaderboardEmbed({
 return (
   `\n> **#${idx + 1}** <@${id}> ${rankEmoji ? rankEmoji +'':''}${badges}` +
   `   **•**   **${data.rr || 0}** <:VIDE:1541125087384829962>`+
-  `  **•**   **${invites}**<:VIDE:1472667823875559708>` +
-  `   **•**   **${timeouts}**<:VIDE:1493378253446975619>` +
+  `  **•**   **${invites}**<:VIDE:1472667823875559708>`+
+  `   **•**   **${timeouts}**<:VIDE:1493378253446975619>`+
+  `   **•**   **${winrate}ᴡʀ﹪**<:VIDE:1493266679504048148>`+
   `\n> ${bar}\n`
 );
 });
