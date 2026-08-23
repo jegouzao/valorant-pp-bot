@@ -1117,19 +1117,18 @@ const rankEmoji = getRankEmojiFromMember(member);
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 25;
 
-
 const lines = sorted.map(([id, data], idx) => {
   const medal = medalFor(idx);
 
   const invites = totalInvitesPerMember[id] || 0;
 
-  const losses = Math.max(
-    0,
-    (data.games || 0) - (data.wins || 0)
-  );
+  const wins = data.wins || 0;
+  const games = data.games || 0;
 
-  const winrate = data.games
-    ? Math.round((data.wins / data.games) * 100)
+  const losses = Math.max(0, games - wins);
+
+  const winrate = games
+    ? Math.round((wins / games) * 100)
     : 0;
 
   const rawBars = (data.rr / maxRR) * barLength;
