@@ -1576,7 +1576,7 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '## **RÈGLES DU SERVEUR**\n' +
+      '## **VALORANT PP RULES**\n' +
       'Merci de ne pas mentir sur vos rangs, c\'est juste big relou.\n' +
       'No AFK/Leave non plus.\n' +
       'Sinon **NO RULES**\n' +
@@ -1601,8 +1601,7 @@ function buildRulesEmbed() {
       '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n' +
       '-# Bienvenue sur VALORANT PP !\n' 
     )
-    .setColor(EMBED_COLOR)
-    .setImage(BANNERS.regles);
+    .setColor(EMBED_COLOR);
   }
 
 
