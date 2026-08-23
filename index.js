@@ -1328,7 +1328,7 @@ const ONBOARDING_TOPICS = [
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }},
   { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }},
   { value: 'notifs', label: 'Notifications PP', emoji: { name: '6', id: '1466608491861901362' }},
-  { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378253446975619' }}];
+  { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378287559512174' }}];
 
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
