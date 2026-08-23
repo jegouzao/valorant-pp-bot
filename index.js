@@ -1537,27 +1537,27 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046369076777110> **RÈGLEMENT — VALORANT PP**\n' +
-      '### Merci de ne pas mytho sur vos rangs, c\'est juste relou.\n' +
-      '### AFK/Leave sanctionnés.\n' +
-      'Sinon **NO RULES** Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
+      '### Merci de ne pas mytho sur vos rangs, ni AFK/Leave, c\'est juste relou.\n' +
+      'Sinon **NO RULES**\n' +
+      'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'No limit au niveau de l\'équipement, ni de décibels dans le VC \n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
 
-      '> **Le serveur équilibre intelligemment et instantanément.**\n' +
-      '> Comment ? Grâce au peak rank que vous fournissez à l\'entrée.\n' +
-      '> Si vous améliorez votre rang, @taggez quelqu\'un.\n\n' +
-
-      '__Voici le fonctionnement de l\'attribution des points__ :\n' +
+      '### Voici le fonctionnement de l\'attribution des points :\n' +
       '- Partie gagnée : <:36:1497395169224556686><:RR:1497395178045050992>(<:boost:1488545490189549629> Boost de serveur)\n' +
       '- Partie gagnée : <:33:1497395187415126127><:RR:1497395194289455114>(<:tag:1497390943928586300> Tag de serveur)\n' +
       '- Partie gagnée : <:30:1493259044893360200><:RR:1493259054804369408>\n' +
       '- Partie perdue : <:15:1493259005584343080><:RR:1493259016686538932>\n' +
       '-# Les membres qui aident le serveur sont avantagés, simple.\n\n' +
 
-      '__Les cashprizes seront attribués mensuellement aux__ :\n' +
+      '### Les cashprizes seront attribués mensuellement aux :\n' +
       '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
       '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n'
+      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n'
+
+      '> **Le serveur équilibre intelligemment et instantanément**\n' +
+      '> grâce au peak rank que vous fournissez à l\'arrivée.\n' +
+      '> Si vous améliorez votre rang, @taggez quelqu\'un.' +
     )
     .setColor(EMBED_COLOR);
   }
