@@ -2626,7 +2626,7 @@ client.on('interactionCreate', async (interaction) => {
           `> L'équipe a été notifiée et viendra t'aider.\n\n`
         )
         .setColor(EMBED_COLOR)
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1493071117492031609/1.png');
+        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&');
 
       const closeButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
