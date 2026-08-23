@@ -1081,7 +1081,7 @@ const lines = sorted.map(([id, data], idx) => {
       `\n> ${bar}` +
       `\n> *${data.rr} ʀʀ & ${invites} invites*`
     );
-  }));
+  });
 
   return new EmbedBuilder()
     .setTitle("<:VIDE:1493046347337699499> LEADERBOARD")
