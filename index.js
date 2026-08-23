@@ -1099,7 +1099,6 @@ function buildLeaderboardEmbed({
 return (
   `\n> **${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
   `   •   **${data.rr || 0}** ʀʀ` +
-  `   •   ${winrate}%ᴡʀ` +
   `   •   <:VIDE:1472667823875559708>${invites}` +
   `   •   <:VIDE:1493378253446975619>${timeouts}` +
   `\n> ${bar}`
