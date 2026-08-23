@@ -1107,15 +1107,25 @@ function buildLeaderboardEmbed({
     );
   });
 
+    // ↓ APRÈS LE .map()
+  const leaderboardFields = [];
+
+for (let i = 0; i < lines.length; i += 3)
+      leaderboardFields.push({
+      name: '\u200B',
+      value: lines.slice(i, i + 5).join('\n')
+    });
+  }
+
 return new EmbedBuilder()
   .setDescription(
-    `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
+    `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n\n` +
     `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
     `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
   )
   .addFields(leaderboardFields)
   .setImage(BANNERS.onboarding)
-  .setColor(EMBED_COLOR)
+  .setColor(EMBED_COLOR);
 }
 
 
