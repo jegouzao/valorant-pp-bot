@@ -1003,27 +1003,107 @@ function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCach
     }
   }
 
+
+  function getSpamPenalty(strike) {
+  if (strike === 0) {
+    return {
+      limit: 7, // plus de 7 => 8e message déclenche
+      durationMs: 60 * 1000,
+      label: '60 secondes'
+    };
+  }
+
+  if (strike === 1) {
+    return {
+      limit: 5, // plus de 5 => 6e message déclenche
+      durationMs: 5 * 60 * 1000,
+      label: '5 minutes'
+    };
+  }
+
+  return {
+    limit: 4, // plus de 4 => 5e message déclenche
+    durationMs: 60 * 60 * 1000,
+    label: '1 heure'
+  };
+}
+
+function getTrackerSpamPenalty(strike) {
+  if (strike === 0) {
+    return {
+      limit: 7,
+      durationMs: 60 * 1000,
+      label: '60 secondes'
+    };
+  }
+
+  if (strike === 1) {
+    return {
+      limit: 5,
+      durationMs: 5 * 60 * 1000,
+      label: '5 minutes'
+    };
+  }
+
+  return {
+    limit: 4,
+    durationMs: 60 * 60 * 1000,
+    label: '1 heure'
+  };
+}
+
+  const maxRR = sorted[0][1].rr || 1;
+  const barLength = 25;
+
+  let topInviterId = null;
+  let maxInvites = -1;
+  for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
+    if (invites > maxInvites) {
+      maxInvites = invites;
+      topInviterId = id;
+    }
+  }
+
   const lines = sorted.map(([id, data], idx) => {
     const medal = medalFor(idx);
     const invites = totalInvitesPerMember[id] || 0;
     const losses = Math.max(0, (data.games || 0) - (data.wins || 0));
     const winrate = data.games ? Math.round((data.wins / data.games) * 100) : 0;
+        const rawBars = (data.rr / maxRR) * barLength;
+            const filledBars = Math.max(0, Math.min(barLength, Math.round(rawBars)));    const bar = "▰".repeat(filledBars) + "▱".repeat(barLength - filledBars);
+
+
+    let rankEmoji = '';
+
+    let member = guild?.members?.cache?.get(id) || null;
+    if (!member && guild) {
+      member = await guild.members.fetch(id).catch(() => null);
+    }
+
+    if (member) {
+      const rankName = member.roles.cache.find(r => rankEmojis[r.name])?.name;
+      if (rankName) rankEmoji = rankEmojis[rankName] + ' ';
+    }
+
+
 
     let badges = '';
     if (idx === 0) badges += ` ${BADGES.TOP1}`;
     if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
 
     return (
-      `${medal} <@${id}>${badges} — **${data.rr}** RR\n` +
-      `> 🏅 ${data.wins} | ❌ ${losses} | 📈 ${winrate}% | 🎟️ ${invites} invites`
+      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}` +
+           `\n> ${bar}` +
+           `\n> *${data.rr} ʀʀ  &  ${invites} invites*`;
     );
   });
 
   return new EmbedBuilder()
-    .setDescription(`## 🏆 Classement — Valorant PP`)
-    .setImage(BANNERS.leaderboard)
+    .setTitle("<:VIDE:1493046347337699499> LEADERBOARD")
+    .setImage(BANNERS.onboarding)
     .addFields(
-      { name: '🏅 Top 10 du serveur', value: lines.join('\n\n') },
+      { name: 'ᴀᴏᴜᴛ', value: //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
+        lines.join('\n\n') || "*Calcul en cours...*"},
       {
         name: '🔎 Informations',
         value:
@@ -1267,6 +1347,18 @@ function buildOnboardingSelectRow() {
   return new ActionRowBuilder().addComponents(menu);
 }
 
+// 🔹 Badges (à droite du pseudo)
+  const badgeTop1=position===1?BADGES.TOP1:'';
+  const badgeTopInviter=member.id===topInviterId&&maxInvites>0?BADGES.TOP_INVITER:'';
+
+  // 🔹 Ligne badges
+  let badgesLine='';
+  if (badgeTop1||badgeTopInviter) {
+    badgesLine=`${badgeTop1}${badgeTop1&&badgeTopInviter?'':''}${badgeTopInviter}`;
+  } else {
+    badgesLine='<:VIDE:1465704930160410847>';
+  }
+
 async function handleOnboardingSelect(interaction) {
   const choice = interaction.values[0];
   const member = interaction.member;
@@ -1292,7 +1384,7 @@ async function handleOnboardingSelect(interaction) {
 
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      .setDescription(`## 📊 Mes statistiques — ${member.displayName}`)
+      .setDescription(`## **${member.displayName}** ${rankEmoji}${badgesLine}`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: 'Classement', value: `#${position}`, inline: true },
