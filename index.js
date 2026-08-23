@@ -1365,7 +1365,7 @@ async function handleOnboardingSelect(interaction) {
         `2️⃣ Rejoins le vocal **┃préparation** indiqué dans l'annonce pour t'inscrire automatiquement.\n` +
         `3️⃣ Une fois 10 joueurs réunis, l'Organisateur lance la partie : les équipes sont équilibrées par rank et déplacées dans **┃attaquants** / **┃défenseurs**.\n` +
         `4️⃣ À la fin, l'Organisateur valide le résultat : tes RR sont mis à jour automatiquement.\n\n` +
-        `-# 🎬 Vidéo de démonstration à venir ici.`
+        `-# 🎬 Vidéo de démonstration à venir ici.` +
         `## 📈 Système de RR\n\n` +
         `- Victoire standard : **+${RR_VALUES.WIN} RR**\n` +
         `- Victoire avec le tag du serveur actif : **+${RR_VALUES.WIN_TAG} RR**\n` +
