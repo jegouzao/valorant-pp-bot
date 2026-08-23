@@ -1098,11 +1098,10 @@ function buildLeaderboardEmbed({
 
 return (
   `\n> **#${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
-  `  •  ${data.rr || 0} ʀʀ` +
-  `  •  <:VIDE:1493266372954820741>${wins}` +
-  `  •  <:VIDE:1493266679504048148>${winrate}%` +
-  `  •  <:VIDE:1472667823875559708>${invites}` +
-  `  •  <:VIDE:1493378253446975619>${timeouts}` +
+  `   •   **${data.rr || 0}** ʀʀ` +
+  `   •   <:VIDE:1493266679504048148>${winrate}%` +
+  `   •   <:VIDE:1472667823875559708>${invites}` +
+  `   •   <:VIDE:1493378253446975619>${timeouts}` +
   `\n> ${bar}`
 );
 });
