@@ -1055,7 +1055,6 @@ function getTrackerSpamPenalty(strike) {
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 25;
 
-  let topInviterId = null;
   let maxInvites = -1;
   for (const [id, invites] of Object.entries(totalInvitesPerMember)) {
     if (invites > maxInvites) {
