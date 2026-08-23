@@ -1478,7 +1478,7 @@ const rankEmoji = getRankEmojiFromMember(member);
     }
 
     const pointsData = await getAllPoints();
-    const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
+    const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 15);
     const playerCount = Object.keys(pointsData).length;
 
     const embed = buildLeaderboardEmbed({
