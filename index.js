@@ -1053,7 +1053,7 @@ function buildLeaderboardEmbed({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-  const barLength = 25;
+  const barLength = 30;
 
   const lines = sorted.map(([id, data], idx) => {
     const invites = totalInvitesPerMember[id] || 0;
