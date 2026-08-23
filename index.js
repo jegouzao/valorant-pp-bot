@@ -411,7 +411,7 @@ async function updateRegistrationEmbed(guild, game) {
 
     const playersText = await buildPlayerList(guild, game.players);
     const spectatorCount = game.spectators ? Object.keys(game.spectators).length : 0;
-    const remaining = Math.max(0, 15 - (game.players.length + spectatorCount));
+    const remaining = Math.max(0, 10 - (game.players.length + spectatorCount));
 
     const votes = game.changeMapVotes?.length || 0;
     const needed = 6;
@@ -1302,7 +1302,7 @@ async function updateTop15Embed() {
   }
 
   const pointsData = await getAllPoints();
-  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
+  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 15);
   const playerCount = Object.keys(pointsData).length;
 
 const guild = channel.guild;
