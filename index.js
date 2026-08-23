@@ -98,8 +98,35 @@ const rankEmojis = {
   'Bronze 1': '<:Bronze_1:1461399395605024972>',
   'Iron 3': '<:Iron_3:1461399413619429472>',
   'Iron 2': '<:Iron_2:1461399435924865127>',
-  'Iron 1': '<:Iron_1:1461399458246955195>',
-};
+  'Iron 1': '<:Iron_1:1461399458246955195>',};
+const RANK_ROLES = {
+      Radiant: '1114187578866933790',
+      Immortal3: '1114182691550658650',
+      Immortal2: '1461352160850870427',
+      Immortal1: '1461352201267188046',
+      Ascendant3: '1114186784574812332',
+      Ascendant2: '1461352272075292844',
+      Ascendant1: '1461352294237868222',
+      Diamond3: '1114187919662522429',
+      Diamond2: '1461352361355378688',
+      Diamond1: '1461352408788762738',
+      Platinum3: '1113191909876318268',
+      Platinum2: '1461352440132800768',
+      Platinum1: '1461352460227580111',
+      Gold3: '1113191866888884274',
+      Gold2: '1461352488623014026',
+      Gold1: '1461352505257754888',
+      Silver3: '1113191838657020074',
+      Silver2: '1461352528250933369',
+      Silver1: '1461352567647768729',
+      Bronze3: '1113191790967799889',
+      Bronze2: '1461352629182529740',
+      Bronze1: '1461352645309759508',
+      Iron3: '1461352661684064309',
+      Iron2: '1461352687777091666',
+      Iron1: '1461352715631460516'
+    };
+
 
 const RANK_ORDER = {
   'Radiant': 1, 
@@ -110,8 +137,7 @@ const RANK_ORDER = {
   'Gold 3': 14, 'Gold 2': 15, 'Gold 1': 16,
   'Silver 3': 17, 'Silver 2': 18, 'Silver 1': 19,
   'Bronze 3': 20, 'Bronze 2': 21, 'Bronze 1': 22,
-  'Iron 3': 23, 'Iron 2': 24, 'Iron 1': 25
-};
+  'Iron 3': 23, 'Iron 2': 24, 'Iron 1': 25};
 
 function getRankEmojiFromMember(member) {
   if (!member) return rankEmojis.Unranked || '';
@@ -1285,7 +1311,6 @@ async function updateTop15Embed() {
   const pointsData = await getAllPoints();
   const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
   const playerCount = Object.keys(pointsData).length;
-  const guild = client.guilds.cache.get(GUILD_ID);
 
 const embed = buildLeaderboardEmbed({
   sorted,
@@ -2384,33 +2409,6 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
     }
 
-    const RANK_ROLES = {
-      Radiant: '1114187578866933790',
-      Immortal3: '1114182691550658650',
-      Immortal2: '1461352160850870427',
-      Immortal1: '1461352201267188046',
-      Ascendant3: '1114186784574812332',
-      Ascendant2: '1461352272075292844',
-      Ascendant1: '1461352294237868222',
-      Diamond3: '1114187919662522429',
-      Diamond2: '1461352361355378688',
-      Diamond1: '1461352408788762738',
-      Platinum3: '1113191909876318268',
-      Platinum2: '1461352440132800768',
-      Platinum1: '1461352460227580111',
-      Gold3: '1113191866888884274',
-      Gold2: '1461352488623014026',
-      Gold1: '1461352505257754888',
-      Silver3: '1113191838657020074',
-      Silver2: '1461352528250933369',
-      Silver1: '1461352567647768729',
-      Bronze3: '1113191790967799889',
-      Bronze2: '1461352629182529740',
-      Bronze1: '1461352645309759508',
-      Iron3: '1461352661684064309',
-      Iron2: '1461352687777091666',
-      Iron1: '1461352715631460516'
-    };
 
     function getRankEmojiFromMember(member) {
   if (!member) return rankEmojis.Unranked || '';
