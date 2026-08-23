@@ -1084,17 +1084,17 @@ const lines = sorted.map(([id, data], idx) => {
   });
 
   return new EmbedBuilder()
-    .setTitle("<:VIDE:1493046347337699499> LEADERBOARD")
+    .setDescription("## <:VIDE:1493046347337699499> LEADERBOARD")
     .setImage(BANNERS.onboarding)
     .addFields(
-      { name: 'ᴀᴏᴜᴛ', value: //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
-        lines.join('\n\n') || "*Calcul en cours...*"},
+      { name: '᲼', value: //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
+        lines.join('\n') || "*Calcul en cours...*"},
       {
-        name: '🔎 Informations',
+        name: '᲼',
         value:
-          `**Saison :** ${seasonLabel}\n` +
-          `**Dernière mise à jour :** <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-          `**Joueurs :** ${playerCount}`
+          `-# ᴀᴏᴜᴛ\n` +
+          `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+          `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : ${playerCount}`
       }
     )
     .setColor(EMBED_COLOR);
