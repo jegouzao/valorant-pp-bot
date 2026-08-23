@@ -1443,19 +1443,23 @@ return interaction.reply({
 });
   }
   // ── Comment se vérifier ──
-  if (choice === 'verification') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-          .setDescription('Vidéo à venir');
+if (choice === 'verification') {
+  const embed = new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541082903658627123/Arrivee_type.gif?ex=6a8c4ccc&is=6a8afb4c&hm=38037230d2b2e180951cbbed88f4a3bf4c431248c15d3f75a1e6e2b9df54114a&');
 
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541082903658627123/Arrivee_type.gif?ex=6a8c4ccc&is=6a8afb4c&hm=38037230d2b2e180951cbbed88f4a3bf4c431248c15d3f75a1e6e2b9df54114a&');
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
+  return interaction.reply({
+    embeds: [embed],
+    ephemeral: true
+  });
+}
   // ── Comment jouer ──
-  if (choice === 'jouer') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-     return interaction.reply({
+if (choice === 'jouer') {
+  const embed = new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setDescription('Vidéo à venir');
+
+  return interaction.reply({
     embeds: [embed],
     ephemeral: true
   });
