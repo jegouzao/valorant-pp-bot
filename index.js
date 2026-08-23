@@ -1505,7 +1505,6 @@ return interaction.reply({
   }
 // ── Signaler un joueur ──
 if (choice === 'signaler') {
-
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('open_ticket')
@@ -1519,18 +1518,18 @@ if (choice === 'signaler') {
   });
 }
 
+// ── Règlement ──
+if (choice === 'reglement') {
   return interaction.reply({
-    embeds: [embed],
-    components: [row],
+    embeds: [buildRulesEmbed()],
     ephemeral: true
   });
 }
-  // ── Règlement ──
-  if (choice === 'reglement') {
-    return interaction.reply({ embeds: [buildRulesEmbed()], ephemeral: true });
-  }
 
-  return interaction.reply({ content: '❌ Rubrique inconnue.', ephemeral: true });
+return interaction.reply({
+  content: '❌ Rubrique inconnue.',
+  ephemeral: true
+});
 }
 
 function buildRulesEmbed() {
