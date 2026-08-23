@@ -1070,7 +1070,49 @@ function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCach
   };
 }
 
+// ── TOP INVITER ──
+  const allInvites = await getAllInvites();
+  let topInviterId = null;
+  let maxInvites = -1;
 
+  for (const [id, data] of Object.entries(allInvites)) {
+    const invites = data.invites || 0;
+
+    if (invites > maxInvites) {
+      maxInvites = invites;
+      topInviterId = id;
+    }
+  }
+
+  // ── BADGE DE RANK ──
+const rankEmoji = getRankEmojiFromMember(member);
+
+  // ── BADGES ──
+  const badgeTop1 =
+    position === 1
+      ? BADGES.TOP1
+      : '';
+
+  const badgeTopInviter =
+    member.id === topInviterId && maxInvites > 0
+      ? BADGES.TOP_INVITER
+      : '';
+
+  let badgesLine = '';
+
+  if (badgeTop1 || badgeTopInviter) {
+    badgesLine = `${badgeTop1}${badgeTopInviter}`;
+  } else {
+    badgesLine = '<:VIDE:1465704930160410847>';
+  }
+
+  const winrate = stats.games
+    ? ((stats.wins / stats.games) * 100).toFixed(1)
+    : 0;
+
+  const joinedTs = member.joinedTimestamp
+    ? Math.floor(member.joinedTimestamp / 1000)
+    : null;
 
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 25;
@@ -1113,7 +1155,7 @@ const rankEmoji = getRankEmojiFromMember(member);
     if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
 
     return (
-      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}  •  <:VIDE:1466957289813442721>${data.rr} ʀʀ  •  <:VIDE:1493266372954820741>${wins}  •  <:VIDE:1493266679504048148>${winrate}  •  <:VIDE:1472667823875559708>${invites}` +
+      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}  •  <:VIDE:1466957289813442721>${data.rr} ʀʀ  •  <:VIDE:1493266372954820741>${stats.wins}  •  <:VIDE:1493266679504048148>${winrate}  •  <:VIDE:1472667823875559708>${invitesData.invites}  •  <:VIDE:1472667823875559708>${stats.timeouts}` +
       `\n> ${bar}`     );
   });
 
@@ -1382,49 +1424,7 @@ if (rankRole) {
 
   const invitesData = await getInviteData(member.id);
 
-  // ── TOP INVITER ──
-  const allInvites = await getAllInvites();
-  let topInviterId = null;
-  let maxInvites = -1;
-
-  for (const [id, data] of Object.entries(allInvites)) {
-    const invites = data.invites || 0;
-
-    if (invites > maxInvites) {
-      maxInvites = invites;
-      topInviterId = id;
-    }
-  }
-
-  // ── BADGE DE RANK ──
-const rankEmoji = getRankEmojiFromMember(member);
-
-  // ── BADGES ──
-  const badgeTop1 =
-    position === 1
-      ? BADGES.TOP1
-      : '';
-
-  const badgeTopInviter =
-    member.id === topInviterId && maxInvites > 0
-      ? BADGES.TOP_INVITER
-      : '';
-
-  let badgesLine = '';
-
-  if (badgeTop1 || badgeTopInviter) {
-    badgesLine = `${badgeTop1}${badgeTopInviter}`;
-  } else {
-    badgesLine = '<:VIDE:1465704930160410847>';
-  }
-
-  const winrate = stats.games
-    ? ((stats.wins / stats.games) * 100).toFixed(1)
-    : 0;
-
-  const joinedTs = member.joinedTimestamp
-    ? Math.floor(member.joinedTimestamp / 1000)
-    : null;
+  
 
   const roleNames = member.roles.cache
     .filter(r => r.id !== guild.id)
