@@ -1095,7 +1095,7 @@ function buildLeaderboardEmbed({
 return (
   `\n- **#${idx + 1}**   <@${id}> ${rankEmoji ? rankEmoji +'':''}${badges}` +
   `   •   **${data.rr || 0}** <:VIDE:1541125087384829962>`+
-  `   •   **${invites}**<:VIDE:1472667823875559708>` +
+  `  •   **${invites}**<:VIDE:1472667823875559708>` +
   `   •   **${timeouts}**<:VIDE:1493378253446975619>` +
   `\n-# <:VIDE:1465704930160410847>${bar}\n`
 );
@@ -1292,7 +1292,7 @@ async function updateTop15Embed() {
   }
 
   const pointsData = await getAllPoints();
-  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 15);
+  const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
   const playerCount = Object.keys(pointsData).length;
 
 const guild = channel.guild;
