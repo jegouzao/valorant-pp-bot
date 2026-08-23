@@ -1434,7 +1434,7 @@ const rankEmoji = getRankEmojiFromMember(member);
 
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&')
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=6a8bc103&is=6a8a6f83&hm=23559d39392b353cbb9b4141586279f6a1ec3f9844385360da60dd107058ee71&')
       .setDescription(`## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
