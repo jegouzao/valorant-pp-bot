@@ -1233,14 +1233,14 @@ function getSpamPenalty(strike) {
 
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
-  { value: 'verification', label: 'Comment se vérifier', emoji: { name: '1', id: '1466470349351686194' }, description: 'Débloquer l\'accès au serveur' },
-  { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }, description: 'Le déroulement d\'une partie personnalisée' },
-  { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }, description: 'Les règles du serveur' },
-  { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }, description: 'RR, classement, invitations, parties, winrate...' },
-  { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }, description: 'Voir le top 10 du serveur' },
-  { value: 'notifs', label: 'Notifications', emoji: { name: '6', id: '1466608491861901362' }, description: 'Activer/désactiver les notifications de parties' },
-  { value: 'signaler', label: 'Signaler un joueur', emoji: { name: '7E', id: '1493378253446975619' }, description: 'Faux peak rank, AFK, comportement toxique...' },
-  { value: 'faq', label: 'FAQ', emoji: { name: '8', id: '1493378287559512174' }, description: 'Questions fréquentes' }
+  { value: 'verification', label: 'Comment se vérifier', emoji: { name: '1', id: '1466470349351686194' }},
+  { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }},
+  { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }},
+  { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }},
+  { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }},
+  { value: 'notifs', label: 'Notifications', emoji: { name: '6', id: '1466608491861901362' }},
+  { value: 'signaler', label: 'Signaler un joueur', emoji: { name: '7E', id: '1493378253446975619' }},
+  { value: 'faq', label: 'FAQ', emoji: { name: '8', id: '1493378287559512174' }}
 ];
 
 function buildOnboardingEmbed() {
@@ -1261,7 +1261,6 @@ function buildOnboardingSelectRow() {
     .addOptions(ONBOARDING_TOPICS.map(t => ({
       label: t.label,
       value: t.value,
-      description: t.description,
       emoji: t.emoji
     })));
 
