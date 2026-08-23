@@ -1497,14 +1497,7 @@ return interaction.reply({
   if (choice === 'verification') {
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      .setDescription(
-        `## ✅ Comment se vérifier ?\n\n` +
-        `1️⃣ À ton arrivée, un fil privé s'ouvre automatiquement dans <#${ACCUEIL_CHANNEL_ID}>.\n` +
-        `2️⃣ Sélectionne ton **peak rank** dans le menu déroulant.\n` +
-        `3️⃣ Clique sur **Me renommer pour débloquer l'accès** et renseigne ton pseudo Valorant (sans le #TAG).\n` +
-        `4️⃣ Le rôle Vérifié te sera attribué automatiquement, tu as alors accès à tout le serveur.\n\n` +
-        `-# Si tu ne retrouves plus ton fil de bienvenue, ouvre un ticket via /regles.`
-      );
+      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541082903658627123/Arrivee_type.gif?ex=6a8c4ccc&is=6a8afb4c&hm=38037230d2b2e180951cbbed88f4a3bf4c431248c15d3f75a1e6e2b9df54114a&');
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
   // ── Comment jouer ──
@@ -1582,12 +1575,35 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '### ***RÈGLES DU SERVEUR***\n' +
-      '- <:Automate:1466470349351686194>      **Faux peak rank** / **AFK**   →   **BAN**\n' +
-      '- <:Armes:1466470377327825028>      Aucune limite d\'armes\n' +
-      '- <:TopInviterCashprize:1465709888729776296>      Cashprize mensuel pour le **TOP 1   Leaderboard**\n' +
-      '- <:TopLeaderboardCashprize:1465747415670984862>      Cashprize mensuel pour le **TOP 1   Invitations**\n' +
-      '- <:Performance:1466957289813442721>      Pour afficher ton classement   →   `/onboarding`\n' +
+      '## **RÈGLES DU SERVEUR**\n' +
+      'Merci de ne pas mentir sur vos rangs, c\'est juste big relou.\n' +
+      'Ne sont pas bienvenus les AFK/Leave non plus.\n' +
+      'Sinon **NO RULES**. Ça ne plaira pas à tout le monde, mais à la plus grande majorité.\n' +
+      'Pas de limites au niveau de l\'équipement, ni de décibels dans la partie vocale \n' +
+      'On est là pour __crier de rire__, et __rentrer des clips__, les aigris c\'est ciao.\n\n' +
+
+      '**Le serveur est travaillé pour équilibrer les équipes rapidement et de la meilleure des façon**\n' +
+      'Comment ? Justement grâce au peak rank que vous fournissez à l\'entrée.\n' +
+      'Si vous êtes amenés à améliorer votre rang, ouvrez un ticket, @taggez quelqu\'un, 
+      'la modification sera faite.\n' +
+
+      'Voici le fonctionnement de l\'attribution des points :\n' +
+      '- Partie personnalisée gagnée =<:36:1497395169224556686><:RR:1497395178045050992>\n' +
+      '- Partie personnalisée gagnée =<:33:1497395187415126127><:RR:1497395194289455114>\n' +
+      '- Partie personnalisée gagnée =<:30:1493259044893360200><:RR:1493259054804369408>\n' +
+      '- Partie personnalisée perdue =<:15:1493259005584343080><:RR:1493259016686538932>\n' +
+      'Donc les membres qui aident le serveur sont avantagés, simplement.\n' +
+
+      'Les cashprizes seront attribués mensuellement aux :\n' +
+      '- <:TL:1465709888729776296> Top 1 du Leaderboard\n' +
+      '- <:TI:1465747415670984862> Top 1 du classement des invitations\n' +
+      'Les prix varieront, Bundles, carte Riot, PayPal cash, abonnements Nitro...\n' 
+      'Encore une fois, si vous êtes actifs, et que vous faites grossir la communauté, vous gagnez\n' +
+      '-# Bienvenue sur VALORANT PP !\n' +
+
+
+
+
       '\n' +
       '### ***COMMENT JOUER ?***\n' +
       '- <:VC:1466608491861901362>** ┃file d\u2019attente**\n' +
