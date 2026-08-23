@@ -1279,7 +1279,7 @@ async function updateTop15Embed() {
   const embed = buildLeaderboardEmbed({
     sorted,
     totalInvitesPerMember,
-    guildMembersCache: null,
+    guildMembersCache: guild.members.cache,
     playerCount
   });
 
@@ -1458,7 +1458,12 @@ if (rankRole) {
     const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
     const playerCount = Object.keys(pointsData).length;
 
-    const embed = buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCache: null, playerCount });
+    const embed = await buildLeaderboardEmbed({
+  sorted,
+  totalInvitesPerMember,
+  guild,
+  playerCount
+});
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
   // ── Comment se vérifier ──
