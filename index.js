@@ -1085,7 +1085,7 @@ const lines = sorted.map(([id, data], idx) => {
 
 return new EmbedBuilder()
   .setDescription(
-    `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
+    `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n\n` +
     `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
     `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
   )
@@ -1098,7 +1098,7 @@ return new EmbedBuilder()
   )
   .setColor(EMBED_COLOR)
   .setFooter({
-  text: 'ꜱᴀɪꜱᴏɴ : ᴀᴏᴜᴛ'
+  text: 'ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ'
 });
 }
 
