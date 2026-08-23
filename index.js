@@ -1553,6 +1553,30 @@ if (choice === 'signaler') {
   });
 }
 
+if (choice === 'notifs') {
+  const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('toggle_notif_pp')
+      .setLabel(
+        hasRole
+          ? 'Désactiver les notifications'
+          : 'Activer les notifications'
+      )
+      .setStyle(
+        hasRole
+          ? ButtonStyle.Danger
+          : ButtonStyle.Success
+      )
+  );
+
+  return interaction.reply({
+    components: [row],
+    ephemeral: true
+  });
+}
+
 // ── Règlement ──
 if (choice === 'reglement') {
   return interaction.reply({
