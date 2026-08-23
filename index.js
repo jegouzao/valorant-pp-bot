@@ -1316,7 +1316,6 @@ const ONBOARDING_TOPICS = [
   { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }},
   { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }},
-  { value: 'classement', label: 'Classement', emoji: { name: '5', id: '1493266536813690970' }},
   { value: 'notifs', label: 'Notifications PP', emoji: { name: '6', id: '1466608491861901362' }},
   { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378287559512174' }}];
 
@@ -1484,38 +1483,7 @@ if (choice === 'stats') {
     embeds: [embed]
   });
 }
-  // ── Classement ──
-if (choice === 'classement') {
-  await interaction.deferReply({ ephemeral: true });
 
-  const invitesData = await getAllInvites();
-
-  const totalInvitesPerMember = {};
-
-  for (const inviterId in invitesData) {
-    totalInvitesPerMember[inviterId] =
-      invitesData[inviterId].invites || 0;
-  }
-
-  const pointsData = await getAllPoints();
-
-  const sorted = Object.entries(pointsData)
-    .sort((a, b) => b[1].rr - a[1].rr)
-    .slice(0, 15);
-
-  const playerCount = Object.keys(pointsData).length;
-
-  const embed = buildLeaderboardEmbed({
-    sorted,
-    totalInvitesPerMember,
-    guildMembersCache: guild.members.cache,
-    playerCount
-  });
-
-  return interaction.editReply({
-    embeds: [embed]
-  });
-} 
   // ── Comment se vérifier ──
 if (choice === 'verification') {
   const embed = new EmbedBuilder()
