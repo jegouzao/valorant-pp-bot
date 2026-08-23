@@ -975,22 +975,18 @@ function buildAnnounceEmbed({ waitingVCId, mode, code, organisateur, remaining, 
   return new EmbedBuilder()
     .setColor(EMBED_COLOR)
     .setDescription(
-      `## <:Annonce:1472840875708252192> Annonce Custom\n` +
-      `### <#${waitingVCId}>`
+      `# <#${waitingVCId}>`
     )
     .addFields(
       {
-        name: '🔍 Informations',
+        name: 'ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...',
         value:
-          `**Mode :** ${mode}\n` +
-          `**Code :** \`${code}\`\n` +
-          `**Organisateur :** ${organisateur}\n` +
-          `**Slots restants :** ${remaining}\n` +
-          `**Votes changement de map :** ${votes}/${needed}`
+          `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
+          `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
       },
       {
-        name: '🧩 Participants',
-        value: playersText || '*en attente de participants...*'
+        name: 'ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ',
+        value: playersText || 'ᴀᴜᴄᴜɴ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ'
       }
     )
     .setImage(mapImage || null)
