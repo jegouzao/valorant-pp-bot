@@ -1035,8 +1035,8 @@ function buildLeaderboardEmbed({
       .setDescription('## 🏆 Classement — Valorant PP')
       .setImage(BANNERS.leaderboard)
       .addFields({
-        name: '🔎 Informations',
-        value: '*Calcul en cours...*'
+        name: 'ᴄᴀʟᴄᴜʟ ᴇɴ ᴄᴏᴜʀꜱ...',
+        value: '...'
       })
       .setColor(EMBED_COLOR);
   }
