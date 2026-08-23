@@ -1446,7 +1446,7 @@ const rankEmoji = getRankEmojiFromMember(member);
         { name: 'ɪɴᴠɪᴛᴇꜱ', value: `<:VIDE:1472667823875559708> **${invitesData.invites}**`, inline: true },
         { name: 'ᴀʀʀɪᴠᴇ ʟᴇ', value: joinedTs ? `<:VIDE:1493046369076777110> **<t:${joinedTs}:D>**` : 'Inconnue', inline: true },
         { name: 'ᴛɪᴍᴇᴏᴜᴛꜱ', value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`, inline: true },
-        { name: 'ʀᴏʟᴇꜱ', value: roleNames, inline: false }
+        { name: 'ʀᴏʟᴇꜱ', value: roleNames, inline: true }
       );
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
