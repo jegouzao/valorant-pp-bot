@@ -1439,15 +1439,15 @@ const rankEmoji = getRankEmojiFromMember(member);
       .setDescription(`## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: 'Classement', value: `#${position}`, inline: true },
-        { name: 'RR', value: `${stats.rr} ʀʀ`, inline: true },
-        { name: 'Winrate', value: `${winrate}%`, inline: true },
-        { name: 'Parties jouées', value: `${stats.games}`, inline: true },
-        { name: 'Victoires', value: `${stats.wins}`, inline: true },
-        { name: 'Invitations', value: `${invitesData.invites}`, inline: true },
-        { name: 'Arrivée sur le serveur', value: joinedTs ? `<t:${joinedTs}:D>` : 'Inconnue', inline: true },
-        { name: 'Exclusions temporaires', value: `${stats.timeouts || 0}`, inline: true },
-        { name: 'Rôles attribués', value: roleNames, inline: false }
+        { name: 'ᴘᴏꜱɪᴛɪᴏɴ', value: `<:VIDE:1493266536813690970> **#${position}**`, inline: true },
+        { name: 'ᴘᴏɪɴᴛꜱ', value: `<:VIDE:1472667816468418631> **${stats.rr} ʀʀ**`, inline: true },
+        { name: 'ᴡɪɴʀᴀᴛᴇ', value: `<:VIDE:1493266679504048148> **${winrate}%**`, inline: true },
+        { name: 'ᴘᴀʀᴛɪᴇꜱ', value: `<:VIDE:1472667851239456935> **${stats.games}**`, inline: true },
+        { name: 'ᴠɪᴄᴛᴏɪʀᴇꜱ', value: `<:VIDE:1493266372954820741> **${stats.wins}**`, inline: true },
+        { name: 'ɪɴᴠɪᴛᴇꜱ', value: `<:VIDE:1472667823875559708> **${invitesData.invites}**`, inline: true },
+        { name: 'ᴀʀʀɪᴠᴇ ʟᴇ', value: joinedTs ? `<:VIDE:1493046369076777110> **<t:${joinedTs}:D>**` : 'Inconnue', inline: true },
+        { name: 'ᴛɪᴍᴇᴏᴜᴛꜱ', value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`, inline: true },
+        { name: 'ʀᴏʟᴇꜱ', value: roleNames, inline: false }
       );
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -1505,21 +1505,7 @@ return interaction.reply({
   if (choice === 'jouer') {
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      .setDescription(
-        `## 🎮 Comment jouer une partie personnalisée ?\n\n` +
-        `1️⃣ Un Organisateur crée une partie avec \`/pp\` et un code de groupe Valorant.\n` +
-        `2️⃣ Rejoins le vocal **┃préparation** indiqué dans l'annonce pour t'inscrire automatiquement.\n` +
-        `3️⃣ Une fois 10 joueurs réunis, l'Organisateur lance la partie : les équipes sont équilibrées par rank et déplacées dans **┃attaquants** / **┃défenseurs**.\n` +
-        `4️⃣ À la fin, l'Organisateur valide le résultat : tes RR sont mis à jour automatiquement.\n\n` +
-        `-# 🎬 Vidéo de démonstration à venir ici.` +
-        `## 📈 Système de RR\n\n` +
-        `- Victoire standard : **+${RR_VALUES.WIN} RR**\n` +
-        `- Victoire avec le tag du serveur actif : **+${RR_VALUES.WIN_TAG} RR**\n` +
-        `- Victoire en tant que Booster : **+${RR_VALUES.WIN_BOOSTER} RR**\n` +
-        `- Défaite : **${RR_VALUES.LOSS} RR**\n\n` +
-        `Ton RR ne peut jamais descendre en dessous de 0. Le classement est remis à zéro à chaque nouvelle saison.`
-      );
-    // TODO: une fois ta vidéo prête, ajoute par exemple .setImage('URL_DE_TA_VIDEO_OU_GIF')
+      // TODO: .setImage('URL_DE_TA_VIDEO_OU_GIF')
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
   // ── Signaler un joueur ──
