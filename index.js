@@ -1602,9 +1602,8 @@ function buildRulesEmbed() {
       '-# Bienvenue sur VALORANT PP !\n' +
     )
     .setColor(EMBED_COLOR)
-    .setImage(BANNERS.regles)
-    .setFooter({ text: 'Règlement • Valorant PP' });
-}
+    .setImage(BANNERS.regles);
+  }
 
 
 
