@@ -1584,15 +1584,15 @@ function buildRulesEmbed() {
 
       '**Le serveur est travaillé pour équilibrer les équipes rapidement et de la meilleure des façon**\n' +
       'Comment ? Justement grâce au peak rank que vous fournissez à l\'entrée.\n' +
-      'Si vous êtes amenés à améliorer votre rang, ouvrez un ticket, @taggez quelqu\'un, 
-      'la modification sera faite.\n' +
+      'Si vous êtes amenés à améliorer votre rang, ouvrez un ticket, @taggez quelqu\'un,\n' +
+      'la modification sera faite.\n\n' +
 
       'Voici le fonctionnement de l\'attribution des points :\n' +
       '- Partie personnalisée gagnée =<:36:1497395169224556686><:RR:1497395178045050992>\n' +
       '- Partie personnalisée gagnée =<:33:1497395187415126127><:RR:1497395194289455114>\n' +
       '- Partie personnalisée gagnée =<:30:1493259044893360200><:RR:1493259054804369408>\n' +
       '- Partie personnalisée perdue =<:15:1493259005584343080><:RR:1493259016686538932>\n' +
-      'Donc les membres qui aident le serveur sont avantagés, simplement.\n' +
+      'Donc les membres qui aident le serveur sont avantagés, simplement.\n\n' +
 
       'Les cashprizes seront attribués mensuellement aux :\n' +
       '- <:TL:1465709888729776296> Top 1 du Leaderboard\n' +
