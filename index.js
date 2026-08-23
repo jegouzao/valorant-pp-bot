@@ -1323,17 +1323,7 @@ function buildOnboardingSelectRow() {
   return new ActionRowBuilder().addComponents(menu);
 }
 
-// 🔹 Badges (à droite du pseudo)
-  const badgeTop1=position===1?BADGES.TOP1:'';
-  const badgeTopInviter=member.id===topInviterId&&maxInvites>0?BADGES.TOP_INVITER:'';
 
-  // 🔹 Ligne badges
-  let badgesLine='';
-  if (badgeTop1||badgeTopInviter) {
-    badgesLine=`${badgeTop1}${badgeTop1&&badgeTopInviter?'':''}${badgeTopInviter}`;
-  } else {
-    badgesLine='<:VIDE:1465704930160410847>';
-  }
 
 async function handleOnboardingSelect(interaction) {
   const choice = interaction.values[0];
@@ -1342,21 +1332,73 @@ async function handleOnboardingSelect(interaction) {
 
   // ── Mes statistiques ──
   if (choice === 'stats') {
-    const stats = await getPlayerPoints(member.id);
-    const allPoints = await getAllPoints();
-    const sorted = Object.entries(allPoints).sort((a, b) => b[1].rr - a[1].rr);
-    const position = sorted.findIndex(([id]) => id === member.id) + 1 || '—';
+  const stats = await getPlayerPoints(member.id);
+  const allPoints = await getAllPoints();
 
-    const invitesData = await getInviteData(member.id);
-    const winrate = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
+  const sorted = Object.entries(allPoints)
+    .sort((a, b) => b[1].rr - a[1].rr);
 
-    const joinedTs = member.joinedTimestamp ? Math.floor(member.joinedTimestamp / 1000) : null;
+  const position = sorted.findIndex(([id]) => id === member.id) + 1 || '—';
 
-    const roleNames = member.roles.cache
-      .filter(r => r.id !== guild.id)
-      .sort((a, b) => b.position - a.position)
-      .map(r => `<@&${r.id}>`)
-      .join(', ') || 'Aucun';
+  const invitesData = await getInviteData(member.id);
+
+  // ── TOP INVITER ──
+  const allInvites = await getAllInvites();
+  let topInviterId = null;
+  let maxInvites = -1;
+
+  for (const [id, data] of Object.entries(allInvites)) {
+    const invites = data.invites || 0;
+
+    if (invites > maxInvites) {
+      maxInvites = invites;
+      topInviterId = id;
+    }
+  }
+
+  // ── BADGE DE RANK ──
+  let rankEmoji = '';
+
+  const rankRole = member.roles.cache.find(
+    role => rankEmojis[role.name]
+  );
+
+  if (rankRole) {
+    rankEmoji = rankEmojis[rankRole.name] + ' ';
+  }
+
+  // ── BADGES ──
+  const badgeTop1 =
+    position === 1
+      ? BADGES.TOP1
+      : '';
+
+  const badgeTopInviter =
+    member.id === topInviterId && maxInvites > 0
+      ? BADGES.TOP_INVITER
+      : '';
+
+  let badgesLine = '';
+
+  if (badgeTop1 || badgeTopInviter) {
+    badgesLine = `${badgeTop1}${badgeTopInviter}`;
+  } else {
+    badgesLine = '<:VIDE:1465704930160410847>';
+  }
+
+  const winrate = stats.games
+    ? ((stats.wins / stats.games) * 100).toFixed(1)
+    : 0;
+
+  const joinedTs = member.joinedTimestamp
+    ? Math.floor(member.joinedTimestamp / 1000)
+    : null;
+
+  const roleNames = member.roles.cache
+    .filter(r => r.id !== guild.id)
+    .sort((a, b) => b.position - a.position)
+    .map(r => `<@&${r.id}>`)
+    .join(', ') || 'Aucun';
 
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
