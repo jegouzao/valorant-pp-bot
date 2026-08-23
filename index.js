@@ -1361,83 +1361,161 @@ if (rankRole) {
 }
 
   // ── Mes statistiques ──
-  if (choice === 'stats') {
+if (choice === 'stats') {
+  await interaction.deferReply({ ephemeral: true });
+
   const stats = await getPlayerPoints(member.id);
   const allPoints = await getAllPoints();
 
   const sorted = Object.entries(allPoints)
     .sort((a, b) => b[1].rr - a[1].rr);
 
-  const position = sorted.findIndex(([id]) => id === member.id) + 1 || '—';
+  const position =
+    sorted.findIndex(([id]) => id === member.id) + 1 || '—';
 
   const invitesData = await getInviteData(member.id);
 
-  
+  // ── RANK ──
+  const rankEmoji = getRankEmojiFromMember(member);
 
+  // ── TOP INVITER ──
+  const allInvites = await getAllInvites();
+
+  let topInviterId = null;
+  let maxInvites = -1;
+
+  for (const [id, data] of Object.entries(allInvites)) {
+    const invites = data.invites || 0;
+
+    if (invites > maxInvites) {
+      maxInvites = invites;
+      topInviterId = id;
+    }
+  }
+
+  // ── BADGES ──
+  const badgeTop1 =
+    position === 1
+      ? BADGES.TOP1
+      : '';
+
+  const badgeTopInviter =
+    member.id === topInviterId && maxInvites > 0
+      ? BADGES.TOP_INVITER
+      : '';
+
+  const badgesLine = `${badgeTop1}${badgeTopInviter}`;
+
+  // ── WINRATE ──
+  const winrate = stats.games
+    ? ((stats.wins / stats.games) * 100).toFixed(1)
+    : 0;
+
+  // ── DATE D'ARRIVÉE ──
+  const joinedTs = member.joinedTimestamp
+    ? Math.floor(member.joinedTimestamp / 1000)
+    : null;
+
+  // ── RÔLES ──
   const roleNames = member.roles.cache
     .filter(r => r.id !== guild.id)
     .sort((a, b) => b.position - a.position)
     .map(r => `<@&${r.id}>`)
     .join(', ') || 'Aucun';
 
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=6a8bc103&is=6a8a6f83&hm=23559d39392b353cbb9b4141586279f6a1ec3f9844385360da60dd107058ee71&')
-      .setDescription(`## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`)
-      .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-      .addFields(
-        { name: 'ᴘᴏꜱɪᴛɪᴏɴ', value: `<:VIDE:1493266536813690970> **#${position}**`, inline: true },
-        { name: 'ᴘᴏɪɴᴛꜱ', value: `<:VIDE:1472667816468418631> **${stats.rr} ʀʀ**`, inline: true },
-        { name: 'ᴡɪɴʀᴀᴛᴇ', value: `<:VIDE:1493266679504048148> **${winrate}%**`, inline: true },
-        { name: 'ᴘᴀʀᴛɪᴇꜱ', value: `<:VIDE:1472667851239456935> **${stats.games}**`, inline: true },
-        { name: 'ᴠɪᴄᴛᴏɪʀᴇꜱ', value: `<:VIDE:1493266372954820741> **${stats.wins}**`, inline: true },
-        { name: 'ɪɴᴠɪᴛᴇꜱ', value: `<:VIDE:1472667823875559708> **${invitesData.invites}**`, inline: true },
-        { name: 'ᴀʀʀɪᴠᴇ ʟᴇ', value: joinedTs ? `<:VIDE:1493046369076777110> **<t:${joinedTs}:D>**` : 'Inconnue', inline: true },
-        { name: 'ᴛɪᴍᴇᴏᴜᴛꜱ', value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`, inline: true },
-        { name: 'ʀᴏʟᴇꜱ', value: roleNames, inline: true }
-      );
-
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
-  // ── Notifications ──
-  if (choice === 'notifs') {
-    const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('toggle_notif_pp')
-        .setLabel(hasRole ? 'Désactiver les notifications' : 'Activer les notifications')
-        .setStyle(hasRole ? ButtonStyle.Danger : ButtonStyle.Success)
+  const embed = new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=6a8bc103&is=6a8a6f83&hm=23559d39392b353cbb9b4141586279f6a1ec3f9844385360da60dd107058ee71&')
+    .setDescription(
+      `## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`
+    )
+    .setThumbnail(member.displayAvatarURL({ dynamic: true }))
+    .addFields(
+      {
+        name: 'ᴘᴏꜱɪᴛɪᴏɴ',
+        value: `<:VIDE:1493266536813690970> **#${position}**`,
+        inline: true
+      },
+      {
+        name: 'ᴘᴏɪɴᴛꜱ',
+        value: `<:VIDE:1472667816468418631> **${stats.rr} ʀʀ**`,
+        inline: true
+      },
+      {
+        name: 'ᴡɪɴʀᴀᴛᴇ',
+        value: `<:VIDE:1493266679504048148> **${winrate}%**`,
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇꜱ',
+        value: `<:VIDE:1472667851239456935> **${stats.games}**`,
+        inline: true
+      },
+      {
+        name: 'ᴠɪᴄᴛᴏɪʀᴇꜱ',
+        value: `<:VIDE:1493266372954820741> **${stats.wins}**`,
+        inline: true
+      },
+      {
+        name: 'ɪɴᴠɪᴛᴇꜱ',
+        value: `<:VIDE:1472667823875559708> **${invitesData.invites}**`,
+        inline: true
+      },
+      {
+        name: 'ᴀʀʀɪᴠᴇ ʟᴇ',
+        value: joinedTs
+          ? `<:VIDE:1493046369076777110> **<t:${joinedTs}:D>**`
+          : 'Inconnue',
+        inline: true
+      },
+      {
+        name: 'ᴛɪᴍᴇᴏᴜᴛꜱ',
+        value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`,
+        inline: true
+      },
+      {
+        name: 'ʀᴏʟᴇꜱ',
+        value: roleNames,
+        inline: true
+      }
     );
 
-    return interaction.reply({
-  components: [row],
-  ephemeral: true
-});
-  }
+  return interaction.editReply({
+    embeds: [embed]
+  });
+}
   // ── Classement ──
-  if (choice === 'classement') {
-    const invitesData = await getAllInvites();
-    const totalInvitesPerMember = {};
-    for (const inviterId in invitesData) {
-      totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
-    }
+if (choice === 'classement') {
+  await interaction.deferReply({ ephemeral: true });
 
-    const pointsData = await getAllPoints();
-    const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 15);
-    const playerCount = Object.keys(pointsData).length;
+  const invitesData = await getAllInvites();
 
-    const embed = buildLeaderboardEmbed({
-  sorted,
-  totalInvitesPerMember,
-  guildMembersCache: guild.members.cache,
-  playerCount
-});
+  const totalInvitesPerMember = {};
 
-return interaction.reply({
-  embeds: [embed],
-  ephemeral: true
-});
+  for (const inviterId in invitesData) {
+    totalInvitesPerMember[inviterId] =
+      invitesData[inviterId].invites || 0;
   }
+
+  const pointsData = await getAllPoints();
+
+  const sorted = Object.entries(pointsData)
+    .sort((a, b) => b[1].rr - a[1].rr)
+    .slice(0, 15);
+
+  const playerCount = Object.keys(pointsData).length;
+
+  const embed = buildLeaderboardEmbed({
+    sorted,
+    totalInvitesPerMember,
+    guildMembersCache: guild.members.cache,
+    playerCount
+  });
+
+  return interaction.editReply({
+    embeds: [embed]
+  });
+} 
   // ── Comment se vérifier ──
 if (choice === 'verification') {
   const embed = new EmbedBuilder()
