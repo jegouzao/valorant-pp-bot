@@ -1472,11 +1472,6 @@ if (choice === 'stats') {
         value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`,
         inline: true
       },
-       {
-        name: '᲼',
-        value: `᲼`,
-        inline: true
-      },
       {
         name: 'ʀᴏʟᴇꜱ',
         value: roleNames,
