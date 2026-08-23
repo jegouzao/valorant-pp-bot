@@ -918,7 +918,7 @@ const EMBED_COLOR = 0x242429;
 const BANNERS = {
   leaderboard: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png',
   regles: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png',
-  onboarding: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png',
+  onboarding: 'https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&',
 };
 
 function medalFor(index) {
@@ -1233,28 +1233,25 @@ function getSpamPenalty(strike) {
 
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
-  { value: 'stats', label: 'Mes statistiques', emoji: '📊', description: 'RR, classement, invitations, parties, winrate...' },
-  { value: 'notifs', label: 'Notifications', emoji: '🔔', description: 'Activer/désactiver les notifications de parties' },
-  { value: 'classement', label: 'Classement', emoji: '🏆', description: 'Voir le top 10 du serveur' },
-  { value: 'verification', label: 'Comment se vérifier', emoji: '✅', description: 'Débloquer l\'accès au serveur' },
-  { value: 'jouer', label: 'Comment jouer', emoji: '🎮', description: 'Le déroulement d\'une partie personnalisée' },
-  { value: 'roles', label: 'Rôles du serveur', emoji: '🏷️', description: 'À quoi servent les différents rôles' },
-  { value: 'rr', label: 'Système de RR expliqué', emoji: '📈', description: 'Comment sont calculés les gains/pertes de RR' },
-  { value: 'recompenses', label: 'Récompenses', emoji: '🎁', description: 'Cashprizes et avantages du classement' },
-  { value: 'signaler', label: 'Signaler un joueur', emoji: '🚨', description: 'Faux peak rank, AFK, comportement toxique...' },
-  { value: 'reglement', label: 'Règlement', emoji: '📜', description: 'Les règles du serveur' },
-  { value: 'faq', label: 'FAQ', emoji: '❓', description: 'Questions fréquentes' },
+  { value: 'verification', label: 'Comment se vérifier', emoji: '<:E:1466470349351686194>', description: 'Débloquer l\'accès au serveur' },
+  { value: 'jouer', label: 'Comment jouer', emoji: '<:E:1466470377327825028>', description: 'Le déroulement d\'une partie personnalisée' },
+  { value: 'reglement', label: 'Règlement', emoji: '<:E:1472840875708252192>', description: 'Les règles du serveur' },
+  { value: 'stats', label: 'Mes statistiques', emoji: '<:E:1472667834881409181>', description: 'RR, classement, invitations, parties, winrate...' },
+  { value: 'classement', label: 'Classement', emoji: '<:E:1493266536813690970>', description: 'Voir le top 10 du serveur' },
+  { value: 'notifs', label: 'Notifications', emoji: '<:E:1466608491861901362>', description: 'Activer/désactiver les notifications de parties' },
+  { value: 'signaler', label: 'Signaler un joueur', emoji: '<:E:1493378253446975619>', description: 'Faux peak rank, AFK, comportement toxique...' },
+  { value: 'faq', label: 'FAQ', emoji: '<:E:1493378287559512174>', description: 'Questions fréquentes' }
 ];
 
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      `## <:Roles:1493046347337699499> CENTRE D'AIDE — VALORANT PP\n\n` +
-      `Sélectionne une rubrique dans le menu ci-dessous pour obtenir une réponse détaillée, visible uniquement par toi.`
+      `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n\n` +
+      `-# Sélectionne une rubrique dans le menu ci-dessous pour obtenir une réponse détaillée, visible uniquement par toi.`
     )
     .setImage(BANNERS.onboarding)
-    .setColor(EMBED_COLOR)
-    .setFooter({ text: 'Centre d\'aide • Valorant PP' });
+    .setColor(EMBED_COLOR);
+    
 }
 
 function buildOnboardingSelectRow() {
@@ -1374,32 +1371,6 @@ async function handleOnboardingSelect(interaction) {
         `3️⃣ Une fois 10 joueurs réunis, l'Organisateur lance la partie : les équipes sont équilibrées par rank et déplacées dans **┃attaquants** / **┃défenseurs**.\n` +
         `4️⃣ À la fin, l'Organisateur valide le résultat : tes RR sont mis à jour automatiquement.\n\n` +
         `-# 🎬 Vidéo de démonstration à venir ici.`
-      );
-    // TODO: une fois ta vidéo prête, ajoute par exemple .setImage('URL_DE_TA_VIDEO_OU_GIF')
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
-
-  // ── Rôles du serveur ──
-  if (choice === 'roles') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setDescription(
-        `## 🏷️ Rôles du serveur\n\n` +
-        `- **Vérifié** : accès complet au serveur, obtenu après vérification.\n` +
-        `- **Organisateur** : peut créer des parties personnalisées avec \`/pp\`.\n` +
-        `- **Administrateur** : gère la modération et la configuration du serveur.\n` +
-        `- **Rangs (Iron → Radiant)** : reflètent ton peak rank déclaré, utilisés pour l'équilibrage des équipes.\n` +
-        `- **Booster** : bonus de RR sur les victoires en remerciement du boost.\n` +
-        `- **Tag serveur** : bonus de RR pour les membres arborant le tag du serveur sur leur profil Discord.`
-      );
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
-
-  // ── Système de RR expliqué ──
-  if (choice === 'rr') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setDescription(
         `## 📈 Système de RR\n\n` +
         `- Victoire standard : **+${RR_VALUES.WIN} RR**\n` +
         `- Victoire avec le tag du serveur actif : **+${RR_VALUES.WIN_TAG} RR**\n` +
@@ -1407,22 +1378,11 @@ async function handleOnboardingSelect(interaction) {
         `- Défaite : **${RR_VALUES.LOSS} RR**\n\n` +
         `Ton RR ne peut jamais descendre en dessous de 0. Le classement est remis à zéro à chaque nouvelle saison.`
       );
+    // TODO: une fois ta vidéo prête, ajoute par exemple .setImage('URL_DE_TA_VIDEO_OU_GIF')
     return interaction.reply({ embeds: [embed], ephemeral: true });
   }
 
-  // ── Récompenses ──
-  if (choice === 'recompenses') {
-    const embed = new EmbedBuilder()
-      .setColor(EMBED_COLOR)
-      .setDescription(
-        `## 🎁 Récompenses\n\n` +
-        `- 🥇 **Cashprize mensuel** pour le TOP 1 du classement RR.\n` +
-        `- 🎟️ **Cashprize mensuel** pour le TOP 1 des invitations.\n` +
-        `- 💎 Bonus de RR pour les Boosters et les membres avec le tag serveur actif.\n\n` +
-        `-# Les montants et modalités exactes sont annoncés en début de saison.`
-      );
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
+
 
   // ── Signaler un joueur ──
   if (choice === 'signaler') {
