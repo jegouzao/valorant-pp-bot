@@ -1083,21 +1083,21 @@ const lines = sorted.map(([id, data], idx) => {
     );
   });
 
-  return new EmbedBuilder()
-    .setDescription("## <:VIDE:1493046347337699499> LEADERBOARD")
-    .setImage(BANNERS.onboarding)
-    .addFields(
-      { name: '᲼', value: //`**ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ** : <:TopLeaderboardCashprize:1465709888729776296> **5000 VP**\n` +
-        lines.join('\n') || "*Calcul en cours...*"},
-      {
-        name: '᲼',
-        value:
-          `-# ᴀᴏᴜᴛ\n` +
-          `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-          `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : ${playerCount}`
-      }
-    )
-    .setColor(EMBED_COLOR);
+return new EmbedBuilder()
+  .setDescription(
+    `## <:VIDE:1493046347337699499> LEADERBOARD\n\n` +
+    `-# ꜱᴀɪꜱᴏɴ : **Août**\n` +
+    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : **<t:${Math.floor(Date.now() / 1000)}:R>**\n` +
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : **${playerCount}**`
+  )
+  .setImage(BANNERS.onboarding)
+  .addFields(
+    {
+      name: '\u200B',
+      value: lines.join('\n') || '*Calcul en cours...*'
+    }
+  )
+  .setColor(EMBED_COLOR);
 }
 
 
@@ -1329,6 +1329,14 @@ async function handleOnboardingSelect(interaction) {
   const choice = interaction.values[0];
   const member = interaction.member;
   const guild = interaction.guild;
+
+  let rankEmoji = '';
+
+const rankRole = member.roles.cache.find(r => rankEmojis[r.name]);
+
+if (rankRole) {
+  rankEmoji = rankEmojis[rankRole.name] + ' ';
+}
 
   // ── Mes statistiques ──
   if (choice === 'stats') {
