@@ -113,6 +113,22 @@ const RANK_ORDER = {
   'Iron 3': 23, 'Iron 2': 24, 'Iron 1': 25
 };
 
+function getRankEmojiFromMember(member) {
+  if (!member) return rankEmojis.Unranked || '';
+
+  const rankKey = Object.entries(RANK_ROLES).find(
+    ([, roleId]) => member.roles.cache.has(roleId)
+  )?.[0];
+
+  if (!rankKey) {
+    return rankEmojis.Unranked || '';
+  }
+
+  const emojiKey = rankKey.replace(/([A-Za-z]+)(\d)$/, '$1 $2');
+
+  return rankEmojis[emojiKey] || '';
+}
+
 const MIN_ACCOUNT_AGE_DAYS = 30;
 
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
@@ -1269,13 +1285,14 @@ async function updateTop15Embed() {
   const pointsData = await getAllPoints();
   const sorted = Object.entries(pointsData).sort((a, b) => b[1].rr - a[1].rr).slice(0, 10);
   const playerCount = Object.keys(pointsData).length;
+  const guild = client.guilds.cache.get(GUILD_ID);
 
-  const embed = buildLeaderboardEmbed({
-    sorted,
-    totalInvitesPerMember,
-    guildMembersCache: guild.members.cache,
-    playerCount
-  });
+const embed = buildLeaderboardEmbed({
+  sorted,
+  totalInvitesPerMember,
+  guildMembersCache: guild?.members?.cache || null,
+  playerCount
+});
 
   await msg.edit({ embeds: [embed] }).catch(() => {});
 }
