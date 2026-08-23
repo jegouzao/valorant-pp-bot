@@ -1455,7 +1455,6 @@ return interaction.reply({
   if (choice === 'jouer') {
     const embed = new EmbedBuilder()
       .setColor(EMBED_COLOR)
-      // TODO: .setImage('URL_DE_TA_VIDEO_OU_GIF')
      return interaction.reply({
     embeds: [embed],
     ephemeral: true
