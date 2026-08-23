@@ -1576,7 +1576,7 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '## **VALORANT PP RULES**\n' +
+      '## **RULES — VALORANT PP**\n' +
       'Merci de ne pas mentir sur vos rangs, c\'est juste big relou.\n' +
       'No AFK/Leave non plus.\n' +
       'Sinon **NO RULES**\n' +
