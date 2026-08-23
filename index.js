@@ -1336,7 +1336,7 @@ function buildOnboardingEmbed() {
   return new EmbedBuilder()
     .setDescription(
       `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n\n` +
-      `-# Sélectionne une rubrique dans le menu ci-dessous pour obtenir une réponse détaillée, visible uniquement par toi.`
+      `-# Choisis une rubrique pour accéder aux infos qui t’intéressent. La réponse sera visible uniquement par toi.`
     )
     .setImage(BANNERS.onboarding)
     .setColor(EMBED_COLOR);
