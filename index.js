@@ -1564,10 +1564,10 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046369076777110> **RÈGLEMENT — VALORANT PP**\n' +
-      '### Merci de ne pas mytho sur vos rangs, ni AFK/Leave, c\'est juste relou.\n' +
+      'Merci de ne pas fausser vos rangs, AFK ou leave, c\'est relou.\n' +
       'Sinon **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
-      'No limit au niveau de l\'équipement, ni de décibels dans le VC \n' +
+      'No limit au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
 
       '### Voici le fonctionnement de l\'attribution des points :\n' +
