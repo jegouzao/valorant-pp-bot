@@ -1600,30 +1600,6 @@ function buildRulesEmbed() {
       'Les prix varieront, Bundles, carte Riot, PayPal cash, abonnements Nitro...\n' 
       'Encore une fois, si vous êtes actifs, et que vous faites grossir la communauté, vous gagnez\n' +
       '-# Bienvenue sur VALORANT PP !\n' +
-
-
-
-
-      '\n' +
-      '### ***COMMENT JOUER ?***\n' +
-      '- <:VC:1466608491861901362>** ┃file d\u2019attente**\n' +
-      '- <:Annonce:1472840875708252192>** ┃jouer**\n' +
-      '>   <:ENTRY2:1466591986382278831> *Nouvelle partie vocale créée*\n' +
-      '>   <:ENTRY:1466591997874929876> *Connexion manuelle*\n' +
-      '> <:VIDE:1465704930160410847>\n' +
-      '- <:VC:1466608491861901362>** ┃préparation**\n' +
-      '>   <:ENTRY2:1466591986382278831> *Code de groupe*\n' +
-      '>   <:ENTRY2:1466591986382278831> *Équilibrage intelligent*\n' +
-      '>   <:ENTRY:1466591997874929876> *Redirection auto*\n' +
-      '> <:VIDE:1465704930160410847>\n' +
-      '- <:VC:1466608491861901362>** ┃attaquants**\n' +
-      '- <:VC:1466608491861901362>** ┃défenseurs**\n' +
-      '>   <:ENTRY2:1466591986382278831> *Résultats*\n' +
-      '>   <:ENTRY2:1466591986382278831> *Mise à jour du classement*\n' +
-      '>   <:ENTRY:1466591997874929876> *Redirection auto*\n' +
-      '> <:VIDE:1465704930160410847>\n' +
-      '- <:VC:1466608491861901362>** ┃file d\u2019attente**\n' +
-      '<:VIDE:1465704930160410847>\n'
     )
     .setColor(EMBED_COLOR)
     .setImage(BANNERS.regles)
