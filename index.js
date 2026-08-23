@@ -1028,49 +1028,42 @@ function buildLeaderboardEmbed({ sorted, totalInvitesPerMember, guildMembersCach
   };
 }
 
-function getTrackerSpamPenalty(strike) {
-  if (strike === 0) {
-    return {
-      limit: 7,
-      durationMs: 60 * 1000,
-      label: '60 secondes'
-    };
-  }
 
-  if (strike === 1) {
-    return {
-      limit: 5,
-      durationMs: 5 * 60 * 1000,
-      label: '5 minutes'
-    };
-  }
-
-  return {
-    limit: 4,
-    durationMs: 60 * 60 * 1000,
-    label: '1 heure'
-  };
-}
 
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 25;
 
 
-  const lines = sorted.map(([id, data], idx) => {
-    const medal = medalFor(idx);
-    const invites = totalInvitesPerMember[id] || 0;
-    const losses = Math.max(0, (data.games || 0) - (data.wins || 0));
-    const winrate = data.games ? Math.round((data.wins / data.games) * 100) : 0;
-        const rawBars = (data.rr / maxRR) * barLength;
-            const filledBars = Math.max(0, Math.min(barLength, Math.round(rawBars)));    const bar = "▰".repeat(filledBars) + "▱".repeat(barLength - filledBars);
+const lines = sorted.map(([id, data], idx) => {
+  const medal = medalFor(idx);
 
+  const invites = totalInvitesPerMember[id] || 0;
+
+  const losses = Math.max(
+    0,
+    (data.games || 0) - (data.wins || 0)
+  );
+
+  const winrate = data.games
+    ? Math.round((data.wins / data.games) * 100)
+    : 0;
+
+  const rawBars = (data.rr / maxRR) * barLength;
+
+  const filledBars = Math.max(
+    0,
+    Math.min(barLength, Math.round(rawBars))
+  );
+
+  const bar =
+    "▰".repeat(filledBars) +
+    "▱".repeat(barLength - filledBars);
+
+  // suite de ton code...
 
     let rankEmoji = '';
 
-    let member = guild?.members?.cache?.get(id) || null;
-    if (!member && guild) {
-      member = await guild.members.fetch(id).catch(() => null);
-    }
+ let member = guildMembersCache?.get(id) || null;
 
     if (member) {
       const rankName = member.roles.cache.find(r => rankEmojis[r.name])?.name;
@@ -1085,10 +1078,10 @@ function getTrackerSpamPenalty(strike) {
 
     return (
       `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}` +
-           `\n> ${bar}` +
-           `\n> *${data.rr} ʀʀ  &  ${invites} invites*`;
+      `\n> ${bar}` +
+      `\n> *${data.rr} ʀʀ & ${invites} invites*`
     );
-  });
+  }));
 
   return new EmbedBuilder()
     .setTitle("<:VIDE:1493046347337699499> LEADERBOARD")
@@ -1291,15 +1284,6 @@ async function updateTop15Embed() {
   await msg.edit({ embeds: [embed] }).catch(() => {});
 }
 
-function getSpamPenalty(strike) {
-  if (strike === 0) {
-    return { limit: 7, durationMs: 60 * 1000, label: '60 secondes' };
-  }
-  if (strike === 1) {
-    return { limit: 5, durationMs: 5 * 60 * 1000, label: '5 minutes' };
-  }
-  return { limit: 4, durationMs: 60 * 60 * 1000, label: '1 heure' };
-}
 
 
 
