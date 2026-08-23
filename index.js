@@ -1553,11 +1553,11 @@ function buildRulesEmbed() {
       '### Les cashprizes seront attribués mensuellement aux :\n' +
       '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
       '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n'
+      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
 
       '> **Le serveur équilibre intelligemment et instantanément**\n' +
       '> grâce au peak rank que vous fournissez à l\'arrivée.\n' +
-      '> Si vous améliorez votre rang, @taggez quelqu\'un.' +
+      '> Si vous améliorez votre rang, @taggez quelqu\'un.'
     )
     .setColor(EMBED_COLOR);
   }
