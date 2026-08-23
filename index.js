@@ -1113,7 +1113,7 @@ const rankEmoji = getRankEmojiFromMember(member);
     if (id === topInviterId && maxInvites > 0) badges += ` ${BADGES.TOP_INVITER}`;
 
     return (
-      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges} ᲼•᲼ ${data.rr} ʀʀ ᲼•᲼ ${invites} ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ` +
+      `\n> **#${idx + 1}**   <@${id}> ${rankEmoji}${badges}  •  ${data.rr} ʀʀ  •  ${invites} ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ` +
       `\n> ${bar}`     );
   });
 
