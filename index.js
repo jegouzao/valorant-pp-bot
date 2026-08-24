@@ -1323,9 +1323,8 @@ const ONBOARDING_TOPICS = [
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n\n` +
-      `-# Choisis une rubrique pour accéder aux infos qui t’intéressent.\n` +
-      `-# La réponse sera visible uniquement par toi.`
+      `## <:Roles:1493046347337699499> ONBOARDING ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ\n\n` +
+      `-# ʟᴇꜱ ʀᴇᴘᴏɴꜱᴇꜱ ꜱᴇʀᴏɴᴛ ᴠɪꜱɪʙʟᴇꜱ ᴜɴɪǫᴜᴇᴍᴇɴᴛ ᴘᴀʀ ᴛᴏɪ.`
     )
     .setImage(BANNERS.onboarding)
     .setColor(EMBED_COLOR);
@@ -1438,7 +1437,7 @@ if (choice === 'stats') {
       },
       {
         name: 'ᴘᴏɪɴᴛꜱ',
-        value: `<:VIDE:1472667816468418631> **${stats.rr} ʀʀ**`,
+        value: `<:VIDE:1472667816468418631> **${stats.rr}**<:VIDE:1541125087384829962>`,
         inline: true
       },
       {
@@ -1563,31 +1562,65 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '## <:36:1493046369076777110> **RÈGLEMENT — VALORANT PP**\n' +
+      '## <:36:1493046347337699499> **RÈGLEMENT ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ**\n' +
       'Merci de ne pas fausser vos rangs, AFK ou leave, c\'est relou.\n' +
       'Sinon **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'No limit au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
 
-      '### Voici le fonctionnement de l\'attribution des points :\n' +
-      '- Partie gagnée : <:36:1497395169224556686><:RR:1497395178045050992>(<:boost:1488545490189549629> Boost de serveur)\n' +
-      '- Partie gagnée : <:33:1497395187415126127><:RR:1497395194289455114>(<:tag:1497390943928586300> Tag de serveur)\n' +
-      '- Partie gagnée : <:30:1493259044893360200><:RR:1493259054804369408>\n' +
-      '- Partie perdue : <:15:1493259005584343080><:RR:1493259016686538932>\n' +
-      '-# Les membres qui aident le serveur sont avantagés, simple.\n\n' +
-
-      '### Les cashprizes seront attribués mensuellement aux :\n' +
-      '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
-      '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-      '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
-
-      '> **Le serveur équilibre intelligemment et instantanément**\n' +
-      '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
-      '> Si vous améliorez votre rang, @taggez quelqu\'un.'
+      '### Voici le fonctionnement de l\'attribution des points :'
     )
+
+    .addFields(
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
+        value: '<:36:1497395169224556686><:RR:1497395178045050992>\n-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
+        value: '<:33:1497395187415126127><:RR:1497395194289455114>\n-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+        inline: true
+      },
+
+      // Force le retour à la ligne après 2 colonnes
+      {
+        name: '\u200B',
+        value: '\u200B',
+        inline: false
+      },
+
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
+        value: '<:30:1493259044893360200><:RR:1493259054804369408>\n-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ',
+        value: '<:15:1493259005584343080><:RR:1493259016686538932>',
+        inline: true
+      }
+    )
+
+    .addFields({
+      name: '\u200B',
+      value:
+        '-# Les membres soutenant le serveur sont avantagés, simplement.\n\n' +
+
+        '### Les cashprizes seront attribués mensuellement aux :\n' +
+        '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
+        '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
+        '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
+
+        '> **Le serveur équilibre intelligemment et instantanément**\n' +
+        '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
+        '> Si vous améliorez votre rang, @taggez quelqu\'un.',
+      inline: false
+    })
+
     .setColor(EMBED_COLOR);
-  }
+}
 
 
 
@@ -2982,8 +3015,8 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         .setDescription(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# MERCI pour le <@&${BOOSTER_ROLE_ID}> !\n` +
-          `-# Tiens : <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208> ʀʀ pour toutes tes prochaines victoires.`
+          `-# **MERCI** pour le <@&${BOOSTER_ROLE_ID}> !\n` +
+          `-# <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208><:BonusTag:1541125087384829962> pour toutes tes prochaines victoires.`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
