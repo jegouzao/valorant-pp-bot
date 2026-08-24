@@ -1563,10 +1563,10 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      'Merci de ne pas fausser vos rangs, AFK ou leave, c\'est relou.\n' +
-      'Sinon **NO RULES**\n' +
+      'Ne faussez pas vos rangs, c\'est relou. AFK / Leave sanctionné,\n' +
+      'Mais sinon **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
-      'No limit au niveau de l\'équipement ou des décibels\n' +
+      'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
       '### Voici le fonctionnement de l\'attribution des points :'
     )
@@ -1601,22 +1601,17 @@ function buildRulesEmbed() {
         value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         inline: true
       },
-      {
-        name: '\u200B',
-        value: '\u200B',
-        inline: true
-      },
 
       // ───── TEXTE SOUS LES POINTS ─────
       {
         name: '\u200B',
-        value: '-# Les membres soutenant le serveur sont avantagés, simplement.',
+        value: '-# Les membres soutenant le serveur sont avantagés, normal.',
         inline: false
       },
 
       // ───── CASHPRIZES ─────
       {
-        name: 'Les cashprizes seront attribués mensuellement aux :',
+        name: '__Les cashprizes seront attribués mensuellement aux__ :',
         value:
           '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
           '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
