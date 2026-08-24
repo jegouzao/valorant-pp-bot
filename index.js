@@ -1618,14 +1618,14 @@ function buildRulesEmbed() {
 
       {
         name: '<:TL:1465704930160410847>',
-        value: '<:TL:1465704930160410847> __Les cashprizes seront attribués mensuellement aux__ :',
+        value: '__**Les cashprizes seront attribués mensuellement aux**__ :',
         inline: false
       },
 
       {
-        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **Top 1 du Leaderboard**',
-        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **Top 1 du classement des invitations**\n\n' +
-  '-# <:TL:1493378369364951131>  Les prix varieront, **Bundles, RiotCard, PayPal, Nitro...**',
+        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
+        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
+  '-# <:TL:1493378369364951131>  *Les prix varieront, Bundles, RiotCard, PayPal, Nitro...*',
         inline: false
       }
     )
