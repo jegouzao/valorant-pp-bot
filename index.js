@@ -1584,11 +1584,6 @@ function buildRulesEmbed() {
         value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         inline: true
       },
-      {
-        name: '\u200B',
-        value: '\u200B',
-        inline: true
-      },
 
       // ───── LIGNE 2 ─────
       {
