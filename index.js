@@ -1608,6 +1608,13 @@ function buildRulesEmbed() {
         inline: true
       },
 
+      // ───── TEXTE SOUS LES POINTS ─────
+      {
+        name: '\u200B',
+        value: '\u200B',
+        inline: false
+      },
+
       // ───── CASHPRIZES ─────
       {
         name: '__Les cashprizes seront attribués mensuellement aux__ :',
