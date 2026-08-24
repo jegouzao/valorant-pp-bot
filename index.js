@@ -1563,14 +1563,13 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      'AFK / leave sanctionnés, et ne faussez pas vos rangs.\n' +
+      'AFK / Leave sanctionnés, et ne faussez pas vos rangs.\n' +
       'À part ça, **NO RULES**\n' +
-      'Ça ne plaira pas à tous, ***mais à la grande majorité***.\n' +
+      'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__.\n\n' +
       '### Voici le fonctionnement du système de points :' 
     )
-
     .addFields(
 
       // ───── LIGNE 1 ─────
@@ -1616,9 +1615,9 @@ function buildRulesEmbed() {
       },
 
       {
-        name: '<:TL:1465704930160410847><:TL:1465709888729776296>  **Top 1 du Leaderboard**',
-        value: '<:TL:1465704930160410847><:TI:1465747415670984862>  **Top 1 du classement des invitations**\n' +
-  '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
+        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **Top 1 du Leaderboard**',
+        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **Top 1 du classement des invitations**\n\n' +
+  '-# <:TL:1493378369364951131>  Les prix varieront, **Bundles, RiotCard, PayPal, Nitro...**',
         inline: false
       },
 
