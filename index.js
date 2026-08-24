@@ -1616,8 +1616,8 @@ function buildRulesEmbed() {
       },
 
       {
-        name: '<:TL:1465709888729776296> **Top 1 du Leaderboard**',
-        value: '<:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
+        name: ' <:TL:1465709888729776296>  **Top 1 du Leaderboard**',
+        value: ' <:TI:1465747415670984862>  **Top 1 du classement des invitations**\n' +
   '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
         inline: false
       },
