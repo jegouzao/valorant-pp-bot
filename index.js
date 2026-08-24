@@ -1599,8 +1599,8 @@ function buildRulesEmbed() {
 
       // ───── TEXTE SOUS LES POINTS ─────
       {
-        name: '\u200B',
-        value: '-# Les membres soutenant le serveur sont avantagés, normal.',
+        name: '-# Les membres soutenant le serveur sont avantagés, normal.',
+        value: '\u200B',
         inline: false
       },
 
