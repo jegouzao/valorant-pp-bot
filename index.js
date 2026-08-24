@@ -1323,8 +1323,8 @@ const ONBOARDING_TOPICS = [
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      `## <:Roles:1493046347337699499> ONBOARDING ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ\n\n` +
-      `-# ʟᴇꜱ ʀᴇᴘᴏɴꜱᴇꜱ ꜱᴇʀᴏɴᴛ ᴠɪꜱɪʙʟᴇꜱ ᴜɴɪǫᴜᴇᴍᴇɴᴛ ᴘᴀʀ ᴛᴏɪ.`
+      `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n\n` +
+      `-# Réponses visibles uniquement par toi.`
     )
     .setImage(BANNERS.onboarding)
     .setColor(EMBED_COLOR);
@@ -1562,7 +1562,7 @@ return interaction.reply({
 function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
-      '## <:36:1493046347337699499> **RÈGLEMENT ᴠᴀʟᴏʀᴀɴᴛ ᴘᴘ**\n' +
+      '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
       'Merci de ne pas fausser vos rangs, AFK ou leave, c\'est relou.\n' +
       'Sinon **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
