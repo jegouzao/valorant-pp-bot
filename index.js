@@ -1626,9 +1626,9 @@ function buildRulesEmbed() {
       {
         name: '\u200B',
         value:
-          '-# <:TL:1493378388725989456> **Le serveur équilibre intelligemment et instantanément**\n' +
-          '-# <:TL:1465704930160410847> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
-          '-# <:TL:1465704930160410847> Si vous améliorez votre rang, @taggez quelqu\'un.',
+          '-# <:TL:1465704930160410847>  **Le serveur équilibre intelligemment et instantanément**\n' +
+          '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
+          '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
         inline: false
       }
     )
