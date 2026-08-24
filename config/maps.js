@@ -11,4 +11,5 @@ module.exports = [
   { name: 'ꜰʀᴀᴄᴛᴜʀᴇ', image: 'https://cdn.discordapp.com/attachments/1461761854563942400/1463713699435909165/10.png?ex=69b2c5dc&is=69b1745c&hm=1a502dfb057602a4511707ce4299cc51eee49945fcef37eb0887cf6bf66716bd&' },
   { name: 'ᴀʙʏꜱꜱ', image: 'https://cdn.discordapp.com/attachments/1461761854563942400/1463713704142176381/11.png?ex=69b2c5dd&is=69b1745d&hm=5616f1dd3041a7ed4c1fba11d14fb02ce527ac6359f3616c0e01e30c995d89e6&' },
   { name: 'ᴄᴏʀʀᴏᴅᴇ', image: 'https://cdn.discordapp.com/attachments/1461761854563942400/1463713707933696094/12.png?ex=69b2c5de&is=69b1745e&hm=99a947a34296c0fcdc53457bf5ac8c0540660d70223a9a43d6dfa535e122f640&' },
+  { name: 'ꜱᴜᴍᴍɪᴛ', image: 'https://cdn.discordapp.com/attachments/1461761854563942400/1541410110180687972/Dessin.png?ex=6a8d7d88&is=6a8c2c08&hm=06715e0aafcca2aabc24ca8336e1acf6eb8451df714d18df69ce4202dadd31af&' },
 ];
