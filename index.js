@@ -3107,7 +3107,7 @@ if (timeoutApplied) {
 
   await sendActivityMessage(newMember.guild, {
     embeds: [embed]
-  });)
+  });
 
 client.on('guildBanAdd', async (ban) => {
   try {
