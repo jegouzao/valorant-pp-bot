@@ -1573,39 +1573,29 @@ function buildRulesEmbed() {
     )
 
     .addFields(
-      {
-        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
-        value: '<:36:1497395169224556686><:RR:1497395178045050992>\n-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-        inline: true
-      },
-      {
-        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
-        value: '<:33:1497395187415126127><:RR:1497395194289455114>\n-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-        inline: true
-      },
+  {
+    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>',
+    value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+    inline: true
+  },
+  {
+    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>',
+    value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+    inline: true
+  },
+  {
+    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>',
+    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+    inline: true
+  },
+  {
+    name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>',
+    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+    inline: true
+  }
+)
 
-      // Force le retour à la ligne après 2 colonnes
-      {
-        name: '\u200B',
-        value: '\u200B',
-        inline: false
-      },
-
-      {
-        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ',
-        value: '<:30:1493259044893360200><:RR:1493259054804369408>\n-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-        inline: true
-      },
-      {
-        name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ',
-        value: '<:15:1493259005584343080><:RR:1493259016686538932>',
-        inline: true
-      }
-    )
-
-    .addFields({
-      name: '\u200B',
-      value:
+    .setDescription(
         '-# Les membres soutenant le serveur sont avantagés, simplement.\n\n' +
 
         '### Les cashprizes seront attribués mensuellement aux :\n' +
@@ -1615,9 +1605,8 @@ function buildRulesEmbed() {
 
         '> **Le serveur équilibre intelligemment et instantanément**\n' +
         '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
-        '> Si vous améliorez votre rang, @taggez quelqu\'un.',
-      inline: false
-    })
+        '> Si vous améliorez votre rang, @taggez quelqu\'un.'
+    )
 
     .setColor(EMBED_COLOR);
 }
