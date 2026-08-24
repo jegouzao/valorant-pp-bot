@@ -1565,7 +1565,7 @@ function buildRulesEmbed() {
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
       'AFK / leave sanctionnés, et ne faussez pas vos rangs.\n' +
       'À part ça, **NO RULES**\n' +
-      'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
+      'Ça ne plaira pas à tous, ***mais à la grande majorité***.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__.\n\n' +
       '### Voici le fonctionnement du système de points :' 
