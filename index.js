@@ -1568,7 +1568,8 @@ function buildRulesEmbed() {
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
-      '### Voici le fonctionnement de l\'attribution des points :'
+      '### Voici le fonctionnement de l\'attribution des points :\n' +
+      '-# Les membres soutenant le serveur sont avantagés, normal.'
     )
 
     .addFields(
@@ -1584,6 +1585,11 @@ function buildRulesEmbed() {
         value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         inline: true
       },
+      {
+        name: '\u200B',
+        value: '\u200B',
+        inline: true
+      },
 
       // ───── LIGNE 2 ─────
       {
@@ -1596,12 +1602,10 @@ function buildRulesEmbed() {
         value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         inline: true
       },
-
-      // ───── TEXTE SOUS LES POINTS ─────
       {
-        name: '-# Les membres soutenant le serveur sont avantagés, normal.',
+        name: '\u200B',
         value: '\u200B',
-        inline: false
+        inline: true
       },
 
       // ───── CASHPRIZES ─────
