@@ -1104,10 +1104,10 @@ return (
 
 const leaderboardFields = [];
 
-for (let i = 0; i < lines.length; i += 3) {
+for (let i = 0; i < lines.length; i += 1) {
   leaderboardFields.push({
     name: '\u200B',
-    value: lines.slice(i, i + 3).join('\n')
+    value: lines.slice(i, i + 1).join('\n')
   });
 }
 
