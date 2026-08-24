@@ -1568,8 +1568,7 @@ function buildRulesEmbed() {
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
-      '### Voici le fonctionnement de l\'attribution des points :\n' +
-      '-# Les membres soutenant le serveur sont avantagés, normal.'
+      '### Voici le fonctionnement de l\'attribution des points :' 
     )
 
     .addFields(
@@ -1611,13 +1610,13 @@ function buildRulesEmbed() {
       // ───── TEXTE SOUS LES POINTS ─────
       {
         name: '\u200B',
-        value: '\u200B',
+        value: '__Les cashprizes seront attribués mensuellement aux__ :',
         inline: false
       },
 
       // ───── CASHPRIZES ─────
       {
-        name: '__Les cashprizes seront attribués mensuellement aux__ :',
+        name: '<:TL:1472199399382978672><:TL:1472199381854847109><:TL:1472199414155051172>',
         value:
           '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
           '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
