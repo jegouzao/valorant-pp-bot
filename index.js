@@ -3105,9 +3105,17 @@ if (timeoutApplied) {
     });
   }
 
-  await sendActivityMessage(newMember.guild, {
+   await sendActivityMessage(newMember.guild, {
     embeds: [embed]
   });
+
+} // fin timeoutApplied
+
+} catch (err) {
+  console.error('Erreur guildMemberUpdate activité :', err);
+}
+}); // fin guildMemberUpdate
+
 
 client.on('guildBanAdd', async (ban) => {
   try {
