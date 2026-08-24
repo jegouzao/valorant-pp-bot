@@ -1606,21 +1606,6 @@ function buildRulesEmbed() {
         inline: true
       },
 
-
-
-      {
-        name: '<:TL:1465704930160410847>',
-        value: '__Les cashprizes seront attribués mensuellement aux__ :',
-        inline: false
-      },
-
-      {
-        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **Top 1 du Leaderboard**',
-        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **Top 1 du classement des invitations**\n\n' +
-  '-# <:TL:1493378369364951131>  Les prix varieront, **Bundles, RiotCard, PayPal, Nitro...**',
-        inline: false
-      },
-
       // ───── ÉQUILIBRAGE ─────
       {
         name: '\u200B',
@@ -1628,6 +1613,19 @@ function buildRulesEmbed() {
           '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
           '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
           '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
+        inline: false
+      },
+
+      {
+        name: '<:TL:1465704930160410847>',
+        value: '<:TL:1465704930160410847> __Les cashprizes seront attribués mensuellement aux__ :',
+        inline: false
+      },
+
+      {
+        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **Top 1 du Leaderboard**',
+        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **Top 1 du classement des invitations**\n\n' +
+  '-# <:TL:1493378369364951131>  Les prix varieront, **Bundles, RiotCard, PayPal, Nitro...**',
         inline: false
       }
     )
