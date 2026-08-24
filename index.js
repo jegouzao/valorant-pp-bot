@@ -2955,7 +2955,11 @@ client.on('guildMemberAdd', async member => {
       `-# Sur Discord depuis **${accountAge} jours**`
     )
     .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
-    .setTimestamp();
+    .setTimestamp()
+    .setFooter({
+  text: `Invité par ${inviter.DisplayName}`,
+  iconURL: inviter.user.displayAvatarURL()
+});
 
   await welcomeChannel.send({ embeds: [embed] });
 
@@ -3067,7 +3071,11 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
           `-# Raison : **${reason}**`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({
+  text: `Timeout par ${moderator.DisplayName}`,
+  iconURL: moderator.user.displayAvatarURL()
+});
 
       await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
@@ -3101,7 +3109,11 @@ client.on('guildBanAdd', async (ban) => {
         `-# Raison : **${reason}**`
       )
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 128 }))
-      .setTimestamp();
+      .setTimestamp()
+      .setFooter({
+  text: `Banni par ${moderator.DisplayName}`,
+  iconURL: moderator.user.displayAvatarURL()
+});
 
     await sendActivityMessage(guild, { embeds: [embed] });
   } catch (err) {
