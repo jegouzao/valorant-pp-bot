@@ -2957,7 +2957,7 @@ client.on('guildMemberAdd', async member => {
     .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
     .setTimestamp()
     .setFooter({
-  text: `Invité par ${inviter.DisplayName}`,
+  text: `Invité par ${inviter.displayName}`,
   iconURL: inviter.user.displayAvatarURL()
 });
 
@@ -3039,50 +3039,75 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
 
-    const oldTimeoutTs = oldMember.communicationDisabledUntilTimestamp ?? 0;
-    const newTimeoutTs = newMember.communicationDisabledUntilTimestamp ?? 0;
+    const oldTimeoutTs =
+  oldMember.communicationDisabledUntilTimestamp ?? 0;
 
-    const timeoutApplied = newTimeoutTs > Date.now() && newTimeoutTs !== oldTimeoutTs;
+const newTimeoutTs =
+  newMember.communicationDisabledUntilTimestamp ?? 0;
 
-    if (timeoutApplied) {
-      // ✅ Compteur d'exclusions temporaires (utilisé dans /onboarding → Mes statistiques)
-      await incrementPlayerTimeouts(newMember.id).catch(err => console.error('Erreur incrementPlayerTimeouts :', err));
+const timeoutApplied =
+  newTimeoutTs > Date.now() &&
+  newTimeoutTs !== oldTimeoutTs;
 
-      let reason = 'Non fournie';
+if (timeoutApplied) {
+  await incrementPlayerTimeouts(newMember.id)
+    .catch(err =>
+      console.error('Erreur incrementPlayerTimeouts :', err)
+    );
 
-      try {
-        const logs = await newMember.guild.fetchAuditLogs({ type: 24, limit: 10 });
-        const entry = logs.entries.find(entry =>
-          entry.target?.id === newMember.id && Date.now() - entry.createdTimestamp < 15000
-        );
-        if (entry?.reason) reason = entry.reason;
-      } catch (err) {
-        console.error('Erreur audit logs timeout :', err);
+  let reason = 'Non fournie';
+  let moderator = null;
+
+  try {
+    const logs = await newMember.guild.fetchAuditLogs({
+      type: 24,
+      limit: 10
+    });
+
+    const entry = logs.entries.find(entry =>
+      entry.target?.id === newMember.id &&
+      Date.now() - entry.createdTimestamp < 15000
+    );
+
+    if (entry) {
+      moderator = entry.executor || null;
+
+      if (entry.reason) {
+        reason = entry.reason;
       }
-
-      const endUnix = Math.floor(newTimeoutTs / 1000);
-
-      const embed = new EmbedBuilder()
-        .setColor(0xe70019)
-        .setDescription(
-          `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
-          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# Temps restant : <t:${endUnix}:R>\n` +
-          `-# Raison : **${reason}**`
-        )
-        .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
-        .setTimestamp()
-        .setFooter({
-  text: `Timeout par ${moderator.DisplayName}`,
-  iconURL: moderator.user.displayAvatarURL()
-});
-
-      await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
   } catch (err) {
-    console.error('Erreur guildMemberUpdate activité :', err);
+    console.error('Erreur audit logs timeout :', err);
   }
-});
+
+  const endUnix = Math.floor(newTimeoutTs / 1000);
+
+  const embed = new EmbedBuilder()
+    .setColor(0xe70019)
+    .setDescription(
+      `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n\n` +
+      `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+      `-# Temps restant : <t:${endUnix}:R>\n` +
+      `-# Raison : **${reason}**`
+    )
+    .setThumbnail(
+      newMember.displayAvatarURL({
+        dynamic: true,
+        size: 128
+      })
+    )
+    .setTimestamp();
+
+  if (moderator) {
+    embed.setFooter({
+      text: `Timeout par ${moderator.displayName || moderator.tag}`,
+      iconURL: moderator.displayAvatarURL()
+    });
+  }
+
+  await sendActivityMessage(newMember.guild, {
+    embeds: [embed]
+  });)
 
 client.on('guildBanAdd', async (ban) => {
   try {
@@ -3090,13 +3115,26 @@ client.on('guildBanAdd', async (ban) => {
     const user = ban.user;
 
     let reason = ban.reason || 'Non fournie';
+    let moderator = null;
 
     try {
-      const logs = await guild.fetchAuditLogs({ type: 22, limit: 10 });
+      const logs = await guild.fetchAuditLogs({
+        type: 22,
+        limit: 10
+      });
+
       const entry = logs.entries.find(entry =>
-        entry.target?.id === user.id && Date.now() - entry.createdTimestamp < 15000
+        entry.target?.id === user.id &&
+        Date.now() - entry.createdTimestamp < 15000
       );
-      if (entry?.reason) reason = entry.reason;
+
+      if (entry) {
+        moderator = entry.executor || null;
+
+        if (entry.reason) {
+          reason = entry.reason;
+        }
+      }
     } catch (err) {
       console.error('Erreur audit logs ban :', err);
     }
@@ -3108,14 +3146,25 @@ client.on('guildBanAdd', async (ban) => {
         `-# **${user.tag}** (<@${user.id}>)\n` +
         `-# Raison : **${reason}**`
       )
-      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 128 }))
-      .setTimestamp()
-      .setFooter({
-  text: `Banni par ${moderator.DisplayName}`,
-  iconURL: moderator.user.displayAvatarURL()
-});
+      .setThumbnail(
+        user.displayAvatarURL({
+          dynamic: true,
+          size: 128
+        })
+      )
+      .setTimestamp();
 
-    await sendActivityMessage(guild, { embeds: [embed] });
+    if (moderator) {
+      embed.setFooter({
+        text: `Banni par ${moderator.displayName || moderator.tag}`,
+        iconURL: moderator.displayAvatarURL()
+      });
+    }
+
+    await sendActivityMessage(guild, {
+      embeds: [embed]
+    });
+
   } catch (err) {
     console.error('Erreur embed ban activité :', err);
   }
@@ -3130,34 +3179,25 @@ const ROLE_NOTIF_PP_ID = '1468458885357502599';
 client.on('messageCreate', async (message) => {
   try {
     if (!message.guild) return;
+    if (message.author.bot) return;
 
-    if (message.channel.id === JOUER_CHANNEL_ID) {
-      if (message.author.bot) return;
+    if (message.channel.id !== JOUER_CHANNEL_ID) return;
 
-      const member = message.member;
-      if (!member) return;
+    await message.delete().catch(() => {});
 
-      const isAdmin = member.permissions.has('Administrator');
-      const isOrganizer = member.roles.cache.has(ROLE_ORGANISATEUR_ID);
-      const hasNotifMention = message.mentions.roles.has(ROLE_NOTIF_PP_ID);
+    const warning = await message.channel.send(
+      `## ${message.author}, les messages ne sont pas autorisés ici.\n` +
+      `-# Ce salon est exclusivement réservé aux parties créées avec **/pp**.`
+    ).catch(() => null);
 
-      if (isAdmin) return;
-      if (isOrganizer && hasNotifMention) return;
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await message.delete().catch(() => {});
-
-      const warning = await message.channel.send(
-        `## ${message.author}, ce salon est réservé aux notifications de parties.\n` +
-        `-# Utilise @NotifsPP pour poster une annonce valide.`,
-      ).catch(() => null);
-
-      if (warning) {
-        setTimeout(() => { warning.delete().catch(() => {}); }, 5000);
-      }
+    if (warning) {
+      setTimeout(() => {
+        warning.delete().catch(() => {});
+      }, 5000);
     }
+
   } catch (err) {
-    console.error('Erreur modération salon jouets :', err);
+    console.error('Erreur modération salon rejoindre :', err);
   }
 });
 
@@ -3225,6 +3265,28 @@ client.on('messageCreate', async (message) => {
 
       return;
     }
+
+    const hasAttachment = message.attachments.size > 0;
+
+const hasLink =
+  /(https?:\/\/[^\s]+)/i.test(message.content);
+
+if (!hasAttachment && !hasLink) {
+  await message.delete().catch(() => {});
+
+  const warning = await message.channel.send(
+    `## ${message.author}, seuls les médias et les liens sont autorisés ici.\n` +
+    `-# Envoie une **image**, une **vidéo**, un **fichier média** ou un **lien**. Les GIF sont interdits.`
+  ).catch(() => null);
+
+  if (warning) {
+    setTimeout(() => {
+      warning.delete().catch(() => {});
+    }, 5000);
+  }
+
+  return;
+}
 
   } catch (err) {
     console.error('Erreur modération #clipfarming :', err);
