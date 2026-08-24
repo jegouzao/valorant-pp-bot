@@ -1563,8 +1563,8 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      'Ne faussez pas vos rangs, c\'est relou. AFK / Leave sanctionné,\n' +
-      'Mais sinon **NO RULES**\n' +
+      'AFK / leave sanctionnés, et ne faussez pas vos rangs.\n' +
+      'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
@@ -1610,7 +1610,7 @@ function buildRulesEmbed() {
       // ───── TEXTE SOUS LES POINTS ─────
       {
         name: '\u200B',
-        value: '<:TL:1472199399382978672><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199414155051172>',
+        value: '<:TL:1465704930160410847>',
         inline: false
       },
 
