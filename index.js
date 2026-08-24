@@ -1563,7 +1563,7 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      'AFK / Leave sanctionnés, et ne faussez pas vos rangs.\n' +
+      '### AFK / Leave / Faux peak rank sanctionnés.\n' +
       'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
@@ -1625,7 +1625,7 @@ function buildRulesEmbed() {
       {
         name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
         value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
-  '-# <:TL:1493378369364951131>  *Les prix varieront, Bundles, RiotCard, PayPal, Nitro...*',
+  '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
         inline: false
       }
     )
