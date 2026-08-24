@@ -1610,13 +1610,13 @@ function buildRulesEmbed() {
       // ───── TEXTE SOUS LES POINTS ─────
       {
         name: '\u200B',
-        value: '__Les cashprizes seront attribués mensuellement aux__ :',
+        value: '<:TL:1472199399382978672><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199381854847109><:TL:1472199414155051172>',
         inline: false
       },
 
       // ───── CASHPRIZES ─────
       {
-        name: '<:TL:1472199399382978672><:TL:1472199381854847109><:TL:1472199414155051172>',
+        name: '__Les cashprizes seront attribués mensuellement aux__ :',
         value:
           '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
           '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
@@ -1628,9 +1628,9 @@ function buildRulesEmbed() {
       {
         name: '\u200B',
         value:
-          '> **Le serveur équilibre intelligemment et instantanément**\n' +
-          '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
-          '> Si vous améliorez votre rang, @taggez quelqu\'un.',
+          '-# **Le serveur équilibre intelligemment et instantanément**\n' +
+          '-# **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
+          '-# Si vous améliorez votre rang, @taggez quelqu\'un.',
         inline: false
       }
     )
