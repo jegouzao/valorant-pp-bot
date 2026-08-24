@@ -1567,8 +1567,8 @@ function buildRulesEmbed() {
       'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
-      'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
-      '### Voici le fonctionnement de l\'attribution des points :' 
+      'On est là pour __crier de rire__, et __rentrer des clips__.\n\n' +
+      '### Voici le fonctionnement du système de points :' 
     )
 
     .addFields(
@@ -1610,16 +1610,15 @@ function buildRulesEmbed() {
       // ───── TEXTE SOUS LES POINTS ─────
       {
         name: '\u200B',
-        value: '<:TL:1465704930160410847>',
+        value: '__Les cashprizes seront attribués mensuellement aux__ :',
         inline: false
       },
 
       // ───── CASHPRIZES ─────
       {
-        name: '__Les cashprizes seront attribués mensuellement aux__ :',
+        name: '<:TL:1465709888729776296> **Top 1 du Leaderboard**',
         value:
-          '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
-          '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
+          '<:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
           '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
         inline: false
       },
