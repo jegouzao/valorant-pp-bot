@@ -1568,44 +1568,43 @@ function buildRulesEmbed() {
       'Ça ne plaira pas à tous, *mais à la grande majorité*.\n' +
       'No limit au niveau de l\'équipement ou des décibels\n' +
       'On est là pour __crier de rire__, et __rentrer des clips__, les aigris ciao.\n\n' +
-
       '### Voici le fonctionnement de l\'attribution des points :'
     )
 
     .addFields(
-  {
-    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>',
-    value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-    inline: true
-  },
-  {
-    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>',
-    value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-    inline: true
-  },
-  {
-    name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>',
-    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-    inline: true
-  },
-  {
-    name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>',
-    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-    inline: true
-  }
-)
-
-    .setDescription(
-        '-# Les membres soutenant le serveur sont avantagés, simplement.\n\n' +
-
-        '### Les cashprizes seront attribués mensuellement aux :\n' +
-        '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
-        '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-        '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
-
-        '> **Le serveur équilibre intelligemment et instantanément**\n' +
-        '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
-        '> Si vous améliorez votre rang, @taggez quelqu\'un.'
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>',
+        value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>',
+        value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>',
+        value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+        inline: true
+      },
+      {
+        name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>',
+        value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+        inline: true
+      },
+      {
+        name: '\u200B',
+        value:
+          '-# Les membres soutenant le serveur sont avantagés, simplement.\n\n' +
+          '### Les cashprizes seront attribués mensuellement aux :\n' +
+          '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
+          '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
+          '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
+          '> **Le serveur équilibre intelligemment et instantanément**\n' +
+          '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
+          '> Si vous améliorez votre rang, @taggez quelqu\'un.',
+        inline: false
+      }
     )
 
     .setColor(EMBED_COLOR);
