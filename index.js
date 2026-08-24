@@ -1572,6 +1572,8 @@ function buildRulesEmbed() {
     )
 
     .addFields(
+
+      // ───── LIGNE 1 ─────
       {
         name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>',
         value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
@@ -1582,6 +1584,13 @@ function buildRulesEmbed() {
         value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         inline: true
       },
+      {
+        name: '\u200B',
+        value: '\u200B',
+        inline: true
+      },
+
+      // ───── LIGNE 2 ─────
       {
         name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>',
         value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
@@ -1594,12 +1603,31 @@ function buildRulesEmbed() {
       },
       {
         name: '\u200B',
+        value: '\u200B',
+        inline: true
+      },
+
+      // ───── TEXTE SOUS LES POINTS ─────
+      {
+        name: '\u200B',
+        value: '-# Les membres soutenant le serveur sont avantagés, simplement.',
+        inline: false
+      },
+
+      // ───── CASHPRIZES ─────
+      {
+        name: 'Les cashprizes seront attribués mensuellement aux :',
         value:
-          '-# Les membres soutenant le serveur sont avantagés, simplement.\n\n' +
-          '### Les cashprizes seront attribués mensuellement aux :\n' +
           '- <:TL:1465709888729776296> **Top 1 du Leaderboard**\n' +
           '- <:TI:1465747415670984862> **Top 1 du classement des invitations**\n' +
-          '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...\n\n' +
+          '-# Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
+        inline: false
+      },
+
+      // ───── ÉQUILIBRAGE ─────
+      {
+        name: '\u200B',
+        value:
           '> **Le serveur équilibre intelligemment et instantanément**\n' +
           '> **grâce au peak rank que vous fournissez à l\'arrivée**.\n' +
           '> Si vous améliorez votre rang, @taggez quelqu\'un.',
