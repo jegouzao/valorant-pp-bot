@@ -1218,7 +1218,7 @@ async function syncServerTagRole(userId, user = null) {
           `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
           `-# Merci d'avoir ajouté le **tag VALORANT PP** !\n` +
-          `-# <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208><:BonusTag:1541125087384829962> pour toutes tes prochaines victoires.`
+          `-# Le bonus vient d'être activé pour toutes tes prochaines victoires.`
         )
         .setThumbnail(
           member.displayAvatarURL({
@@ -3090,7 +3090,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         .setDescription(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# **MERCI** pour le <@&${BOOSTER_ROLE_ID}> !\n` +
+          `-# Merci d'avoir boosté le **serveur VALORANT PP** !\n` +
           `-# Le bonus vient d'être activé pour toutes tes prochaines victoires.`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
