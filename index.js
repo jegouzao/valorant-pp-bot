@@ -3274,7 +3274,7 @@ client.on('messageCreate', async (message) => {
 
       const warning = await message.channel.send(
         `## ${message.author}, les **GIF** sont interdits dans ce salon.\n` +
-        `-# Tu peux envoyer du **texte**, des **images**, des **vidéos** ou des **liens**, mais pas de GIF.\n`
+        `-# Tu peux envoyer du **texte**, des **images**, des **vidéos** ou des **liens**, mais pas de GIFs.\n`
       ).catch(() => null);
 
       if (warning) {
