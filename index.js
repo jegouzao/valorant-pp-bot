@@ -2502,60 +2502,53 @@ client.on('interactionCreate', async (interaction) => {
     // MENU RANK
     // --------------------------------------
     if (interaction.isStringSelectMenu() && interaction.customId === 'rank_select') {
-      if (interaction.replied || interaction.deferred) return;
+  if (interaction.replied || interaction.deferred) return;
 
-      await interaction.reply({ content: 'Mise à jour du rank…', ephemeral: true });
+  await interaction.deferUpdate();
 
-      const thread = interaction.channel;
-      if (thread?.isThread()) await thread.sendTyping();
-      await new Promise(r => setTimeout(r, 250));
+  const thread = interaction.channel;
 
-      for (const roleId of Object.values(RANK_ROLES)) {
-        if (interaction.member.roles.cache.has(roleId)) {
-          await interaction.member.roles.remove(roleId).catch(() => {});
-        }
-      }
-
-      const selectedRank = interaction.values[0];
-      const roleIdToAdd = RANK_ROLES[selectedRank];
-
-      await interaction.member.roles.add(roleIdToAdd).catch(() => {});
-
-      const role = interaction.guild.roles.cache.get(roleIdToAdd);
-
-      const rankEmbed = new EmbedBuilder()
-        .setColor(EMBED_COLOR)
-        .setDescription(`### Ton peak rank a été défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}`)
-        .setFooter({ text: 'Tu peux maintenant utiliser le bouton "Me renommer" ci-dessous.' });
-
-      await interaction.editReply({ content: null, embeds: [rankEmbed] });
-
-      try {
-        const messages = await thread.messages.fetch({ limit: 10 });
-        const renameMessage = messages.find(msg =>
-          msg.author.id === client.user.id &&
-          msg.components?.some(row => row.components?.some(component => component.customId === 'verify_riot'))
-        );
-
-        if (renameMessage) {
-          const enabledButton = new ButtonBuilder()
-            .setCustomId('verify_riot')
-            .setLabel(`Me renommer pour débloquer l'accès`)
-            .setEmoji({ id: '1493378334326001816' })
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false);
-
-          await renameMessage.edit({
-            content: '-# Rank sélectionné. Tu peux maintenant te renommer.',
-            components: [new ActionRowBuilder().addComponents(enabledButton)]
-          });
-        }
-      } catch (err) {
-        console.error('Erreur activation bouton :', err);
-      }
-
-      return;
+  for (const roleId of Object.values(RANK_ROLES)) {
+    if (interaction.member.roles.cache.has(roleId)) {
+      await interaction.member.roles.remove(roleId).catch(() => {});
     }
+  }
+
+  const selectedRank = interaction.values[0];
+  const roleIdToAdd = RANK_ROLES[selectedRank];
+
+  await interaction.member.roles.add(roleIdToAdd).catch(() => {});
+
+  const role = interaction.guild.roles.cache.get(roleIdToAdd);
+
+  if (thread?.isThread()) {
+    await thread.sendTyping();
+    await new Promise(resolve => setTimeout(resolve, 800));
+  }
+
+  await thread.send(
+    `## Peak rank défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}\n` +
+    `-# Parfait. Il ne te reste plus qu'à renseigner ton **pseudo VALORANT** pour terminer la vérification.`
+  );
+
+  if (thread?.isThread()) {
+    await thread.sendTyping();
+    await new Promise(resolve => setTimeout(resolve, 700));
+  }
+
+  const riotButton = new ButtonBuilder()
+    .setCustomId('verify_riot')
+    .setLabel(`Me renommer pour débloquer l'accès`)
+    .setEmoji({ id: '1493378334326001816' })
+    .setStyle(ButtonStyle.Primary);
+
+  await thread.send({
+    content: `-# Clique sur le bouton ci-dessous puis entre ton pseudo **IN-GAME**, sans le #TAG.`,
+    components: [new ActionRowBuilder().addComponents(riotButton)]
+  });
+
+  return;
+}
 
     // --------------------------------------
     // BOUTON RIOT
@@ -2906,58 +2899,63 @@ client.on('guildMemberAdd', async member => {
 
       await thread.members.add(member.id);
 
-      await thread.send(
-        `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**\n\n` +
-        `-# Pour débloquer l'accès, suis ces étapes :\n` +
-        `-# Sélectionne ton **PEAK RANK**\n`
-      );
+      await thread.members.add(member.id);
 
-      const rankMenu = new StringSelectMenuBuilder()
-        .setCustomId('rank_select')
-        .setPlaceholder('Sélectionner')
-        .setMinValues(1)
-        .setMaxValues(1)
-        .addOptions([
-          { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } },
-          { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } },
-          { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } },
-          { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } },
-          { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } },
-          { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } },
-          { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } },
-          { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } },
-          { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } },
-          { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } },
-          { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } },
-          { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } },
-          { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } },
-          { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } },
-          { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } },
-          { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } },
-          { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } },
-          { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } },
-          { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } },
-          { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } },
-          { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } },
-          { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } },
-          { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } },
-          { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } },
-          { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } }
-        ]);
+await thread.sendTyping();
+await new Promise(resolve => setTimeout(resolve, 800));
 
-      await thread.send({ components: [new ActionRowBuilder().addComponents(rankMenu)] });
+await thread.send(
+  `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**`
+);
 
-      const riotButton = new ButtonBuilder()
-        .setCustomId('verify_riot')
-        .setLabel(`Me renommer pour débloquer l'accès`)
-        .setEmoji({ id: '1493378334326001816' })
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true);
+await thread.sendTyping();
+await new Promise(resolve => setTimeout(resolve, 700));
 
-      await thread.send({
-        content: `-# Attends que le **bouton** se débloque, et entre ton pseudo **IN-GAME**`,
-        components: [new ActionRowBuilder().addComponents(riotButton)]
-      });
+await thread.send(
+  `-# Pour débloquer l'accès au serveur, nous avons besoin de quelques informations.\n` +
+  `-# Commence par sélectionner le **plus haut rank que tu as atteint sur VALORANT**.`
+);
+
+await thread.sendTyping();
+await new Promise(resolve => setTimeout(resolve, 700));
+
+const rankMenu = new StringSelectMenuBuilder()
+  .setCustomId('rank_select')
+  .setPlaceholder('Sélectionne ton peak rank')
+  .setMinValues(1)
+  .setMaxValues(1)
+  .addOptions([
+    { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } },
+    { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } },
+    { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } },
+    { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } },
+    { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } },
+    { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } },
+    { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } },
+    { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } },
+    { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } },
+    { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } },
+    { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } },
+    { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } },
+    { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } },
+    { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } },
+    { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } },
+    { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } },
+    { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } },
+    { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } },
+    { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } },
+    { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } },
+    { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } },
+    { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } },
+    { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } },
+    { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } },
+    { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } }
+  ]);
+
+await thread.send({
+  components: [new ActionRowBuilder().addComponents(rankMenu)]
+});
+
     }
   } catch (err) {
     console.error('Erreur thread bienvenue :', err);
