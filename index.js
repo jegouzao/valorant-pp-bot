@@ -1568,7 +1568,7 @@ function buildRulesEmbed() {
 {
   name: '\u200B',
   value:
-    '__Voici le fonctionnement du système de points__ :\n' +
+    '### Voici le fonctionnement du système de points :\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:36:1497395169224556686><:RR:1497395178045050992>**ᴀᴠᴇᴄ ʟᴇ ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ <:boost:1488545490189549629>\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:33:1497395187415126127><:RR:1497395194289455114>**ᴀᴠᴇᴄ ʟᴇ ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ <:tag:1497390943928586300>\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:30:1493259044893360200><:RR:1493259054804369408>**ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ <:VPP:1493046369076777110>\n' +
@@ -1580,14 +1580,14 @@ function buildRulesEmbed() {
 {
   name: '\u200B',
   value:
-    '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
-    '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
-    '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.\n\n',
+    '-# **Boombot est automatisé pour équilibrer intelligemment**\n' +
+    '-# **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
+    '-# Si vous améliorez votre rang, @taggez quelqu\'un.\n\n',
   inline: false
 },
 
 {
-  name: '__Les cashprizes seront attribués mensuellement aux__ :',
+  name: 'Les cashprizes seront attribués mensuellement aux :',
   value:
     '-# <:TL:1465704930160410847><:TL:1465709888729776296> ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n' +
     '-# <:TL:1465704930160410847><:TI:1465747415670984862> ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ\n\n' +
