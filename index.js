@@ -1670,7 +1670,7 @@ client.on('interactionCreate', async (interaction) => {
         const modal = new ModalBuilder().setCustomId('ticket_reason_modal').setTitle('Ouvrir un ticket');
         const reasonInput = new TextInputBuilder()
           .setCustomId('ticket_reason')
-          .setLabel('Motif (ex: report, question, reset, etc.)')
+          .setLabel('Objet : (siganlement, rank-up, questions etc...)')
           .setStyle(TextInputStyle.Short)
           .setRequired(false);
         modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
