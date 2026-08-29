@@ -1397,7 +1397,8 @@ const sorted = activePlayers
   .sort((a, b) => b[1].rr - a[1].rr)
   .slice(0, 10);
 
-const playerCount = guild.members.cache.filter(member => !member.user.bot).size;
+const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
+const playerCount = Math.round(currentMembers * 0.85);
 const embed = buildLeaderboardEmbed({
   sorted,
   totalInvitesPerMember,
