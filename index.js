@@ -290,13 +290,26 @@ function isGifUrl(url = '') {
   const u = url.toLowerCase();
 
   return (
+    // Fichier GIF direct
     u.endsWith('.gif') ||
     u.includes('.gif?') ||
+    u.includes('.gif#') ||
+
+    // Tenor
     u.includes('tenor.com') ||
-    u.includes('giphy.com') ||
     u.includes('media.tenor.com') ||
+
+    // Giphy
+    u.includes('giphy.com') ||
     u.includes('media.giphy.com') ||
-    u.includes('/view/')
+
+    // Klipy
+    u.includes('klipy.com/gif/') ||
+    u.includes('klipy.com/gifs/') ||
+
+    // Autres URLs explicitement orientées GIF
+    u.includes('/gif/') ||
+    u.includes('/gifs/')
   );
 }
 
