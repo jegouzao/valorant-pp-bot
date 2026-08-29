@@ -2196,9 +2196,9 @@ client.on('interactionCreate', async (interaction) => {
           });
 
           const buttons = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('spectate').setLabel('Spectate').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('attack_win').setLabel('Attaquants').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('defense_win').setLabel('Défenseurs').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('spectate').setLabel('Observer').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('attack_win').setLabel('Attaquants gagnants').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('defense_win').setLabel('Défenseurs gagnants').setStyle(ButtonStyle.Primary),
             new ButtonBuilder().setCustomId('cancel_game').setLabel('Annuler').setStyle(ButtonStyle.Danger)
           );
 
