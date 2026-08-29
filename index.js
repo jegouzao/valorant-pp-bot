@@ -1192,7 +1192,10 @@ async function syncServerTagRole(userId, user = null) {
 
     if (!member) return;
 
-    const freshUser = user || await client.users.fetch(userId, { force: true }).catch(() => null);
+    const freshUser =
+      user ||
+      await client.users.fetch(userId, { force: true }).catch(() => null);
+
     if (!freshUser) return;
 
     const pg = freshUser.primaryGuild;
@@ -1204,12 +1207,59 @@ async function syncServerTagRole(userId, user = null) {
     const hasRole = member.roles.cache.has(SERVER_TAG_ROLE_ID);
 
     if (hasServerTag && !hasRole) {
-      await member.roles.add(SERVER_TAG_ROLE_ID, 'Tag serveur actif');
+      await member.roles.add(
+        SERVER_TAG_ROLE_ID,
+        'Tag serveur actif'
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor(0xc5b174)
+        .setDescription(
+          `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n\n` +
+          `-# **${member.user.tag}** (<@${member.id}>)\n` +
+          `-# Merci d'avoir ajouté le **tag VALORANT PP** !\n` +
+          `-# <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208><:BonusTag:1541125087384829962> pour toutes tes prochaines victoires.`
+        )
+        .setThumbnail(
+          member.displayAvatarURL({
+            dynamic: true,
+            size: 128
+          })
+        )
+        .setTimestamp();
+
+      await sendActivityMessage(guild, {
+        embeds: [embed]
+      });
     }
 
     if (!hasServerTag && hasRole) {
-      await member.roles.remove(SERVER_TAG_ROLE_ID, 'Tag serveur retiré');
+      await member.roles.remove(
+        SERVER_TAG_ROLE_ID,
+        'Tag serveur retiré'
+      );
+
+      const embed = new EmbedBuilder()
+        .setColor(0x858585)
+        .setDescription(
+          `## <:tag:1543303374974357695> TAG DU SERVEUR RETIRÉ\n\n` +
+          `-# **${member.user.tag}** (<@${member.id}>)\n` +
+          `-# A retiré le **tag VALORANT PP**.\n` +
+          `-# Le bonus associé au tag serveur a été retiré.`
+        )
+        .setThumbnail(
+          member.displayAvatarURL({
+            dynamic: true,
+            size: 128
+          })
+        )
+        .setTimestamp();
+
+      await sendActivityMessage(guild, {
+        embeds: [embed]
+      });
     }
+
   } catch (err) {
     console.error('Erreur syncServerTagRole :', err);
   }
