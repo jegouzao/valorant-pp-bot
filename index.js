@@ -1752,10 +1752,11 @@ client.on('interactionCreate', async (interaction) => {
       if (interaction.customId === 'open_ticket') {
         const modal = new ModalBuilder().setCustomId('ticket_reason_modal').setTitle('Ouvrir un ticket');
         const reasonInput = new TextInputBuilder()
-          .setCustomId('ticket_reason')
-          .setLabel('Objet : (siganlement, rank-up, questions etc...)')
-          .setStyle(TextInputStyle.Short)
-          .setRequired(false);
+  .setCustomId('ticket_reason')
+  .setLabel('Objet du ticket')
+  .setPlaceholder('Signalement, rank-up, question...')
+  .setStyle(TextInputStyle.Short)
+  .setRequired(false);
         modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
         return interaction.showModal(modal);
       }
