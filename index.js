@@ -3132,10 +3132,20 @@ client.on('guildBanAdd', async (ban) => {
     const guild = ban.guild;
     const user = ban.user;
 
-    let reason = ban.reason || 'Non fournie';
+    let reason = 'Non fournie';
     let moderator = null;
 
+    // Discord peut mettre un petit délai avant d'ajouter le ban aux Audit Logs
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     try {
+      // Récupère aussi le ban directement pour avoir la raison la plus récente
+      const fetchedBan = await guild.bans.fetch(user.id).catch(() => null);
+
+      if (fetchedBan?.reason) {
+        reason = fetchedBan.reason;
+      }
+
       const logs = await guild.fetchAuditLogs({
         type: 22,
         limit: 10
@@ -3143,16 +3153,18 @@ client.on('guildBanAdd', async (ban) => {
 
       const entry = logs.entries.find(entry =>
         entry.target?.id === user.id &&
-        Date.now() - entry.createdTimestamp < 15000
+        Date.now() - entry.createdTimestamp < 30000
       );
 
       if (entry) {
         moderator = entry.executor || null;
 
+        // La raison des Audit Logs est prioritaire
         if (entry.reason) {
           reason = entry.reason;
         }
       }
+
     } catch (err) {
       console.error('Erreur audit logs ban :', err);
     }
@@ -3174,8 +3186,11 @@ client.on('guildBanAdd', async (ban) => {
 
     if (moderator) {
       embed.setFooter({
-        text: `Banni par ${moderator.displayName || moderator.tag}`,
-        iconURL: moderator.displayAvatarURL()
+        text: `Banni par ${moderator.globalName || moderator.username}`,
+        iconURL: moderator.displayAvatarURL({
+          dynamic: true,
+          size: 64
+        })
       });
     }
 
