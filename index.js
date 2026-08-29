@@ -1563,7 +1563,7 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      '### <:36:1493378388725989456> AFK / Leave / Faux peak rank sanctionnés.\n' +
+      '### AFK / Leave / Faux peak rank sanctionnés.\n' +
       'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
@@ -1579,12 +1579,7 @@ function buildRulesEmbed() {
         inline: true
       },
       {
-        name: '\u200B',
-        value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-        inline: true
-      },
-      {
-        name: '\u200B',
+        name: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         value: '\u200B',
         inline: true
       },
@@ -1596,12 +1591,7 @@ function buildRulesEmbed() {
         inline: true
       },
       {
-        name: '\u200B',
-        value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-        inline: true
-      },
-      {
-        name: '\u200B',
+        name: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         value: '\u200B',
         inline: true
       },
@@ -1613,12 +1603,7 @@ function buildRulesEmbed() {
         inline: true
       },
       {
-        name: '\u200B',
-        value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-        inline: true
-      },
-      {
-        name: '\u200B',
+        name: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         value: '\u200B',
         inline: true
       },
@@ -1630,12 +1615,7 @@ function buildRulesEmbed() {
         inline: true
       },
       {
-        name: '\u200B',
-        value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-        inline: true
-      },
-      {
-        name: '\u200B',
+        name: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         value: '\u200B',
         inline: true
       },
