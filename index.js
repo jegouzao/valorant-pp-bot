@@ -1313,10 +1313,10 @@ const embed = buildLeaderboardEmbed({
 
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
-  { value: 'verification', label: 'Accéder au serveur', emoji: { name: '1', id: '1466470349351686194' }},
-  { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1466470377327825028' }},
-  { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1472840875708252192' }},
-  { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1472667834881409181' }},
+  { value: 'verification', label: 'Accéder au serveur', emoji: { name: '1', id: '1493378334326001816' }},
+  { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1493046369076777110' }},
+  { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1466611512646045739' }},
+  { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
   { value: 'notifs', label: 'Notifications PP', emoji: { name: '6', id: '1466608491861901362' }},
   { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378287559512174' }}];
 
