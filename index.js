@@ -1583,11 +1583,6 @@ function buildRulesEmbed() {
     value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
     inline: true
   },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
 
   // ───── +33 RR ─────
   {
@@ -1600,11 +1595,6 @@ function buildRulesEmbed() {
     value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
     inline: true
   },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
 
   // ───── +30 RR ─────
   {
@@ -1615,11 +1605,6 @@ function buildRulesEmbed() {
   {
     name: '\u200B',
     value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '\u200B',
     inline: true
   },
 
@@ -1657,9 +1642,9 @@ function buildRulesEmbed() {
   },
 
   {
-    name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
+    name: '<:TL:1465704930160410847><:TL:1465709888729776296>  **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
     value:
-      '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
+      '<:TL:1465704930160410847><:TI:1465747415670984862>  **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
       '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
     inline: false
   }
@@ -1922,8 +1907,8 @@ client.on('interactionCreate', async (interaction) => {
       });
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('change_map').setLabel('Map rotation').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('start').setLabel('Lancer la partie').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('change_map').setLabel('Changer la map').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('start').setLabel('Équilibrer les équipes').setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId('cancel_registration').setLabel('Annuler').setStyle(ButtonStyle.Primary)
       );
 
