@@ -2922,10 +2922,16 @@ client.on('guildMemberAdd', async member => {
     )
     .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 128 }))
     .setTimestamp()
-    .setFooter({
-  text: `Invité par ${inviter.displayName}`,
-  iconURL: inviter.user.displayAvatarURL()
-});
+    .setFooter(
+  usedInvite?.inviter
+    ? {
+        text: `Invité par ${usedInvite.inviter.displayName || usedInvite.inviter.tag}`,
+        iconURL: usedInvite.inviter.displayAvatarURL({ dynamic: true, size: 64 })
+      }
+    : {
+        text: `Invité via .gg/valorant-pp`
+      }
+);
 
   await welcomeChannel.send({ embeds: [embed] });
 
@@ -3240,27 +3246,7 @@ client.on('messageCreate', async (message) => {
       return;
     }
 
-    const hasAttachment = message.attachments.size > 0;
-
-const hasLink =
-  /(https?:\/\/[^\s]+)/i.test(message.content);
-
-if (!hasAttachment && !hasLink) {
-  await message.delete().catch(() => {});
-
-  const warning = await message.channel.send(
-    `## ${message.author}, seuls les médias et les liens sont autorisés ici.\n` +
-    `-# Envoie une **image**, une **vidéo**, un **fichier média** ou un **lien**. Les GIF sont interdits.`
-  ).catch(() => null);
-
-  if (warning) {
-    setTimeout(() => {
-      warning.delete().catch(() => {});
-    }, 5000);
-  }
-
-  return;
-}
+    
 
   } catch (err) {
     console.error('Erreur modération #clipfarming :', err);
