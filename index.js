@@ -2610,11 +2610,11 @@ await thread.send(
 await thread.sendTyping();
 await new Promise(resolve => setTimeout(resolve, 500));
 
-const countdownMessage = await thread.send(`# <:TL:1465709888729776296> 5`);
+const countdownMessage = await thread.send(`# 5`);
 
 for (let i = 4; i >= 1; i--) {
   await new Promise(resolve => setTimeout(resolve, 1000));
-  await countdownMessage.edit(`# <:TL:1465709888729776296> ${i}`);
+  await countdownMessage.edit(`# ${i}`);
 }
 
 await new Promise(resolve => setTimeout(resolve, 1000));
