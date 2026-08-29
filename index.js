@@ -1436,7 +1436,7 @@ function buildOnboardingContainer() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n` +
-        `-# Sélectionne une rubrique ci-dessous pour accéder aux informations du serveur.`
+        `-# Sélectionne une rubrique pour accéder aux informations du serveur. Réponses visibles uniquement par toi.`
       )
     )
 
