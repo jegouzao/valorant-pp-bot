@@ -3099,6 +3099,28 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       await sendActivityMessage(newMember.guild, { embeds: [embed] });
     }
 
+    if (wasBooster && !isBooster) {
+  const embed = new EmbedBuilder()
+    .setColor(0x858585)
+    .setDescription(
+      `## <:Bonus20:1543305540594045068> BOOST EXPIRÉ\n\n` +
+      `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+      `-# Le boost du serveur a **expiré**.\n` +
+      `-# Le bonus associé au boost a été retiré.`
+    )
+    .setThumbnail(
+      newMember.displayAvatarURL({
+        dynamic: true,
+        size: 128
+      })
+    )
+    .setTimestamp();
+
+  await sendActivityMessage(newMember.guild, {
+    embeds: [embed]
+  });
+}
+
     const oldTimeoutTs =
   oldMember.communicationDisabledUntilTimestamp ?? 0;
 
