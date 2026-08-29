@@ -2527,7 +2527,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   await thread.send(
-    `## Peak rank défini sur ${role ? `<@&${role.id}>` : `**${selectedRank}**`}\n` +
+    `## Peak rank défini sur **${role?.name || selectedRank}**\n` +
     `-# Parfait. Il ne te reste plus qu'à renseigner ton **pseudo VALORANT** pour terminer la vérification.`
   );
 
@@ -2602,7 +2602,7 @@ if (thread?.isThread?.()) {
 }
 
 await thread.send(
-  `## ${interaction.user}, vérification terminée !\n` +
+  `## ${interaction.member.displayName}, vérification terminée !\n` +
   `-# Ton pseudo VALORANT a été défini sur **${pseudo}**.\n` +
   `-# Tes salons vont être débloqués dans quelques secondes...`
 );
