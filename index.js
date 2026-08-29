@@ -3091,7 +3091,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
           `-# **MERCI** pour le <@&${BOOSTER_ROLE_ID}> !\n` +
-          `-# <:BonusTag:1497402804216791130><:BonusTag:1497402812332638208><:BonusTag:1541125087384829962> pour toutes tes prochaines victoires.`
+          `-# Le bonus vient d'être activé pour toutes tes prochaines victoires.`
         )
         .setThumbnail(newMember.displayAvatarURL({ dynamic: true, size: 128 }))
         .setTimestamp();
