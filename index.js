@@ -1568,7 +1568,7 @@ function buildRulesEmbed() {
 {
   name: '\u200B',
   value:
-    '**Voici le fonctionnement du système de points :**\n' +
+    '__Voici le fonctionnement du système de points__ :\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:36:1497395169224556686><:RR:1497395178045050992>**ᴀᴠᴇᴄ ʟᴇ ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ <:boost:1488545490189549629>\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:33:1497395187415126127><:RR:1497395194289455114>**ᴀᴠᴇᴄ ʟᴇ ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ <:tag:1497390943928586300>\n' +
     '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ : <:30:1493259044893360200><:RR:1493259054804369408>**ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ <:VPP:1493046369076777110>\n' +
@@ -1587,13 +1587,7 @@ function buildRulesEmbed() {
 },
 
 {
-  name: '<:TL:1465704930160410847>',
-  value: '__**Les cashprizes seront attribués mensuellement aux**__ :',
-  inline: false
-},
-
-{
-  name: 'Les cashprizes seront attribués mensuellement aux :',
+  name: '__Les cashprizes seront attribués mensuellement aux__ :',
   value:
     '-# <:TL:1465704930160410847><:TL:1465709888729776296> ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n' +
     '-# <:TL:1465704930160410847><:TI:1465747415670984862> ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ\n\n' +
