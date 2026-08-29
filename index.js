@@ -2587,32 +2587,54 @@ client.on('interactionCreate', async (interaction) => {
       await setRiotUser(interaction.user.id, { pseudo });
       await interaction.member.setNickname(pseudo).catch(() => {});
 
-      await interaction.reply({ content: 'Vérification en cours…', ephemeral: true });
+      await interaction.reply({
+  content: 'Vérification en cours…',
+  ephemeral: true
+});
 
-      const thread = interaction.channel;
-      if (thread?.isThread?.()) await thread.sendTyping();
-      await new Promise(r => setTimeout(r, 250));
+await interaction.deleteReply().catch(() => {});
 
-      const verifyEmbed = new EmbedBuilder()
-        .setColor(EMBED_COLOR)
-        .setDescription(
-          `# ${interaction.user.tag} <:DISCORD:1472201746246799451><:DEBUT:1472199399382978672><:MILIEU:1472199381854847109><:FIN:1472199414155051172><:RIOT:1472201753306071217> ${pseudo}`
-        )
-        .setFooter({ text: 'Ton compte est vérifié, amuse-toi bien !' });
+const thread = interaction.channel;
 
-      await interaction.editReply({ content: null, embeds: [verifyEmbed] });
+if (thread?.isThread?.()) {
+  await thread.sendTyping();
+  await new Promise(resolve => setTimeout(resolve, 700));
+}
 
-      if (thread?.isThread?.()) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        await thread.setLocked(true).catch(() => {});
-        await thread.setArchived(true).catch(() => {});
-        await thread.delete().catch(() => {});
-      }
+await thread.send(
+  `## ${interaction.user}, vérification terminée !\n` +
+  `-# Ton pseudo VALORANT a été défini sur **${pseudo}**.\n` +
+  `-# Tes salons vont être débloqués dans quelques secondes...`
+);
 
-      await interaction.member.roles.add(ROLE_VERIFIE).catch(() => {});
-      await interaction.member.roles.add(ROLE_NOTIF_PP).catch(() => {});
+await thread.sendTyping();
+await new Promise(resolve => setTimeout(resolve, 500));
 
-      return;
+const countdownMessage = await thread.send(`# <:TL:1465709888729776296> 5`);
+
+for (let i = 4; i >= 1; i--) {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await countdownMessage.edit(`# <:TL:1465709888729776296> ${i}`);
+}
+
+await new Promise(resolve => setTimeout(resolve, 1000));
+
+await interaction.member.roles.add(ROLE_VERIFIE).catch(() => {});
+await interaction.member.roles.add(ROLE_NOTIF_PP).catch(() => {});
+
+await countdownMessage.edit(
+  `## ✅ Accès débloqué !\n` +
+  `-# Bienvenue sur **VALORANT PP**, amuse-toi bien !`
+);
+
+if (thread?.isThread?.()) {
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  await thread.setLocked(true).catch(() => {});
+  await thread.setArchived(true).catch(() => {});
+  await thread.delete().catch(() => {});
+}
+
+return;
     }
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'top15') {
