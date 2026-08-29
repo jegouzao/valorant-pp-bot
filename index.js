@@ -1447,7 +1447,9 @@ function buildOnboardingContainer() {
       )
     )
 
-  
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
 
     .addActionRowComponents(
       buildOnboardingSelectRow()
@@ -1484,7 +1486,9 @@ if (rankRole) {
 
   // ── Mes statistiques ──
 if (choice === 'stats') {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({
+  flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+});
 
   const stats = await getPlayerPoints(member.id);
   const allPoints = await getAllPoints();
@@ -1545,66 +1549,70 @@ if (choice === 'stats') {
     .map(r => `<@&${r.id}>`)
     .join(', ') || 'Aucun';
 
-  const embed = new EmbedBuilder()
-    .setColor(EMBED_COLOR)
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png?ex=6a8bc103&is=6a8a6f83&hm=23559d39392b353cbb9b4141586279f6a1ec3f9844385360da60dd107058ee71&')
-    .setDescription(
+  const statsContainer = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
       `## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`
     )
-    .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-    .addFields(
-      {
-        name: 'ᴘᴏꜱɪᴛɪᴏɴ',
-        value: `<:VIDE:1493266536813690970> **#${position}**`,
-        inline: true
-      },
-      {
-        name: 'ᴘᴏɪɴᴛꜱ',
-        value: `<:VIDE:1472667816468418631> **${stats.rr}**<:VIDE:1541125087384829962>`,
-        inline: true
-      },
-      {
-        name: 'ᴡɪɴʀᴀᴛᴇ',
-        value: `<:VIDE:1493266679504048148> **${winrate}%**`,
-        inline: true
-      },
-      {
-        name: 'ᴘᴀʀᴛɪᴇꜱ',
-        value: `<:VIDE:1472667851239456935> **${stats.games}**`,
-        inline: true
-      },
-      {
-        name: 'ᴠɪᴄᴛᴏɪʀᴇꜱ',
-        value: `<:VIDE:1493266372954820741> **${stats.wins}**`,
-        inline: true
-      },
-      {
-        name: 'ɪɴᴠɪᴛᴇꜱ',
-        value: `<:VIDE:1472667823875559708> **${invitesData.invites}**`,
-        inline: true
-      },
-      {
-        name: 'ᴀʀʀɪᴠᴇ ʟᴇ',
-        value: joinedTs
-          ? `<:VIDE:1493046369076777110> **<t:${joinedTs}:D>**`
-          : 'Inconnue',
-        inline: true
-      },
-      {
-        name: 'ᴛɪᴍᴇᴏᴜᴛꜱ',
-        value: `<:VIDE:1493378253446975619> **${stats.timeouts || 0}**`,
-        inline: true
-      },
-      {
-        name: 'ʀᴏʟᴇꜱ',
-        value: roleNames,
-        inline: false
-      }
-    );
+  )
 
-  return interaction.editReply({
-    embeds: [embed]
-  });
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### ᴘʀᴏɢʀᴇꜱꜱɪᴏɴ\n` +
+      `<:VIDE:1493266536813690970> **Position :** #${position}\n` +
+      `<:VIDE:1472667816468418631> **Points :** ${stats.rr}<:VIDE:1541125087384829962>\n` +
+      `<:VIDE:1493266679504048148> **Winrate :** ${winrate}%`
+    )
+  )
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### ꜱᴛᴀᴛɪꜱᴛɪǫᴜᴇꜱ\n` +
+      `<:VIDE:1472667851239456935> **Parties :** ${stats.games}\n` +
+      `<:VIDE:1493266372954820741> **Victoires :** ${stats.wins}\n` +
+      `<:VIDE:1472667823875559708> **Invites :** ${invitesData.invites}\n` +
+      `<:VIDE:1493378253446975619> **Timeouts :** ${stats.timeouts || 0}`
+    )
+  )
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### ᴘʀᴏꜰɪʟ\n` +
+      `${joinedTs
+        ? `<:VIDE:1493046369076777110> **Arrivé le :** <t:${joinedTs}:D>`
+        : `<:VIDE:1493046369076777110> **Arrivé le :** Inconnue`
+      }\n` +
+      `**Rôles :** ${roleNames}`
+    )
+  )
+
+  .addMediaGalleryComponents(
+    new MediaGalleryBuilder().addItems(
+      new MediaGalleryItemBuilder()
+        .setURL(
+          'https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png'
+        )
+    )
+  );
+
+return interaction.editReply({
+  components: [statsContainer],
+  flags: MessageFlags.IsComponentsV2
+});
 }
 
   // ── Comment se vérifier ──
