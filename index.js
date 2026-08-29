@@ -69,7 +69,16 @@ const {
   PermissionFlagsBits,
   PermissionsBitField,
   StringSelectMenuBuilder,
-  Events, // ✅ AJOUTE ÇA
+
+  // Components V2
+  ContainerBuilder,
+  TextDisplayBuilder,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder,
+  SeparatorBuilder,
+  MessageFlags,
+
+  Events,
 } = require('discord.js');
 
 const rankEmojis = {
@@ -1420,15 +1429,31 @@ const ONBOARDING_TOPICS = [
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
   { value: 'signaler', label: 'Notifications PP • Contact', emoji: { name: '7E', id: '1493378160639741992' }}];
 
-function buildOnboardingEmbed() {
-  return new EmbedBuilder()
-    .setDescription(
-      `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n\n` +
-      `-# Réponses visibles uniquement par toi.`
+function buildOnboardingContainer() {
+  return new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n` +
+        `-# Sélectionne une rubrique ci-dessous pour accéder aux informations du serveur.`
+      )
     )
-    .setImage(BANNERS.onboarding)
-    .setColor(EMBED_COLOR);
-    
+
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder()
+          .setURL(BANNERS.onboarding)
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+
+    .addActionRowComponents(
+      buildOnboardingSelectRow()
+    );
 }
 
 function buildOnboardingSelectRow() {
@@ -1736,11 +1761,11 @@ client.on('interactionCreate', async (interaction) => {
 
     // ── /onboarding ──
     if (interaction.isChatInputCommand() && interaction.commandName === 'onboarding') {
-      return interaction.reply({
-        embeds: [buildOnboardingEmbed()],
-        components: [buildOnboardingSelectRow()]
-      });
-    }
+  return interaction.reply({
+    components: [buildOnboardingContainer()],
+    flags: MessageFlags.IsComponentsV2
+  });
+}
 
     if (interaction.isStringSelectMenu() && interaction.customId === 'onboarding_select') {
       return handleOnboardingSelect(interaction);
