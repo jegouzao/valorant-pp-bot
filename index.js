@@ -1554,12 +1554,14 @@ if (choice === 'stats') {
   const statsContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
 
+  // ── EN-TÊTE ──
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
-          `-# Tes statistiques personnelles sur VALORANT PP`
+          `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
+          `-# Tes statistiques personnelles sur VALORANT PP\n` +
+          `-# Arrivé le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
         )
       )
       .setThumbnailAccessory(
@@ -1572,16 +1574,12 @@ if (choice === 'stats') {
     new SeparatorBuilder()
   )
 
+  // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:VIDE:1493266536813690970> **POSITION**\n` +
-      `**#${position}**\n\n` +
-
-      `<:VIDE:1472667816468418631> **POINTS**\n` +
-      `**${stats.rr}**<:VIDE:1541125087384829962>\n\n` +
-
-      `<:VIDE:1493266679504048148> **WINRATE**\n` +
-      `**${winrate}%**`
+      `### <:VIDE:1493266536813690970> POSITION  **#${position}**\n` +
+      `### <:VIDE:1472667816468418631> POINTS  **${stats.rr} RR**\n` +
+      `### <:VIDE:1493266679504048148> WINRATE  **${winrate}%**`
     )
   )
 
@@ -1589,12 +1587,13 @@ if (choice === 'stats') {
     new SeparatorBuilder()
   )
 
+  // ── STATS SECONDAIRES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:VIDE:1472667851239456935> **PARTIES** : **${stats.games}**\n` +
-      `<:VIDE:1493266372954820741> **VICTOIRES** : **${stats.wins}**\n` +
-      `<:VIDE:1472667823875559708> **INVITES** : **${invitesData.invites}**\n` +
-      `<:VIDE:1493378253446975619> **TIMEOUTS** : **${stats.timeouts || 0}**`
+      `<:VIDE:1472667851239456935> **PARTIES**  ${stats.games}　　` +
+      `<:VIDE:1493266372954820741> **VICTOIRES**  ${stats.wins}\n` +
+      `<:VIDE:1472667823875559708> **INVITES**  ${invitesData.invites}　　` +
+      `<:VIDE:1493378253446975619> **TIMEOUTS**  ${stats.timeouts || 0}`
     )
   )
 
@@ -1602,22 +1601,10 @@ if (choice === 'stats') {
     new SeparatorBuilder()
   )
 
+  // ── RÔLES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `${joinedTs
-        ? `<:VIDE:1493046369076777110> **ARRIVÉ LE** : <t:${joinedTs}:D>`
-        : `<:VIDE:1493046369076777110> **ARRIVÉ LE** : Inconnue`
-      }\n\n` +
-      `**RÔLES**\n${roleNames}`
-    )
-  )
-
-  .addMediaGalleryComponents(
-    new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder()
-        .setURL(
-          'https://cdn.discordapp.com/attachments/1461761854563942400/1488567763877367929/Design_sans_titre_18.png'
-        )
+      `### RÔLES\n${roleNames}`
     )
   );
 
