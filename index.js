@@ -1317,8 +1317,7 @@ const ONBOARDING_TOPICS = [
   { value: 'jouer', label: 'Comment jouer', emoji: { name: '2', id: '1493046369076777110' }},
   { value: 'reglement', label: 'Règlement', emoji: { name: '3', id: '1466611512646045739' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
-  { value: 'notifs', label: 'Notifications PP', emoji: { name: '6', id: '1466608491861901362' }},
-  { value: 'signaler', label: 'Nous contacter', emoji: { name: '7E', id: '1493378287559512174' }}];
+  { value: 'signaler', label: 'Notifications PP / Nous contacter', emoji: { name: '7E', id: '1493378160639741992' }}];
 
 function buildOnboardingEmbed() {
   return new EmbedBuilder()
@@ -1506,25 +1505,13 @@ if (choice === 'jouer') {
     ephemeral: true
   });
 }
-// ── Signaler un joueur ──
+// ── Nous contacter / Signaler ──
+
 if (choice === 'signaler') {
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('open_ticket')
-      .setLabel('Ouvrir un ticket')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  return interaction.reply({
-    components: [row],
-    ephemeral: true
-  });
-}
-
-if (choice === 'notifs') {
   const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
 
   const row = new ActionRowBuilder().addComponents(
+
     new ButtonBuilder()
       .setCustomId('toggle_notif_pp')
       .setLabel(
@@ -1536,7 +1523,13 @@ if (choice === 'notifs') {
         hasRole
           ? ButtonStyle.Danger
           : ButtonStyle.Success
-      )
+      ),
+
+    new ButtonBuilder()
+      .setCustomId('open_ticket')
+      .setLabel('Ouvrir un ticket')
+      .setStyle(ButtonStyle.Secondary)
+
   );
 
   return interaction.reply({
