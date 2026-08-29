@@ -222,6 +222,31 @@ function addStrike(strikeMap, userId, now = Date.now()) {
   });
 }
 
+function getSpamPenalty(strike) {
+  if (strike >= 2) {
+    return {
+      limit: 4,
+      durationMs: 60 * 60 * 1000,
+      label: '1 heure'
+    };
+  }
+
+  if (strike === 1) {
+    return {
+      limit: 5,
+      durationMs: 5 * 60 * 1000,
+      label: '5 minutes'
+    };
+  }
+
+  return {
+    limit: 7,
+    durationMs: 60 * 1000,
+    label: '1 minute'
+  };
+}
+
+
 function saveGameDebounced(game) {
   if (saveTimeouts.has(game.id)) {
     clearTimeout(saveTimeouts.get(game.id));
