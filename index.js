@@ -1563,7 +1563,7 @@ function buildRulesEmbed() {
   return new EmbedBuilder()
     .setDescription(
       '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      '### AFK / Leave / Faux peak rank sanctionnés.\n' +
+      '### <:36:1493378388725989456> AFK / Leave / Faux peak rank sanctionnés.\n' +
       'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
@@ -1572,14 +1572,31 @@ function buildRulesEmbed() {
     )
     .addFields(
 
-      // ───── LIGNE 1 ─────
+      // ───── +36 RR ─────
       {
         name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>',
+        value: '\u200B',
+        inline: true
+      },
+      {
+        name: '\u200B',
         value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         inline: true
       },
       {
+        name: '\u200B',
+        value: '\u200B',
+        inline: true
+      },
+
+      // ───── +33 RR ─────
+      {
         name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>',
+        value: '\u200B',
+        inline: true
+      },
+      {
+        name: '\u200B',
         value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
         inline: true
       },
@@ -1589,14 +1606,31 @@ function buildRulesEmbed() {
         inline: true
       },
 
-      // ───── LIGNE 2 ─────
+      // ───── +30 RR ─────
       {
         name: 'ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>',
+        value: '\u200B',
+        inline: true
+      },
+      {
+        name: '\u200B',
         value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         inline: true
       },
       {
+        name: '\u200B',
+        value: '\u200B',
+        inline: true
+      },
+
+      // ───── -15 RR ─────
+      {
         name: 'ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>',
+        value: '\u200B',
+        inline: true
+      },
+      {
+        name: '\u200B',
         value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
         inline: true
       },
@@ -1610,9 +1644,9 @@ function buildRulesEmbed() {
       {
         name: '\u200B',
         value:
-          '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
-          '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
-          '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
+          '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
+          '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
+          '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
         inline: false
       },
 
@@ -1623,9 +1657,10 @@ function buildRulesEmbed() {
       },
 
       {
-        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
-        value: '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
-  '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
+        name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
+        value:
+          '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
+          '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
         inline: false
       }
     )
