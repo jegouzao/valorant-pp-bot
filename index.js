@@ -1560,7 +1560,7 @@ function buildRulesEmbed() {
       'À part ça, **NO RULES**\n' +
       'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
       'Pas de limites au niveau de l\'équipement ou des décibels\n' +
-      'On est là pour __crier de rire__, et __rentrer des clips__.'
+      'On est là pour __crier de rire__, et __rentrer des clips__.\n'
     )
     .addFields(
 
@@ -1577,19 +1577,10 @@ function buildRulesEmbed() {
 {
   name: '\u200B',
   value:
-    'ᴀᴠᴇᴄ ʟᴇ\n' +
-    'ᴀᴠᴇᴄ ʟᴇ\n' +
-    'ᴘᴏᴜʀ ᴜɴ\n' +
-    'ᴘᴏᴜʀ ᴜɴ',
-  inline: true
-},
-{
-  name: '\u200B',
-  value:
-    '<:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
-    '<:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
-    '<:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n' +
-    '<:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+    'ᴀᴠᴇᴄ ʟᴇ <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
+    'ᴀᴠᴇᴄ ʟᴇ <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
+    'ᴘᴏᴜʀ ᴜɴ <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n' +
+    'ᴘᴏᴜʀ ᴜɴ <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
   inline: true
 },
 {
