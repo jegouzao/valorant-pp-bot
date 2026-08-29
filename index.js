@@ -77,6 +77,8 @@ const {
   MediaGalleryItemBuilder,
   SeparatorBuilder,
   MessageFlags,
+  SectionBuilder,
+  ThumbnailBuilder,
 
   Events,
 } = require('discord.js');
@@ -1552,9 +1554,34 @@ if (choice === 'stats') {
   const statsContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
 
+  .addSectionComponents(
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
+          `-# Tes statistiques personnelles sur VALORANT PP`
+        )
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder()
+          .setURL(member.displayAvatarURL({ size: 256 }))
+      )
+  )
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `## **${member.displayName}** ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}`
+      `<:VIDE:1493266536813690970> **POSITION**\n` +
+      `**#${position}**\n\n` +
+
+      `<:VIDE:1472667816468418631> **POINTS**\n` +
+      `**${stats.rr}**<:VIDE:1541125087384829962>\n\n` +
+
+      `<:VIDE:1493266679504048148> **WINRATE**\n` +
+      `**${winrate}%**`
     )
   )
 
@@ -1564,10 +1591,10 @@ if (choice === 'stats') {
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### ᴘʀᴏɢʀᴇꜱꜱɪᴏɴ\n` +
-      `<:VIDE:1493266536813690970> **Position :** #${position}\n` +
-      `<:VIDE:1472667816468418631> **Points :** ${stats.rr}<:VIDE:1541125087384829962>\n` +
-      `<:VIDE:1493266679504048148> **Winrate :** ${winrate}%`
+      `<:VIDE:1472667851239456935> **PARTIES** : **${stats.games}**\n` +
+      `<:VIDE:1493266372954820741> **VICTOIRES** : **${stats.wins}**\n` +
+      `<:VIDE:1472667823875559708> **INVITES** : **${invitesData.invites}**\n` +
+      `<:VIDE:1493378253446975619> **TIMEOUTS** : **${stats.timeouts || 0}**`
     )
   )
 
@@ -1577,26 +1604,11 @@ if (choice === 'stats') {
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### ꜱᴛᴀᴛɪꜱᴛɪǫᴜᴇꜱ\n` +
-      `<:VIDE:1472667851239456935> **Parties :** ${stats.games}\n` +
-      `<:VIDE:1493266372954820741> **Victoires :** ${stats.wins}\n` +
-      `<:VIDE:1472667823875559708> **Invites :** ${invitesData.invites}\n` +
-      `<:VIDE:1493378253446975619> **Timeouts :** ${stats.timeouts || 0}`
-    )
-  )
-
-  .addSeparatorComponents(
-    new SeparatorBuilder()
-  )
-
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `### ᴘʀᴏꜰɪʟ\n` +
       `${joinedTs
-        ? `<:VIDE:1493046369076777110> **Arrivé le :** <t:${joinedTs}:D>`
-        : `<:VIDE:1493046369076777110> **Arrivé le :** Inconnue`
-      }\n` +
-      `**Rôles :** ${roleNames}`
+        ? `<:VIDE:1493046369076777110> **ARRIVÉ LE** : <t:${joinedTs}:D>`
+        : `<:VIDE:1493046369076777110> **ARRIVÉ LE** : Inconnue`
+      }\n\n` +
+      `**RÔLES**\n${roleNames}`
     )
   )
 
