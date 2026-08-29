@@ -1572,97 +1572,54 @@ function buildRulesEmbed() {
     )
     .addFields(
 
-  // ───── +36 RR ─────
-  {
-    name: '\u200B',
-    value: '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>**',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
+  // ───── SYSTÈME DE POINTS ─────
+{
+  name: '\u200B',
+  value:
+    '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:36:1497395169224556686><:RR:1497395178045050992>**\n' +
+    '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>**\n' +
+    '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>**\n' +
+    '**ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>**',
+  inline: true
+},
+{
+  name: '\u200B',
+  value:
+    '-# <:boost:1488545490189549629> ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
+    '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
+    '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n' +
+    '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
+  inline: true
+},
+{
+  name: '\u200B',
+  value: '\u200B',
+  inline: true
+},
 
-  // ───── +33 RR ─────
-  {
-    name: '\u200B',
-    value: '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:33:1497395187415126127><:RR:1497395194289455114>**',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '-# <:tag:1497390943928586300> ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
+// ───── ÉQUILIBRAGE ─────
+{
+  name: '\u200B',
+  value:
+    '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
+    '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
+    '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
+  inline: false
+},
 
-  // ───── +30 RR ─────
-  {
-    name: '\u200B',
-    value: '**ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ <:30:1493259044893360200><:RR:1493259054804369408>**',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
+{
+  name: '<:TL:1465704930160410847>',
+  value: '__**Les cashprizes seront attribués mensuellement aux**__ :',
+  inline: false
+},
 
-  // ───── -15 RR ─────
-  {
-    name: '\u200B',
-    value: '**ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ <:15:1493259005584343080><:RR:1493259016686538932>**',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '-# <:VPP:1493046369076777110> ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-    inline: true
-  },
-  {
-    name: '\u200B',
-    value: '\u200B',
-    inline: true
-  },
-
-  // ───── ÉQUILIBRAGE ─────
-  {
-    name: '\u200B',
-    value:
-      '-# <:TL:1465704930160410847>  **Boombot est automatisé pour équilibrer intelligemment**\n' +
-      '-# <:TL:1493378388725989456>  **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
-      '-# <:TL:1465704930160410847>  Si vous améliorez votre rang, @taggez quelqu\'un.',
-    inline: false
-  },
-
-  {
-    name: '<:TL:1465704930160410847>',
-    value: '__**Les cashprizes seront attribués mensuellement aux**__ :',
-    inline: false
-  },
-
-  {
-    name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
-    value:
-      '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
-      '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
-    inline: false
-  }
+{
+  name: '<:TL:1465704930160410847><:TL:1465709888729776296>   **ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ**',
+  value:
+    '<:TL:1465704930160410847><:TI:1465747415670984862>   **ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ**\n\n' +
+    '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
+  inline: false
+}
 )
 
     .setColor(EMBED_COLOR);
