@@ -1167,8 +1167,9 @@ function buildLeaderboardContainer({
     )
 
     .addSeparatorComponents(
-      new SeparatorBuilder()
-    );
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+);
 
   for (const line of lines) {
   container
