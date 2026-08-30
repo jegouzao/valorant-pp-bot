@@ -486,6 +486,12 @@ async function updateRegistrationEmbed(guild, game) {
 });
 
 const row = new ActionRowBuilder().addComponents(
+
+  new ButtonBuilder()
+    .setCustomId('join_game')
+    .setLabel('Rejoindre la partie')
+    .setStyle(ButtonStyle.Success),
+
   new ButtonBuilder()
     .setCustomId('change_map')
     .setLabel('Changer la map')
@@ -499,7 +505,7 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('cancel_registration')
     .setLabel('Annuler')
-    .setStyle(ButtonStyle.Primary)
+    .setStyle(ButtonStyle.Secondary)
 );
 
 container.addActionRowComponents(row);
@@ -1087,10 +1093,14 @@ function buildAnnounceContainer({
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `-# ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
-        `${playersText || '-# ᴀᴜᴄᴜɴ'}` +
-        `\n`
+        `${playersText || '-# ᴀᴜᴄᴜɴ'}`
       )
-    );
+    )
+
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+);
 
   if (mapImage) {
     container.addMediaGalleryComponents(
