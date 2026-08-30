@@ -1912,43 +1912,7 @@ function getDiscordVisualWidth(text, guild) {
 }
 
 function normalizePlayerLine(text, guild) {
-  if (!text) return '';
-
-  const mentionMatch = text.match(/<@!?\d+>/);
-
-  if (!mentionMatch) return text;
-
-  const mention = mentionMatch[0];
-  const mentionIndex = text.indexOf(mention);
-
-  const beforeMention = text
-    .slice(0, mentionIndex)
-    .trim();
-
-  const afterMention = text
-    .slice(mentionIndex + mention.length);
-
-  const prefixWidth = getDiscordVisualWidth(
-    beforeMention,
-    guild
-  );
-
-  const PREFIX_TARGET = 4.4;
-  const NORMAL_SPACE_WIDTH = 0.42;
-
-  const missingWidth = Math.max(
-    0,
-    PREFIX_TARGET - prefixWidth
-  );
-
-  const spacesNeeded = Math.max(
-    1,
-    Math.round(
-      missingWidth / NORMAL_SPACE_WIDTH
-    )
-  );
-
-  return `${beforeMention}${' '.repeat(spacesNeeded)}${mention}${afterMention}`;
+  return text || '';
 }
 
 
@@ -1956,22 +1920,13 @@ function padTeamLine(left, right, guild) {
   const COLUMN_TARGET = 22.5;
   const FULL_SPACE_WIDTH = 1.35;
 
-  const normalizedLeft = normalizePlayerLine(
-    left,
-    guild
-  );
-
-  const normalizedRight = normalizePlayerLine(
-    right,
-    guild
-  );
+  const normalizedLeft = left || '';
+  const normalizedRight = right || '';
 
   if (!normalizedLeft) {
     return `${'　'.repeat(16)}${normalizedRight}`;
   }
 
-  // On ne mesure que jusqu'à la mention utilisateur.
-  // Les RR ne doivent plus décaler la colonne de droite.
   const mentionMatch = normalizedLeft.match(/<@!?\d+>/);
 
   let widthReference = normalizedLeft;
@@ -1989,7 +1944,6 @@ function padTeamLine(left, right, guild) {
     guild
   );
 
-  // Compensation fixe pour la zone RR à gauche
   const RR_ZONE = 4.8;
 
   const spacesNeeded = Math.max(
