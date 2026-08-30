@@ -1119,137 +1119,15 @@ function buildAnnounceContainer({
 
 // ── Embed "Partie en cours" ──
 // ── Container "Partie en cours" ──
-function buildInGameContainer({
-  attackersText,
-  defendersText,
-  mapName,
-  mapImage,
-  footerText
-}) {
-
-  const attackers = attackersText
-    .split('\n')
-    .filter(Boolean);
-
-  const defenders = defendersText
-    .split('\n')
-    .filter(Boolean);
-
-  const maxPlayers = Math.max(
-    attackers.length,
-    defenders.length
-  );
-
-  const teamLines = [];
-
-const COLUMN_WIDTH = 34;
-
-function getVisualWidth(text) {
-  let width = 0;
-
-  const parts = text.match(
-    /<@!?\d+>|<a?:\w+:\d+>|[^\s]+|\s+/g
-  ) || [];
-
-  for (const part of parts) {
-    // Mention Discord
-    if (/^<@!?\d+>$/.test(part)) {
-      width += 12;
-      continue;
-    }
-
-    // Emoji custom Discord
-    if (/^<a?:\w+:\d+>$/.test(part)) {
-      width += 3;
-      continue;
-    }
-
-    // Espaces
-    if (/^\s+$/.test(part)) {
-      width += part.length * 0.5;
-      continue;
-    }
-
-    // Texte normal / RR
-    width += part.length * 0.75;
-  }
-
-  return width;
-}
-
-function padTeamLine(left, right) {
-  const COLUMN_TARGET = 25;
-
-  const currentWidth = getVisualWidth(left);
-
-  const spacesNeeded = Math.max(
-    2,
-    Math.round(COLUMN_TARGET - currentWidth)
-  );
-
-  return `${left}${'　'.repeat(spacesNeeded)}${right}`;
-}
-
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    // ── HEADER + THUMBNAIL MAP ──
-    .addSectionComponents(
-      new SectionBuilder()
-
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ʟᴀɴᴄᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
-            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ\n` +
-            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
-          )
-        )
-
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(mapImage)
-        )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
-    .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    teamLines.join('\n') || '\u200B'
-  )
-)
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    );
-
-  return container;
-}
-
-// ── Embed "Résultat de partie" ──
 function buildResultContainer({
-  attackersText,
-  defendersText,
+  attackers,
+  defenders,
   mapName,
   mapImage,
   validatedBy,
   winningSide
 }) {
 
-  const attackers = attackersText
-    .split('\n')
-    .filter(Boolean);
-
-  const defenders = defendersText
-    .split('\n')
-    .filter(Boolean);
-
   const maxPlayers = Math.max(
     attackers.length,
     defenders.length
@@ -1257,14 +1135,56 @@ function buildResultContainer({
 
   const teamLines = [];
 
-  for (let i = 0; i < maxPlayers; i++) {
-  const attacker = attackers[i] || '';
-  const defender = defenders[i] || '';
+  function buildPlayerText(player) {
+    if (!player) return '';
 
-  teamLines.push(
-    padTeamLine(attacker, defender)
-  );
-}
+    return `${player.rankEmoji} <@${player.id}>  ${player.rrDisplay}`;
+  }
+
+  function estimatePlayerWidth(player) {
+    if (!player) return 0;
+
+    // Emoji de rang
+    const emojiWidth = 3;
+
+    // Largeur approximative du vrai pseudo affiché par Discord
+    const nameWidth = player.displayName.length * 0.8;
+
+    // RR affichés
+    const rrWidth = player.rrDisplay
+      ? player.rrDisplay.length * 0.45
+      : 0;
+
+    return emojiWidth + nameWidth + rrWidth;
+  }
+
+  const COLUMN_TARGET = 24;
+
+  for (let i = 0; i < maxPlayers; i++) {
+    const attacker = attackers[i] || null;
+    const defender = defenders[i] || null;
+
+    const attackerText = buildPlayerText(attacker);
+    const defenderText = buildPlayerText(defender);
+
+    if (!attacker) {
+      teamLines.push(
+        `${'　'.repeat(COLUMN_TARGET)}${defenderText}`
+      );
+      continue;
+    }
+
+    const attackerWidth = estimatePlayerWidth(attacker);
+
+    const spacesNeeded = Math.max(
+      2,
+      Math.round(COLUMN_TARGET - attackerWidth)
+    );
+
+    teamLines.push(
+      `${attackerText}${'　'.repeat(spacesNeeded)}${defenderText}`
+    );
+  }
 
   const winnerText =
     winningSide === 'attack'
@@ -1296,10 +1216,10 @@ function buildResultContainer({
     )
 
     .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    teamLines.join('\n') || '\u200B'
-  )
-);
+      new TextDisplayBuilder().setContent(
+        teamLines.join('\n')
+      )
+    );
 
   return container;
 }
@@ -3101,25 +3021,40 @@ await interaction.editReply('✅ Partie lancée');
             await deleteGame(game.id);
 
             const formatPlayers = async (ids) => {
-              let data = [];
-              for (const id of ids) {
-                const member = interaction.guild.members.cache.get(id) || await interaction.guild.members.fetch(id).catch(() => null);
-                if (!member) continue;
+  let data = [];
 
-                const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
-                const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
-                const rankEmoji = rankRole ? rankEmojis[rankRole.name] : rankEmojis.Unranked;
-                const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+  for (const id of ids) {
+    const member =
+      interaction.guild.members.cache.get(id) ||
+      await interaction.guild.members.fetch(id).catch(() => null);
 
-                data.push({ id, rankValue, rankEmoji, rrDisplay });
-              }
-              data.sort((a, b) => a.rankValue - b.rankValue);
-              return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
-            };
+    if (!member) continue;
 
-            const resultContainer = buildResultContainer({
-  attackersText: await formatPlayers(attackers),
-  defendersText: await formatPlayers(defenders),
+    const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+    const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
+    const rankEmoji = rankRole
+      ? rankEmojis[rankRole.name]
+      : rankEmojis.Unranked;
+
+    const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+
+    data.push({
+      id,
+      rankValue,
+      rankEmoji,
+      rrDisplay,
+      displayName: member.displayName
+    });
+  }
+
+  data.sort((a, b) => a.rankValue - b.rankValue);
+
+  return data;
+};
+
+const resultContainer = buildResultContainer({
+  attackers: await formatPlayers(attackers),
+  defenders: await formatPlayers(defenders),
   mapName: game.mapName,
   mapImage: game.mapImage,
   validatedBy: interaction.member.displayName,
