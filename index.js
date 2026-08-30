@@ -1221,7 +1221,7 @@ if (page === 0) {
   const openLeaderboardRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('leaderboard_open')
-      .setLabel('Classement complet')
+      .setLabel('Voir le classement complet')
       .setStyle(ButtonStyle.Secondary)
   );
 
