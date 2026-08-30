@@ -1075,10 +1075,9 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}** ᴄᴏᴅᴇ ᴅᴇ ɢʀᴏᴜᴘᴇ : \`${code}\`\n` +
             `-# ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ : \`${remaining}\`\n` +
-            `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\`\n` +
-            `-# ᴄᴏᴅᴇ ᴅᴇ ɢʀᴏᴜᴘᴇ : \`${code}\``
+            `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\``
           )
         )
         .setThumbnailAccessory(
