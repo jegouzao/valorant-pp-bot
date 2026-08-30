@@ -1928,7 +1928,7 @@ function normalizePlayerLine(text, guild) {
   const afterMention = text
     .slice(mentionIndex + mention.length);
 
-  const PREFIX_TARGET = 5.2;
+  const PREFIX_TARGET = 4.4;
 
   const prefixWidth = getDiscordVisualWidth(
     beforeMention,
@@ -3271,12 +3271,52 @@ await interaction.editReply('✅ Partie lancée');
             await deleteGame(game.id);
 
   
+
+            const formatResultPlayers = async (ids) => {
+  const data = [];
+
+  for (const id of ids) {
+    const member =
+      interaction.guild.members.cache.get(id) ||
+      await interaction.guild.members.fetch(id).catch(() => null);
+
+    if (!member) continue;
+
+    const rankRole = member.roles?.cache?.find(
+      r => RANK_ORDER[r.name]
+    );
+
+    const rankValue = rankRole
+      ? RANK_ORDER[rankRole.name]
+      : 999;
+
+    const rankEmoji = rankRole
+      ? rankEmojis[rankRole.name]
+      : rankEmojis.Unranked;
+
+    const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+
+    data.push({
+      id,
+      rankValue,
+      rankEmoji,
+      rrDisplay,
+      displayName: member.displayName
+    });
+  }
+
+  data.sort((a, b) => a.rankValue - b.rankValue);
+
+  return data;
+};
+
+
 console.log('RESULT STEP 1');
 
-const formattedAttackers = await formatPlayers(attackers);
+const formattedAttackers = await formatResultPlayers(attackers);
 console.log('RESULT STEP 2', formattedAttackers);
 
-const formattedDefenders = await formatPlayers(defenders);
+const formattedDefenders = await formatResultPlayers(defenders);
 console.log('RESULT STEP 3', formattedDefenders);
 
 
