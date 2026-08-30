@@ -469,20 +469,43 @@ async function updateRegistrationEmbed(guild, game) {
     const creatorMember = guild.members.cache.get(game.creatorId);
     const creatorDisplayName = creatorMember?.displayName || game.creatorName || 'Inconnu';
 
-    const embed = buildAnnounceEmbed({
-      waitingVCId: game.waitingVC,
-      mode: '5v5',
-      code: game.valorantCode,
-      organisateur: creatorDisplayName,
-      remaining,
-      votes,
-      needed,
-      playersText,
-      mapImage: game.mapImage,
-      footerIcon: game.creatorAvatar || guild.iconURL({ dynamic: true, size: 32 })
-    });
+    const container = buildAnnounceContainer({
+  waitingVCId: game.waitingVC,
+  mode: '5v5',
+  code: game.valorantCode,
+  organisateur: creatorDisplayName,
+  remaining,
+  votes,
+  needed,
+  playersText,
+  mapImage: game.mapImage,
+  footerIcon:
+    game.creatorAvatar ||
+    guild.iconURL({ dynamic: true, size: 32 })
+});
 
-    await registrationMsg.edit({ embeds: [embed] });
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId('change_map')
+    .setLabel('Changer la map')
+    .setStyle(ButtonStyle.Secondary),
+
+  new ButtonBuilder()
+    .setCustomId('start')
+    .setLabel('Équilibrer les équipes')
+    .setStyle(ButtonStyle.Primary),
+
+  new ButtonBuilder()
+    .setCustomId('cancel_registration')
+    .setLabel('Annuler')
+    .setStyle(ButtonStyle.Primary)
+);
+
+container.addActionRowComponents(row);
+
+await registrationMsg.edit({
+  components: [container]
+});
 
   } catch (err) {
     if (err.code !== 10008) console.error('Erreur update embed PARTIE CRÉÉE:', err);
@@ -1021,27 +1044,65 @@ function medalFor(index) {
 }
 
 // ── Embed "Annonce Custom" (partie créée / inscription) ──
-function buildAnnounceEmbed({ waitingVCId, mode, code, organisateur, remaining, votes, needed, playersText, mapImage, footerIcon }) {
-  return new EmbedBuilder()
-    .setColor(EMBED_COLOR)
-    .setDescription(
-      `## <:VIDE:1493046369076777110> <#${waitingVCId}>`
+function buildAnnounceContainer({
+  waitingVCId,
+  mode,
+  code,
+  organisateur,
+  remaining,
+  votes,
+  needed,
+  playersText,
+  mapImage,
+  footerIcon
+}) {
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:VIDE:1493046369076777110> <#${waitingVCId}>\n` +
+        `-# Partie organisée par **${organisateur}**`
+      )
     )
-    .addFields(
-      {
-        name: 'ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...',
-        value:
-          `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
-          `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
-      },
-      {
-        name: 'ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ',
-        value: playersText || 'ᴀᴜᴄᴜɴ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ'
-      }
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     )
-    .setImage(mapImage || null)
-    .setFooter({ iconURL: footerIcon, text: `Partie organisée par ${organisateur}` })
-    .setTimestamp();
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+        `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
+        `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
+        `${playersText || '-# ᴀᴜᴄᴜɴ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ'}`
+      )
+    );
+
+  if (mapImage) {
+    container.addMediaGalleryComponents(
+      new MediaGalleryBuilder()
+        .addItems(
+          new MediaGalleryItemBuilder()
+            .setURL(mapImage)
+        )
+    );
+  }
+
+  return container;
 }
 
 // ── Embed "Partie en cours" ──
@@ -2201,26 +2262,49 @@ if (
 
       const map = maps[Math.floor(Math.random() * maps.length)];
 
-      const embed = buildAnnounceEmbed({
-        waitingVCId: waitingVC.id,
-        mode: '5v5',
-        code: valorantCode,
-        organisateur: interaction.member.displayName,
-        remaining: 10,
-        votes: 0,
-        needed: 6,
-        playersText: '-# ᴀᴜᴄᴜɴ',
-        mapImage: map?.image || 'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
-        footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 })
-      });
+      const container = buildAnnounceContainer({
+  waitingVCId: waitingVC.id,
+  mode: '5v5',
+  code: valorantCode,
+  organisateur: interaction.member.displayName,
+  remaining: 10,
+  votes: 0,
+  needed: 6,
+  playersText: '-# ᴀᴜᴄᴜɴ',
+  mapImage:
+    map?.image ||
+    'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
+  footerIcon: interaction.user.displayAvatarURL({
+    dynamic: true,
+    size: 32
+  })
+});
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('change_map').setLabel('Changer la map').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('start').setLabel('Équilibrer les équipes').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId('cancel_registration').setLabel('Annuler').setStyle(ButtonStyle.Primary)
-      );
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId('change_map')
+    .setLabel('Changer la map')
+    .setStyle(ButtonStyle.Secondary),
 
-      const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
+  new ButtonBuilder()
+    .setCustomId('start')
+    .setLabel('Équilibrer les équipes')
+    .setStyle(ButtonStyle.Primary),
+
+  new ButtonBuilder()
+    .setCustomId('cancel_registration')
+    .setLabel('Annuler')
+    .setStyle(ButtonStyle.Primary)
+);
+
+// Les boutons sont intégrés DANS le container V2
+container.addActionRowComponents(row);
+
+const msg = await interaction.channel.send({
+  components: [container],
+  flags: MessageFlags.IsComponentsV2
+});
+
       const newGame = {
         id: msg.id,
         messageId: msg.id,
