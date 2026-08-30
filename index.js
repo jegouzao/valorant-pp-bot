@@ -419,7 +419,7 @@ function scheduleRegistrationUpdate(guild, game) {
 
 // ===== BUILD PLAYER LIST =====
 async function buildPlayerList(guild, playerIds) {
-  if (!playerIds.length) return '-# ᴀᴜᴄᴜɴ';
+  if (!playerIds.length) return 'ᴀᴜᴄᴜɴ';
 
   const list = [];
 
@@ -1060,11 +1060,19 @@ function buildAnnounceContainer({
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046369076777110> <#${waitingVCId}>\n` +
-        `-# Partie organisée par **${organisateur}**`
-      )
+    // ── HEADER + AVATAR ORGANISATEUR ──
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046369076777110> PARTIE PERSONNALISÉE\n` +
+            `-# Partie organisée par **${organisateur}**`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(footerIcon)
+        )
     )
 
     .addSeparatorComponents(
@@ -1072,9 +1080,10 @@ function buildAnnounceContainer({
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
+    // ── INFOS ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+        `ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n\n` +
         `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
         `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
       )
@@ -1085,13 +1094,15 @@ function buildAnnounceContainer({
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
+    // ── JOUEURS ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
-        `${playersText || '-# ᴀᴜᴄᴜɴ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ'}`
+        `ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n\n` +
+        `${playersText || 'ᴀᴜᴄᴜɴ'}`
       )
     );
 
+  // ── MAP ──
   if (mapImage) {
     container.addMediaGalleryComponents(
       new MediaGalleryBuilder()
@@ -2146,7 +2157,16 @@ if (
     // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
     if (interaction.isButton()) {
 
-      const gameButtons = ['change_map', 'start', 'cancel_registration', 'spectate', 'attack_win', 'defense_win', 'cancel_game'];
+      const gameButtons = [
+  'join_game',
+  'change_map',
+  'start',
+  'cancel_registration',
+  'spectate',
+  'attack_win',
+  'defense_win',
+  'cancel_game'
+];
 
       if (gameButtons.includes(interaction.customId) && !game) {
         return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
@@ -2270,7 +2290,7 @@ if (
   remaining: 10,
   votes: 0,
   needed: 6,
-  playersText: '-# ᴀᴜᴄᴜɴ',
+  playersText: 'ᴀᴜᴄᴜɴ',
   mapImage:
     map?.image ||
     'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
@@ -2281,6 +2301,12 @@ if (
 });
 
 const row = new ActionRowBuilder().addComponents(
+
+  new ButtonBuilder()
+    .setCustomId('join_game')
+    .setLabel('Rejoindre la partie')
+    .setStyle(ButtonStyle.Success),
+
   new ButtonBuilder()
     .setCustomId('change_map')
     .setLabel('Changer la map')
@@ -2294,7 +2320,7 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('cancel_registration')
     .setLabel('Annuler')
-    .setStyle(ButtonStyle.Primary)
+    .setStyle(ButtonStyle.Secondary)
 );
 
 // Les boutons sont intégrés DANS le container V2
@@ -2365,6 +2391,55 @@ const msg = await interaction.channel.send({
 
     if (interaction.isButton()) {
       switch (interaction.customId) {
+
+        case 'join_game': {
+
+  if (!game) {
+    return interaction.reply({
+      content: "❌ Cette partie n'existe plus.",
+      ephemeral: true
+    });
+  }
+
+  const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
+
+  if (!prepVC) {
+    return interaction.reply({
+      content: '❌ Le salon vocal de préparation est introuvable.',
+      ephemeral: true
+    });
+  }
+
+  if (game.players.includes(interaction.user.id)) {
+    return interaction.reply({
+      content: '✅ Tu participes déjà à cette partie.',
+      ephemeral: true
+    });
+  }
+
+  if (game.players.length >= 10) {
+    return interaction.reply({
+      content: '❌ La partie est déjà complète.',
+      ephemeral: true
+    });
+  }
+
+  if (!interaction.member.voice?.channel) {
+    return interaction.reply({
+      content: '❌ Connecte-toi d’abord à un salon vocal du serveur.',
+      ephemeral: true
+    });
+  }
+
+  await interaction.member.voice
+    .setChannel(prepVC)
+    .catch(() => null);
+
+  return interaction.reply({
+    content: '✅ Tu as rejoint la partie.',
+    ephemeral: true
+  });
+}
 
         case 'change_map': {
           if (!game) return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
