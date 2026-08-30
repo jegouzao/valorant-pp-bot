@@ -1073,7 +1073,7 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE LANCÉE ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ **${organisateur}**\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
             `-# ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ : \`${remaining}\`\n` +
             `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\`\n` +
             `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...`
