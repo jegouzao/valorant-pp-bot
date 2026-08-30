@@ -1183,6 +1183,14 @@ function buildLeaderboardContainer({
     );
 }
 
+container.addMediaGalleryComponents(
+  new MediaGalleryBuilder()
+    .addItems(
+      new MediaGalleryItemBuilder()
+        .setURL('https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a95599a&is=6a94081a&hm=ec8249dd3e50563de325f542df6863814dada56ace8cbf4a9b50ae5bb6ca50c0&')
+    )
+);
+
   return container;
 }
 
