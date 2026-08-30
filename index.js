@@ -64,7 +64,6 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  EmbedBuilder,
   REST,
   Routes,
   PermissionFlagsBits,
@@ -141,7 +140,7 @@ const RANK_ROLES = {
       Iron1: '1461352715631460516'
     };
 
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 const RANK_ORDER = {
   'Radiant': 1, 
@@ -1744,24 +1743,62 @@ return interaction.editReply({
 
   // ── Comment se vérifier ──
 if (choice === 'verification') {
-  const embed = new EmbedBuilder()
-    .setColor(EMBED_COLOR)
-    .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541082903658627123/Arrivee_type.gif?ex=6a8c4ccc&is=6a8afb4c&hm=38037230d2b2e180951cbbed88f4a3bf4c431248c15d3f75a1e6e2b9df54114a&');
+  const verificationContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:Roles:1493046347337699499> DÉBLOQUER L'ACCÈS AU SERVEUR\n` +
+        `-# ᴘᴏᴜʀ ᴀᴄᴄᴇᴅᴇʀ ᴀᴜ ꜱᴇʀᴠᴇᴜʀ, ᴛᴜ ᴅᴏɪꜱ ᴅ'ᴀʙᴏʀᴅ ᴄᴏᴍᴘʟᴇᴛᴇʀ ᴛᴀ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ\n` +
+        `-# ꜱᴜɪꜱ ʟᴇꜱ ᴇᴛᴀᴘᴇꜱ ᴘʀᴇꜱᴇɴᴛᴇᴇꜱ ᴄɪ-ᴅᴇꜱꜱᴏᴜꜱ`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL(
+          'https://cdn.discordapp.com/attachments/1461761854563942400/1541082903658627123/Arrivee_type.gif?ex=6a8c4ccc&is=6a8afb4c&hm=38037230d2b2e180951cbbed88f4a3bf4c431248c15d3f75a1e6e2b9df54114a&'
+        )
+      )
+    );
 
   return interaction.reply({
-    embeds: [embed],
-    ephemeral: true
+    components: [verificationContainer],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
   });
 }
   // ── Comment jouer ──
 if (choice === 'jouer') {
-  const embed = new EmbedBuilder()
-    .setColor(EMBED_COLOR)
-    .setDescription('Vidéo à venir');
+  const jouerContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:Roles:1493046347337699499> COMMENT JOUER UNE PP\n` +
+        `-# ʟᴇ ꜱʏꜱᴛᴇᴍᴇ ᴅᴇ ᴘᴀʀᴛɪᴇꜱ ᴘᴇʀꜱᴏɴɴᴀʟɪꜱᴇᴇꜱ ꜱᴇ ɢᴇʀᴇ ᴅɪʀᴇᴄᴛᴇᴍᴇɴᴛ ꜱᴜʀ ʟᴇ ꜱᴇʀᴠᴇᴜʀ\n` +
+        `-# ᴜɴ ᴛᴜᴛᴏʀɪᴇʟ ᴄᴏᴍᴘʟᴇᴛ ꜱᴇʀᴀ ᴅɪꜱᴘᴏɴɪʙʟᴇ ɪᴄɪ ᴘʀᴏᴄʜᴀɪɴᴇᴍᴇɴᴛ`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# ᴠɪᴅᴇᴏ ᴀ ᴠᴇɴɪʀ`
+      )
+    );
 
   return interaction.reply({
-    embeds: [embed],
-    ephemeral: true
+    components: [jouerContainer],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
   });
 }
 // ── Nous contacter / Signaler ──
@@ -1770,7 +1807,6 @@ if (choice === 'signaler') {
   const hasRole = member.roles.cache.has(ROLE_NOTIF_PP);
 
   const row = new ActionRowBuilder().addComponents(
-
     new ButtonBuilder()
       .setCustomId('toggle_notif_pp')
       .setLabel(
@@ -1788,20 +1824,39 @@ if (choice === 'signaler') {
       .setCustomId('open_ticket')
       .setLabel('Ouvrir un ticket')
       .setStyle(ButtonStyle.Secondary)
-
   );
 
+  const contactContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:Roles:1493046347337699499> NOTIFICATIONS • CONTACT\n` +
+        `-# ɢᴇʀᴇ ɪᴄɪ ᴛᴇꜱ ɴᴏᴛɪꜰɪᴄᴀᴛɪᴏɴꜱ ᴘᴏᴜʀ ʟᴇꜱ ᴘᴀʀᴛɪᴇꜱ ᴘᴇʀꜱᴏɴɴᴀʟɪꜱᴇᴇꜱ\n` +
+        `-# ᴛᴜ ᴘᴇᴜx ᴀᴜꜱꜱɪ ᴏᴜᴠʀɪʀ ᴜɴ ᴛɪᴄᴋᴇᴛ ᴘᴏᴜʀ ᴄᴏɴᴛᴀᴄᴛᴇʀ ʟ'ᴇǫᴜɪᴘᴇ`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addActionRowComponents(
+      row
+    );
+
   return interaction.reply({
-    components: [row],
-    ephemeral: true
+    components: [contactContainer],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
   });
 }
 
 // ── Règlement ──
 if (choice === 'reglement') {
   return interaction.reply({
-    embeds: [buildRulesEmbed()],
-    ephemeral: true
+    components: [buildRulesContainer()],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
   });
 }
 
@@ -1811,51 +1866,63 @@ return interaction.reply({
 });
 }
 
-function buildRulesEmbed() {
-  return new EmbedBuilder()
-    .setDescription(
-      '## <:36:1493046347337699499> **RÈGLEMENT — VALORANT PP**\n' +
-      '### AFK / Leave / Faux peak rank sanctionnés.\n' +
-      'À part ça, **NO RULES**\n' +
-      'Ça ne plaira pas à tous, _*mais à la grande majorité*_.\n' +
-      'Pas de limites au niveau de l\'équipement ou des décibels\n' +
-      'On est là pour __crier de rire__, et __rentrer des clips__.\n'
+function buildRulesContainer() {
+  return new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:36:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
+        `-# ᴀꜰᴋ / ʟᴇᴀᴠᴇ / ꜰᴀᴜx ᴘᴇᴀᴋ ʀᴀɴᴋ ꜱᴀɴᴄᴛɪᴏɴɴᴇꜱ\n` +
+        `-# ᴀ ᴘᴀʀᴛ ᴄᴀ, **NO RULES**\n` +
+        `-# ᴄᴀ ɴᴇ ᴘʟᴀɪʀᴀ ᴘᴀꜱ ᴀ ᴛᴏᴜꜱ, _*ᴍᴀɪꜱ ᴀ ʟᴀ ɢʀᴀɴᴅᴇ ᴍᴀᴊᴏʀɪᴛᴇ*_\n` +
+        `-# ᴘᴀꜱ ᴅᴇ ʟɪᴍɪᴛᴇꜱ ᴀᴜ ɴɪᴠᴇᴀᴜ ᴅᴇ ʟ'ᴇǫᴜɪᴘᴇᴍᴇɴᴛ ᴏᴜ ᴅᴇꜱ ᴅᴇᴄɪʙᴇʟꜱ\n` +
+        `-# ᴏɴ ᴇꜱᴛ ʟᴀ ᴘᴏᴜʀ __ᴄʀɪᴇʀ ᴅᴇ ʀɪʀᴇ__, ᴇᴛ __ʀᴇɴᴛʀᴇʀ ᴅᴇꜱ ᴄʟɪᴘꜱ__`
+      )
     )
-    .addFields(
 
-  // ───── SYSTÈME DE POINTS ─────
-{
-  name: '\u200B',
-  value:
-    'ʙᴀʀᴇᴍᴇ ᴅᴇꜱ ᴘᴏɪɴᴛꜱ :\n' +
-    '<:boost:1488545490189549629> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:36:1497395169224556686><:RR:1497395178045050992>ᴀᴠᴇᴄ ʟᴇ ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
-    '<:tag:1497390943928586300> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:33:1497395187415126127><:RR:1497395194289455114>ᴀᴠᴇᴄ ʟᴇ ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n' +
-    '<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:30:1493259044893360200><:RR:1493259054804369408>ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n' +
-    '<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ** : <:15:1493259005584343080><:RR:1493259016686538932>ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ',
-  inline: false
-},
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
 
-// ───── ÉQUILIBRAGE ─────
-{
-  name: '\u200B',
-  value:
-    '-# **Boombot est automatisé pour équilibrer intelligemment**\n' +
-    '-# **grâce au peak rank que vous fournissez à l\'arrivée.**\n' +
-    '-# Si vous améliorez votre rang, @taggez quelqu\'un.\n\n',
-  inline: false
-},
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ʙᴀʀᴇᴍᴇ ᴅᴇꜱ ᴘᴏɪɴᴛꜱ\n` +
+        `<:boost:1488545490189549629> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:36:1497395169224556686><:RR:1497395178045050992> ᴀᴠᴇᴄ ʟᴇ ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n` +
+        `<:tag:1497390943928586300> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:33:1497395187415126127><:RR:1497395194289455114> ᴀᴠᴇᴄ ʟᴇ ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n` +
+        `<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:30:1493259044893360200><:RR:1493259054804369408> ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n` +
+        `<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ** : <:15:1493259005584343080><:RR:1493259016686538932> ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ`
+      )
+    )
 
-{
-  name: 'Les cashprizes seront attribués mensuellement aux :',
-  value:
-    '-# <:TL:1465704930160410847><:TL:1465709888729776296> ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n' +
-    '-# <:TL:1465704930160410847><:TI:1465747415670984862> ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ\n\n' +
-    '-# <:TL:1493378369364951131>  Les prix varieront, Bundles, RiotCard, PayPal, Nitro...',
-  inline: false
-}
-)
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
 
-    .setColor(EMBED_COLOR);
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ᴇǫᴜɪʟɪʙʀᴀɢᴇ\n` +
+        `-# **ʙᴏᴏᴍʙᴏᴛ ᴇꜱᴛ ᴀᴜᴛᴏᴍᴀᴛɪꜱᴇ ᴘᴏᴜʀ ᴇǫᴜɪʟɪʙʀᴇʀ ɪɴᴛᴇʟʟɪɢᴇᴍᴍᴇɴᴛ**\n` +
+        `-# **ɢʀᴀᴄᴇ ᴀᴜ ᴘᴇᴀᴋ ʀᴀɴᴋ ǫᴜᴇ ᴠᴏᴜꜱ ꜰᴏᴜʀɴɪꜱꜱᴇᴢ ᴀ ʟ'ᴀʀʀɪᴠᴇᴇ**\n` +
+        `-# ꜱɪ ᴠᴏᴜꜱ ᴀᴍᴇʟɪᴏʀᴇᴢ ᴠᴏᴛʀᴇ ʀᴀɴɢ, @ᴛᴀɢɢᴇᴢ ǫᴜᴇʟǫᴜ'ᴜɴ`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ᴄᴀꜱʜᴘʀɪᴢᴇꜱ ᴍᴇɴꜱᴜᴇʟꜱ\n` +
+        `-# <:TL:1465704930160410847><:TL:1465709888729776296> ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n` +
+        `-# <:TL:1465704930160410847><:TI:1465747415670984862> ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ\n` +
+        `-# <:TL:1493378369364951131> ʟᴇꜱ ᴘʀɪx ᴠᴀʀɪᴇʀᴏɴᴛ : ʙᴜɴᴅʟᴇꜱ, ʀɪᴏᴛᴄᴀʀᴅ, ᴘᴀʏᴘᴀʟ, ɴɪᴛʀᴏ...`
+      )
+    );
 }
 
 function getDiscordVisualWidth(text, guild) {
@@ -3566,21 +3633,33 @@ return;
 }
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('open_ticket')
-          .setLabel('┃Ouvrir un ticket')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji({ id: '1466470365269070026' }),
-        new ButtonBuilder()
-          .setCustomId('toggle_notif_pp')
-          .setLabel('Notifications PP')
-          .setStyle(ButtonStyle.Secondary)
-      );
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('open_ticket')
+      .setLabel('┃Ouvrir un ticket')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji({ id: '1466470365269070026' }),
 
-      await interaction.channel.send({ embeds: [buildRulesEmbed()], components: [row] });
-      return interaction.reply({ content: '✅ Règles envoyées', ephemeral: true });
-    }
+    new ButtonBuilder()
+      .setCustomId('toggle_notif_pp')
+      .setLabel('Notifications PP')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const rulesContainer = buildRulesContainer();
+
+  rulesContainer.addActionRowComponents(row);
+
+  await interaction.channel.send({
+    components: [rulesContainer],
+    flags: MessageFlags.IsComponentsV2
+  });
+
+  return interaction.reply({
+    content: '✅ Règles envoyées',
+    ephemeral: true
+  });
+}
 
     // ── Gestion du modal TICKET REASON ──
     if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
