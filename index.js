@@ -1062,33 +1062,22 @@ function buildAnnounceContainer({
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
-    // ── HEADER + AVATAR ORGANISATEUR ──
     .addSectionComponents(
-  new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046369076777110> PARTIE LANCÉE ${mapName || 'Map inconnue'}\n` +
-        `-# Partie organisée par **${organisateur}**`
-      )
-    )
-    .setThumbnailAccessory(
-      new ThumbnailBuilder()
-        .setURL(footerIcon)
-    )
-)
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // ── INFOS ──
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n\n` +
-        `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
-        `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
-      )
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE LANCÉE ${mapName || ''}\n` +
+            `-# Partie organisée par **${organisateur}**\n` +
+            `\n` +
+            `ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+            `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
+            `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(footerIcon)
+        )
     )
 
     .addSeparatorComponents(
@@ -1096,15 +1085,13 @@ function buildAnnounceContainer({
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
-    // ── JOUEURS ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n\n` +
+        `ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
         `${playersText || 'ᴀᴜᴄᴜɴ'}`
       )
     );
 
-  // ── MAP ──
   if (mapImage) {
     container.addMediaGalleryComponents(
       new MediaGalleryBuilder()
@@ -2296,9 +2283,8 @@ if (
   mapName: map.name,
   mapImage: map?.image,
   footerIcon: interaction.user.displayAvatarURL({
-    dynamic: true,
-    size: 32
-  })
+  size: 256
+})
 });
 
 const row = new ActionRowBuilder().addComponents(
@@ -2347,7 +2333,9 @@ const msg = await interaction.channel.send({
         locks: {},
         creatorId: interaction.user.id,
         creatorName: interaction.member.displayName,
-        creatorAvatar: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
+        creatorAvatar: interaction.user.displayAvatarURL({
+  size: 256
+}),
       };
 
       gamesData.games.push(newGame);
