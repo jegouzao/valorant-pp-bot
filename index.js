@@ -1416,7 +1416,37 @@ const activePlayers = Object.entries(pointsData).filter(([id]) =>
 
 // Classement uniquement parmi les membres présents
 const sorted = activePlayers
-  .sort((a, b) => b[1].rr - a[1].rr)
+  .sort(([idA, a], [idB, b]) => {
+
+    // 1. Plus de RR
+    const rrDiff = (b.rr || 0) - (a.rr || 0);
+    if (rrDiff !== 0) return rrDiff;
+
+    // 2. Meilleur winrate
+    const winrateA = (a.games || 0)
+      ? (a.wins || 0) / a.games
+      : 0;
+
+    const winrateB = (b.games || 0)
+      ? (b.wins || 0) / b.games
+      : 0;
+
+    const winrateDiff = winrateB - winrateA;
+    if (winrateDiff !== 0) return winrateDiff;
+
+    // 3. Plus d'invitations
+    const invitesA = totalInvitesPerMember[idA] || 0;
+    const invitesB = totalInvitesPerMember[idB] || 0;
+
+    const invitesDiff = invitesB - invitesA;
+    if (invitesDiff !== 0) return invitesDiff;
+
+    // 4. Moins de timeouts
+    const timeoutsA = a.timeouts || 0;
+    const timeoutsB = b.timeouts || 0;
+
+    return timeoutsA - timeoutsB;
+  })
   .slice(0, 10);
 
 const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
@@ -1428,9 +1458,25 @@ const container = buildLeaderboardContainer({
   playerCount
 });
 
+// ── ANCIEN MESSAGE : on ne tente PAS de le convertir ──
+if (!msg.flags.has(MessageFlags.IsComponentsV2)) {
+  const newMsg = await channel.send({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2
+  });
+
+  await setConfigValue('top15Data', {
+    messageId: newMsg.id,
+    channelId: channel.id
+  });
+
+  await msg.delete().catch(() => {});
+  return;
+}
+
+// ── MESSAGE DÉJÀ V2 : PAS DE FLAG ICI ──
 await msg.edit({
-  components: [container],
-  flags: MessageFlags.IsComponentsV2
+  components: [container]
 }).catch(console.error);
 }
 
