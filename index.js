@@ -1162,7 +1162,7 @@ function buildInGameContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
+            `-# ᴘᴀʀᴛɪᴇ ʟᴀɴᴄᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
             `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ\n` +
             `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
           )
@@ -1195,17 +1195,91 @@ function buildInGameContainer({
 }
 
 // ── Embed "Résultat de partie" ──
-function buildResultEmbed({ attackersText, defendersText, footerIcon, footerText, winningSide }) {
-  const title = winningSide === 'attack' ? '🏆 Victoire des Attaquants' : '🏆 Victoire des Défenseurs';
-  return new EmbedBuilder()
-    .setDescription(`## ${title}`)
-    .addFields(
-      { name: '<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline: true },
-      { name: '<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline: true }
+function buildResultContainer({
+  attackersText,
+  defendersText,
+  mapName,
+  mapImage,
+  validatedBy,
+  winningSide
+}) {
+
+  const attackers = attackersText
+    .split('\n')
+    .filter(Boolean);
+
+  const defenders = defendersText
+    .split('\n')
+    .filter(Boolean);
+
+  const maxPlayers = Math.max(
+    attackers.length,
+    defenders.length
+  );
+
+  const teamLines = [];
+
+  for (let i = 0; i < maxPlayers; i++) {
+    const attacker = attackers[i] || ' ';
+    const defender = defenders[i] || ' ';
+
+    teamLines.push(
+      `${attacker}　　　　　　　　　${defender}`
+    );
+  }
+
+  const winnerText =
+    winningSide === 'attack'
+      ? 'ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ'
+      : 'ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴠᴀʟɪᴅᴇᴇ ᴘᴀʀ : **${validatedBy}**\n` +
+            `-# ᴠɪᴄᴛᴏɪʀᴇ : **${winnerText}**\n` +
+            `-# ʟᴇ ᴄᴀʟᴄᴜʟ ᴅᴇꜱ ᴘᴏɪɴᴛꜱ ᴘʀᴇɴᴅ ᴇɴ ᴄᴏᴍᴘᴛᴇ ʟᴇꜱ ᴀᴠᴀɴᴛᴀɢᴇꜱ ᴛᴀɢ ᴇᴛ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(mapImage)
+        )
     )
-    .setColor(EMBED_COLOR)
-    .setFooter({ iconURL: footerIcon, text: footerText })
-    .setTimestamp();
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `**ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ**　　　　　　　　　　　　**ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ**\n` +
+        teamLines.join('\n')
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder()
+        .addItems(
+          new MediaGalleryItemBuilder()
+            .setURL(
+              'https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a95aa68&is=6a9458e8&hm=f3ca38f4f063667605bb7d934d20f85f89ef673415b6c981dcd00949b95525d5&'
+            )
+        )
+    );
+
+  return container;
 }
 
 // ── Embed Leaderboard ──
@@ -3021,15 +3095,19 @@ await interaction.editReply('✅ Partie lancée');
               return data.map(p => `${p.rankEmoji} <@${p.id}>  ${p.rrDisplay}`).join('\n');
             };
 
-            const embed = buildResultEmbed({
-              attackersText: await formatPlayers(attackers),
-              defendersText: await formatPlayers(defenders),
-              footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-              footerText: `Partie validée par ${interaction.member.displayName}`,
-              winningSide
-            });
+            const resultContainer = buildResultContainer({
+  attackersText: await formatPlayers(attackers),
+  defendersText: await formatPlayers(defenders),
+  mapName: game.mapName,
+  mapImage: game.mapImage,
+  validatedBy: interaction.member.displayName,
+  winningSide
+});
 
-            await interaction.channel.send({ embeds: [embed] }).catch(console.error);
+await interaction.channel.send({
+  components: [resultContainer],
+  flags: MessageFlags.IsComponentsV2
+}).catch(console.error);
           } finally {
             delete gameLocks[game.id];
           }
