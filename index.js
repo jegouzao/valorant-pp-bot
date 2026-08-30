@@ -478,6 +478,7 @@ async function updateRegistrationEmbed(guild, game) {
   votes,
   needed,
   playersText,
+  mapName: game.mapName,
   mapImage: game.mapImage,
   footerIcon:
     game.creatorAvatar ||
@@ -1053,6 +1054,7 @@ function buildAnnounceContainer({
   votes,
   needed,
   playersText,
+  mapName,
   mapImage,
   footerIcon
 }) {
@@ -1062,18 +1064,18 @@ function buildAnnounceContainer({
 
     // ── HEADER + AVATAR ORGANISATEUR ──
     .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046369076777110> PARTIE PERSONNALISÉE\n` +
-            `-# Partie organisée par **${organisateur}**`
-          )
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(footerIcon)
-        )
+  new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:VIDE:1493046369076777110> PARTIE LANCÉE ${mapName || 'Map inconnue'}\n` +
+        `-# Partie organisée par **${organisateur}**`
+      )
     )
+    .setThumbnailAccessory(
+      new ThumbnailBuilder()
+        .setURL(footerIcon)
+    )
+)
 
     .addSeparatorComponents(
       new SeparatorBuilder()
@@ -2291,9 +2293,8 @@ if (
   votes: 0,
   needed: 6,
   playersText: 'ᴀᴜᴄᴜɴ',
-  mapImage:
-    map?.image ||
-    'https://cdn.discordapp.com/attachments/1461761854563942400/1476383168964722848/Dessin.gif',
+  mapName: map.name,
+  mapImage: map?.image,
   footerIcon: interaction.user.displayAvatarURL({
     dynamic: true,
     size: 32
