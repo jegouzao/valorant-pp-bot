@@ -1846,43 +1846,88 @@ function buildRulesEmbed() {
     .setColor(EMBED_COLOR);
 }
 
-function getVisualWidth(text) {
+function getDiscordVisualWidth(text, guild) {
+  if (!text) return 0;
+
   let width = 0;
 
   const parts = text.match(
-    /<@!?\d+>|<a?:\w+:\d+>|[^\s]+|\s+/g
+    /<@!?\d+>|<a?:\w+:\d+>|./gu
   ) || [];
 
   for (const part of parts) {
-    if (/^<@!?\d+>$/.test(part)) {
-      width += 12;
+
+    // Mention utilisateur
+    const mentionMatch = part.match(/^<@!?(\d+)>$/);
+
+    if (mentionMatch) {
+      const member = guild.members.cache.get(mentionMatch[1]);
+
+      const name = member
+        ? `@${member.displayName}`
+        : '@Utilisateur';
+
+      for (const char of name) {
+        if ('ilIjtfr1.,\'`|!:'.includes(char)) {
+          width += 0.45;
+        } else if ('MW@#%&'.includes(char)) {
+          width += 1.15;
+        } else if (/[A-ZÀ-Ü]/.test(char)) {
+          width += 0.85;
+        } else if (/[0-9]/.test(char)) {
+          width += 0.75;
+        } else {
+          width += 0.72;
+        }
+      }
+
       continue;
     }
 
+    // Emoji custom Discord
     if (/^<a?:\w+:\d+>$/.test(part)) {
-      width += 3;
+      width += 2.15;
       continue;
     }
 
-    if (/^\s+$/.test(part)) {
-      width += part.length * 0.5;
+    // Espaces normaux
+    if (part === ' ') {
+      width += 0.42;
       continue;
     }
 
-    width += part.length * 0.75;
+    // Caractères classiques
+    if ('ilIjtfr1.,\'`|!:'.includes(part)) {
+      width += 0.45;
+    } else if ('MW@#%&'.includes(part)) {
+      width += 1.15;
+    } else if (/[A-ZÀ-Ü]/.test(part)) {
+      width += 0.85;
+    } else {
+      width += 0.72;
+    }
   }
 
   return width;
 }
 
-function padTeamLine(left, right) {
+
+function padTeamLine(left, right, guild) {
   const COLUMN_TARGET = 25;
 
-  const currentWidth = getVisualWidth(left);
+  const leftWidth = getDiscordVisualWidth(
+    left,
+    guild
+  );
+
+  const FULL_SPACE_WIDTH = 1.75;
 
   const spacesNeeded = Math.max(
     2,
-    Math.round(COLUMN_TARGET - currentWidth)
+    Math.round(
+      (COLUMN_TARGET - leftWidth) /
+      FULL_SPACE_WIDTH
+    )
   );
 
   return `${left}${'　'.repeat(spacesNeeded)}${right}`;
@@ -1894,7 +1939,8 @@ function buildInGameContainer({
   defendersText,
   mapName,
   mapImage,
-  footerText
+  footerText,
+  guild
 }) {
   const attackers = String(attackersText || '')
     .split('\n')
@@ -1918,9 +1964,8 @@ function buildInGameContainer({
     const defender = defenders[i] || '';
 
     teamLines.push(
-      padTeamLine(attacker, defender)
-    );
-  }
+  padTeamLine(attacker, defender, guild)
+);
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
@@ -3036,7 +3081,8 @@ const gameContainer = buildInGameContainer({
   defendersText,
   mapName: game.mapName,
   mapImage: game.mapImage,
-  footerText: interaction.member.displayName
+  footerText: interaction.member.displayName,
+  guild: interaction.guild
 });
 
 
