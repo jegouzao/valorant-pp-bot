@@ -1917,7 +1917,7 @@ function normalizePlayerLine(text, guild) {
 
 
 function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 22.5;
+  const COLUMN_TARGET = 19.5;
   const FULL_SPACE_WIDTH = 1.35;
 
   const normalizedLeft = left || '';
