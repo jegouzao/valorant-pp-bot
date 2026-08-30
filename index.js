@@ -1595,7 +1595,7 @@ const statsContainer = new ContainerBuilder()
       `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ : **#${position}**　` +
       `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ : **${stats.rr}<:VIDE:1541125087384829962>**　` +
       `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ : **${winrate}<:VIDE:1541167342535319603>%**\n` +
-      `### ${progressBar}\n` +
+      `-# ${progressBar}\n` +
       `### <:VIDE:1472667851239456935> ${stats.games} ᴘᴀʀᴛɪᴇꜱ　` +
       `<:VIDE:1493266372954820741> ${stats.wins} ᴠɪᴄᴛᴏɪʀᴇꜱ　` +
       `<:VIDE:1472667823875559708> ${invitesData.invites} ɪɴᴠɪᴛᴇꜱ　` +
