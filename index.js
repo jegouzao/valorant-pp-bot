@@ -1942,8 +1942,8 @@ if (normalizedRight) {
       guild
     );
 
-    const RIGHT_PREFIX_TARGET = 4.5;
-    const NORMAL_SPACE_WIDTH = 0.42;
+    const RIGHT_PREFIX_TARGET = 6.5;
+const NORMAL_SPACE_WIDTH = 0.42;
 
     const padding = Math.max(
       1,
