@@ -1142,15 +1142,35 @@ function buildInGameContainer({
 
   const teamLines = [];
 
-  for (let i = 0; i < maxPlayers; i++) {
+const COLUMN_WIDTH = 34;
 
-    const attacker = attackers[i] || ' ';
-    const defender = defenders[i] || ' ';
+function getVisibleLength(text) {
+  return text
+    .replace(/<@!?\d+>/g, '@XXXXXXXXXXXX')
+    .replace(/<a?:\w+:\d+>/g, '██')
+    .replace(/\*\*/g, '')
+    .length;
+}
 
-    teamLines.push(
-      `${attacker}　　　　　　　　　${defender}`
-    );
-  }
+function padTeamLine(left, right) {
+  const visibleLength = getVisibleLength(left);
+
+  const spacesNeeded = Math.max(
+    3,
+    COLUMN_WIDTH - visibleLength
+  );
+
+  return `${left}${'　'.repeat(spacesNeeded)}${right}`;
+}
+
+for (let i = 0; i < maxPlayers; i++) {
+  const attacker = attackers[i] || '';
+  const defender = defenders[i] || '';
+
+  teamLines.push(
+    padTeamLine(attacker, defender)
+  );
+}
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
