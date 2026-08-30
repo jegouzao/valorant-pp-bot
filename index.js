@@ -3850,8 +3850,7 @@ client.on('guildMemberAdd', async member => {
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> ACCÈS RESTREINT\n` +
           `-# ${member}\n` +
-          `-# ᴛᴏɴ ᴄᴏᴍᴘᴛᴇ ᴅɪꜱᴄᴏʀᴅ ᴀ ꜱᴇᴜʟᴇᴍᴇɴᴛ **${accountAgeDays} ᴊᴏᴜʀꜱ**\n` +
-          `-# ᴛᴜ ᴘᴏᴜʀʀᴀꜱ ᴛᴏᴜᴊᴏᴜʀꜱ ᴏᴜᴠʀɪʀ ᴜɴ ᴛɪᴄᴋᴇᴛ`
+          `-# ᴛᴏɴ ᴄᴏᴍᴘᴛᴇ ᴅɪꜱᴄᴏʀᴅ ᴀ ꜱᴇᴜʟᴇᴍᴇɴᴛ **${accountAgeDays} ᴊᴏᴜʀꜱ**`
         )
       )
       .setThumbnailAccessory(
