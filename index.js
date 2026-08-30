@@ -1911,18 +1911,61 @@ function getDiscordVisualWidth(text, guild) {
   return width;
 }
 
+function normalizePlayerLine(text, guild) {
+  if (!text) return '';
 
-function padTeamLine(left, right, guild) {
-const COLUMN_TARGET = 28;
-  const FULL_SPACE_WIDTH = 1.35;
+  const mentionMatch = text.match(/<@!?\d+>/);
 
-  // Ligne sans joueur à gauche
-  if (!left) {
-  return `${'　'.repeat(20)}${right}`;
+  if (!mentionMatch) return text;
+
+  const mention = mentionMatch[0];
+  const mentionIndex = text.indexOf(mention);
+
+  const beforeMention = text
+    .slice(0, mentionIndex)
+    .trimEnd();
+
+  const afterMention = text
+    .slice(mentionIndex + mention.length);
+
+  const PREFIX_TARGET = 5.2;
+
+  const prefixWidth = getDiscordVisualWidth(
+    beforeMention,
+    guild
+  );
+
+  const spacesNeeded = Math.max(
+    1,
+    Math.round(
+      (PREFIX_TARGET - prefixWidth) / 0.42
+    )
+  );
+
+  return `${beforeMention}${' '.repeat(spacesNeeded)}${mention}${afterMention}`;
 }
 
-  const leftWidth = getDiscordVisualWidth(
+
+function padTeamLine(left, right, guild) {
+  const COLUMN_TARGET = 28;
+  const FULL_SPACE_WIDTH = 1.35;
+
+  const normalizedLeft = normalizePlayerLine(
     left,
+    guild
+  );
+
+  const normalizedRight = normalizePlayerLine(
+    right,
+    guild
+  );
+
+  if (!normalizedLeft) {
+    return `${'　'.repeat(20)}${normalizedRight}`;
+  }
+
+  const leftWidth = getDiscordVisualWidth(
+    normalizedLeft,
     guild
   );
 
@@ -1934,7 +1977,7 @@ const COLUMN_TARGET = 28;
     )
   );
 
-  return `${left}${'　'.repeat(spacesNeeded)}${right}`;
+  return `${normalizedLeft}${'　'.repeat(spacesNeeded)}${normalizedRight}`;
 }
 
 
@@ -3228,15 +3271,32 @@ await interaction.editReply('✅ Partie lancée');
             await deleteGame(game.id);
 
   
+console.log('RESULT STEP 1');
+
+const formattedAttackers = await formatPlayers(attackers);
+console.log('RESULT STEP 2', formattedAttackers);
+
+const formattedDefenders = await formatPlayers(defenders);
+console.log('RESULT STEP 3', formattedDefenders);
+
 
 const resultContainer = buildResultContainer({
-  attackers: await formatPlayers(attackers),
-  defenders: await formatPlayers(defenders),
+  attackers: formattedAttackers,
+  defenders: formattedDefenders,
   mapName: game.mapName,
   mapImage: game.mapImage,
   validatedBy: interaction.member.displayName,
   winningSide
 });
+
+console.log('RESULT STEP 4');
+
+await interaction.channel.send({
+  components: [resultContainer],
+  flags: MessageFlags.IsComponentsV2
+}).catch(console.error);
+
+console.log('RESULT STEP 5');
 
 await interaction.channel.send({
   components: [resultContainer],
