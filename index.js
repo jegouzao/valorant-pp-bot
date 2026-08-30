@@ -3041,11 +3041,6 @@ const gameContainer = buildInGameContainer({
   footerText: interaction.member.displayName
 });
 
-const gameContainer = buildInGameContainer({
-  mapName: game.mapName,
-  mapImage: game.mapImage,
-  footerText: interaction.member.displayName
-});
 
 const buttons = new ActionRowBuilder().addComponents(
 
@@ -3078,10 +3073,11 @@ const inGameMsg = await interaction.channel.send({
   flags: MessageFlags.IsComponentsV2
 });
 
-          game.manageMessageId = inGameMsg.id;
+game.manageMessageId = inGameMsg.id;
 await saveGame(game);
-
 await interaction.editReply('✅ Partie lancée');
+
+
           break;
         }
 
