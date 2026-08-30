@@ -1269,7 +1269,7 @@ const ONBOARDING_TOPICS = [
   { value: 'jouer', label: 'Comment jouer une PP', emoji: { name: '2', id: '1493046369076777110' }},
   { value: 'reglement', label: 'Règlement du serveur', emoji: { name: '3', id: '1466611512646045739' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
-  { value: 'signaler', label: 'Notifications PP    •    Contact', emoji: { name: '7E', id: '1493378160639741992' }}];
+  { value: 'signaler', label: 'Régler les notifications', emoji: { name: '7E', id: '1493378160639741992' }}];
 
 function buildOnboardingContainer() {
   return new ContainerBuilder()
@@ -1277,8 +1277,8 @@ function buildOnboardingContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n` +
-        `-# Sélectionne une rubrique ci-dessous pour accéder aux informations du serveur.`
+        `## <:Roles:1493046347337699499> ACCUEIL — VALORANT PP\n` +
+        `-# Retrouve ici toutes les informations utiles du serveur ou contacte directement l'équipe.`
       )
     )
 
@@ -1290,8 +1290,19 @@ function buildOnboardingContainer() {
     )
 
     .addActionRowComponents(
-      buildOnboardingSelectRow()
-    );
+  new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('open_onboarding_menu')
+      .setLabel('Demander à Boombot…')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('open_ticket')
+      .setLabel('Ouvrir un ticket')
+      .setEmoji('1466470365269070026')
+      .setStyle(ButtonStyle.Secondary)
+  )
+);
 }
 
 function buildOnboardingSelectRow() {
@@ -1997,6 +2008,30 @@ function buildResultContainer({
 // ===== Interaction Handler =====
 client.on('interactionCreate', async (interaction) => {
   try {
+
+    if (
+  interaction.isButton() &&
+  interaction.customId === 'open_onboarding_menu'
+) {
+  const menuContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:Roles:1493046347337699499> DEMANDER À BOOMBOT\n` +
+        `-# Sélectionne une rubrique ci-dessous pour accéder aux informations du serveur.`
+      )
+    )
+
+    .addActionRowComponents(
+      buildOnboardingSelectRow()
+    );
+
+  return interaction.reply({
+    components: [menuContainer],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+  });
+}
 
     const MOD_ROLE_ID = '1461348856100028439';
     const VERIFIED_ROLE_ID = '1461354176931041312';
