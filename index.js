@@ -1960,14 +1960,15 @@ function buildInGameContainer({
   const teamLines = [];
 
   for (let i = 0; i < maxPlayers; i++) {
-    const attacker = attackers[i] || '';
-    const defender = defenders[i] || '';
+  const attacker = attackers[i] || '';
+  const defender = defenders[i] || '';
 
-    teamLines.push(
-  padTeamLine(attacker, defender, guild)
-);
+  teamLines.push(
+    padTeamLine(attacker, defender, guild)
+  );
+}
 
-  const container = new ContainerBuilder()
+const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
     .addSectionComponents(
