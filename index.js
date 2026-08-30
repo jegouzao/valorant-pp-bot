@@ -1577,23 +1577,23 @@ if (choice === 'stats') {
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1493266536813690970> POSITION  **#${position}**\n` +
-      `### <:VIDE:1472667816468418631> POINTS  **${stats.rr} RR**\n` +
-      `### <:VIDE:1493266679504048148> WINRATE  **${winrate}%**`
+      `<:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**` +
+      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**` +
+      `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**`
     )
   )
 
   .addSeparatorComponents(
     new SeparatorBuilder()
   )
-
+  
   // ── STATS SECONDAIRES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:VIDE:1472667851239456935> **PARTIES**  ${stats.games}　　` +
-      `<:VIDE:1493266372954820741> **VICTOIRES**  ${stats.wins}\n` +
-      `<:VIDE:1472667823875559708> **INVITES**  ${invitesData.invites}　　` +
-      `<:VIDE:1493378253446975619> **TIMEOUTS**  ${stats.timeouts || 0}`
+      `<:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　　` +
+      `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}\n` +
+      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　　` +
+      `<:VIDE:1493378253446975619> ᴀᴠᴇʀᴛɪꜱꜱᴇᴍᴇɴᴛꜱ  ${stats.timeouts || 0}`
     )
   )
 
@@ -1604,7 +1604,7 @@ if (choice === 'stats') {
   // ── RÔLES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### RÔLES\n${roleNames}`
+      `ʀᴏʟᴇꜱ\n${roleNames}`
     )
   );
 
