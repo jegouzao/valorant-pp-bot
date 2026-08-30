@@ -1187,6 +1187,11 @@ teamLines.join('\n')
       )
     )
 
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
 .addMediaGalleryComponents(
   new MediaGalleryBuilder()
     .addItems(
