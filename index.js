@@ -1215,21 +1215,39 @@ container.addSeparatorComponents(
     .setSpacing(SeparatorSpacingSize.Large)
 );
 
-const paginationRow = new ActionRowBuilder().addComponents(
-  new ButtonBuilder()
-    .setCustomId(`leaderboard_page_${page - 1}`)
-    .setEmoji('⬅️')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(page === 0),
+if (page === 0) {
 
-  new ButtonBuilder()
-    .setCustomId(`leaderboard_page_${page + 1}`)
-    .setEmoji('➡️')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(page >= totalPages - 1)
-);
+  // Page publique : un seul bouton
+  const openLeaderboardRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('leaderboard_open')
+      .setLabel('Classement complet')
+      .setStyle(ButtonStyle.Secondary)
+  );
 
-container.addActionRowComponents(paginationRow);
+  container.addActionRowComponents(openLeaderboardRow);
+
+} else {
+
+  // Pages privées : navigation
+  const paginationRow = new ActionRowBuilder().addComponents(
+
+    new ButtonBuilder()
+      .setCustomId(`leaderboard_page_${page - 1}`)
+      .setEmoji({ id: '1543638363125588098' })
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 1),
+
+    new ButtonBuilder()
+      .setCustomId(`leaderboard_page_${page + 1}`)
+      .setEmoji({ id: '1543638348248121538' })
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= totalPages - 1)
+
+  );
+
+  container.addActionRowComponents(paginationRow);
+}
 
   return container;
 }
@@ -1894,21 +1912,27 @@ client.on('interactionCreate', async (interaction) => {
     // ✅ Boutons hors "game" (doivent répondre vite)
     if (interaction.isButton()) {
 
-      if (interaction.customId.startsWith('leaderboard_page_')) {
+if (
+  interaction.customId === 'leaderboard_open' ||
+  interaction.customId.startsWith('leaderboard_page_')
+) {
 
-  const page = parseInt(
-    interaction.customId.replace('leaderboard_page_', ''),
-    10
-  );
+  // "Classement complet" ouvre directement #11 à #20
+  const page = interaction.customId === 'leaderboard_open'
+    ? 1
+    : parseInt(
+        interaction.customId.replace('leaderboard_page_', ''),
+        10
+      );
 
-  if (isNaN(page) || page < 0) return;
+  if (isNaN(page) || page < 1) return;
 
   const guild = interaction.guild;
 
   await guild.members.fetch().catch(() => {});
 
+  // ── INVITATIONS ──
   const invitesData = await getAllInvites();
-
   const totalInvitesPerMember = {};
 
   for (const inviterId in invitesData) {
@@ -1916,12 +1940,14 @@ client.on('interactionCreate', async (interaction) => {
       invitesData[inviterId].invites || 0;
   }
 
+  // ── POINTS ──
   const pointsData = await getAllPoints();
 
   const activePlayers = Object.entries(pointsData).filter(([id]) =>
     guild.members.cache.has(id)
   );
 
+  // ── CLASSEMENT ──
   const sorted = activePlayers.sort(([idA, a], [idB, b]) => {
 
     // RR
@@ -1940,7 +1966,7 @@ client.on('interactionCreate', async (interaction) => {
     const winrateDiff = winrateB - winrateA;
     if (winrateDiff !== 0) return winrateDiff;
 
-    // INVITES
+    // INVITATIONS
     const invitesA = totalInvitesPerMember[idA] || 0;
     const invitesB = totalInvitesPerMember[idB] || 0;
 
@@ -1951,10 +1977,7 @@ client.on('interactionCreate', async (interaction) => {
     return (a.timeouts || 0) - (b.timeouts || 0);
   });
 
-  const currentMembers =
-    guild.members.cache.filter(member => !member.user.bot).size;
-
-  const playerCount = Math.round(currentMembers * 0.85);
+  const playerCount = activePlayers.length;
 
   const container = buildLeaderboardContainer({
     sorted,
@@ -1964,9 +1987,8 @@ client.on('interactionCreate', async (interaction) => {
     page
   });
 
-  // Depuis le leaderboard PUBLIC :
-  // on ouvre une navigation privée.
-  if (!interaction.message.flags.has(MessageFlags.Ephemeral)) {
+  // Premier clic depuis le leaderboard public
+  if (interaction.customId === 'leaderboard_open') {
     return interaction.reply({
       components: [container],
       flags:
@@ -1978,8 +2000,7 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
-  // Depuis une page déjà éphémère :
-  // on remplace simplement cette page.
+  // Navigation dans le classement éphémère
   return interaction.update({
     components: [container],
     allowedMentions: {
