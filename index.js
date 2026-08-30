@@ -1078,7 +1078,8 @@ function buildLeaderboardContainer({
   totalInvitesPerMember,
   guildMembersCache,
   playerCount,
-  seasonLabel = 'Saison 1'
+  seasonLabel = 'Saison 1',
+  page = 0
 }) {
 
   if (!sorted.length) {
@@ -1107,7 +1108,20 @@ function buildLeaderboardContainer({
   const maxRR = sorted[0][1].rr || 1;
   const barLength = 35;
 
-  const lines = sorted.map(([id, data], idx) => {
+  const playersPerPage = 10;
+const totalPages = Math.max(1, Math.ceil(sorted.length / playersPerPage));
+
+page = Math.max(0, Math.min(page, totalPages - 1));
+
+const startIndex = page * playersPerPage;
+const pagePlayers = sorted.slice(
+  startIndex,
+  startIndex + playersPerPage
+);
+
+  const lines = pagePlayers.map(([id, data], idx) => {
+
+  const globalIndex = startIndex + idx;
 
     const invites = totalInvitesPerMember[id] || 0;
 
@@ -1137,7 +1151,7 @@ function buildLeaderboardContainer({
     // ── BADGES ──
     let badges = '';
 
-    if (idx === 0) {
+    if (globalIndex === 0) {
       badges += `${BADGES.TOP1}`;
     }
 
@@ -1146,7 +1160,7 @@ function buildLeaderboardContainer({
     }
 
     return (
-  ` **#${idx + 1}**   <@${id}>  ${rankEmoji ? rankEmoji + '' : ''}${badges}  ` +
+  ` **#${globalIndex + 1}**   <@${id}>  ${rankEmoji ? rankEmoji + '' : ''}${badges}  ` +
   `  **${data.rr || 0}**<:VIDE:1541125087384829962> ` +
   `  **${winrate}**<:VIDE:1541167342535319603>**%**   ` +
   `  **${games}**<:VIDE:1472667851239456935>  ` +
@@ -1195,6 +1209,22 @@ function buildLeaderboardContainer({
   );
 }
 }
+
+const paginationRow = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId(`leaderboard_page_${page - 1}`)
+    .setEmoji('⬅️')
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page === 0),
+
+  new ButtonBuilder()
+    .setCustomId(`leaderboard_page_${page + 1}`)
+    .setEmoji('➡️')
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page >= totalPages - 1)
+);
+
+container.addActionRowComponents(paginationRow);
 
   return container;
 }
@@ -1463,8 +1493,7 @@ const sorted = activePlayers
     const timeoutsB = b.timeouts || 0;
 
     return timeoutsA - timeoutsB;
-  })
-  .slice(0, 10);
+  });
 
 const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
 const playerCount = Math.round(currentMembers * 0.85);
@@ -1472,7 +1501,8 @@ const container = buildLeaderboardContainer({
   sorted,
   totalInvitesPerMember,
   guildMembersCache: guild?.members?.cache || null,
-  playerCount
+  playerCount,
+  page: 0
 });
 
 // ── ANCIEN MESSAGE : on ne tente PAS de le convertir ──
@@ -1858,6 +1888,100 @@ client.on('interactionCreate', async (interaction) => {
 
     // ✅ Boutons hors "game" (doivent répondre vite)
     if (interaction.isButton()) {
+
+      if (interaction.customId.startsWith('leaderboard_page_')) {
+
+  const page = parseInt(
+    interaction.customId.replace('leaderboard_page_', ''),
+    10
+  );
+
+  if (isNaN(page) || page < 0) return;
+
+  const guild = interaction.guild;
+
+  await guild.members.fetch().catch(() => {});
+
+  const invitesData = await getAllInvites();
+
+  const totalInvitesPerMember = {};
+
+  for (const inviterId in invitesData) {
+    totalInvitesPerMember[inviterId] =
+      invitesData[inviterId].invites || 0;
+  }
+
+  const pointsData = await getAllPoints();
+
+  const activePlayers = Object.entries(pointsData).filter(([id]) =>
+    guild.members.cache.has(id)
+  );
+
+  const sorted = activePlayers.sort(([idA, a], [idB, b]) => {
+
+    // RR
+    const rrDiff = (b.rr || 0) - (a.rr || 0);
+    if (rrDiff !== 0) return rrDiff;
+
+    // WINRATE
+    const winrateA = (a.games || 0)
+      ? (a.wins || 0) / a.games
+      : 0;
+
+    const winrateB = (b.games || 0)
+      ? (b.wins || 0) / b.games
+      : 0;
+
+    const winrateDiff = winrateB - winrateA;
+    if (winrateDiff !== 0) return winrateDiff;
+
+    // INVITES
+    const invitesA = totalInvitesPerMember[idA] || 0;
+    const invitesB = totalInvitesPerMember[idB] || 0;
+
+    const invitesDiff = invitesB - invitesA;
+    if (invitesDiff !== 0) return invitesDiff;
+
+    // TIMEOUTS
+    return (a.timeouts || 0) - (b.timeouts || 0);
+  });
+
+  const currentMembers =
+    guild.members.cache.filter(member => !member.user.bot).size;
+
+  const playerCount = Math.round(currentMembers * 0.85);
+
+  const container = buildLeaderboardContainer({
+    sorted,
+    totalInvitesPerMember,
+    guildMembersCache: guild.members.cache,
+    playerCount,
+    page
+  });
+
+  // Depuis le leaderboard PUBLIC :
+  // on ouvre une navigation privée.
+  if (!interaction.message.flags.has(MessageFlags.Ephemeral)) {
+    return interaction.reply({
+      components: [container],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2,
+      allowedMentions: {
+        parse: []
+      }
+    });
+  }
+
+  // Depuis une page déjà éphémère :
+  // on remplace simplement cette page.
+  return interaction.update({
+    components: [container],
+    allowedMentions: {
+      parse: []
+    }
+  });
+}
 
       if (interaction.customId === 'open_ticket') {
         const modal = new ModalBuilder().setCustomId('ticket_reason_modal').setTitle('Ouvrir un ticket');
