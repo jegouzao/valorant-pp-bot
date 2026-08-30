@@ -8,7 +8,6 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const gamesFile = path.join(dataDir, 'games.json');
 if (!fs.existsSync(gamesFile)) fs.writeFileSync(gamesFile, JSON.stringify({ games: [] }, null, 2));
 
-const { createCanvas } = require('@napi-rs/canvas');
 
 
 const Points = require('./models/Points');
@@ -83,7 +82,6 @@ const {
   SectionBuilder,
   ThumbnailBuilder,
 
-  AttachmentBuilder,
 
   Events,
 } = require('discord.js');
@@ -1888,88 +1886,8 @@ function padTeamLine(left, right) {
   );
 
   return `${left}${'　'.repeat(spacesNeeded)}${right}`;
-} 
-
-
-function createTeamsImage(attackers, defenders) {
-  const WIDTH = 900;
-  const ROW_HEIGHT = 46;
-  const PADDING_TOP = 20;
-  const MAX_PLAYERS = Math.max(attackers.length, defenders.length);
-
-  const HEIGHT = Math.max(
-    120,
-    PADDING_TOP * 2 + MAX_PLAYERS * ROW_HEIGHT
-  );
-
-  const canvas = createCanvas(WIDTH, HEIGHT);
-  const ctx = canvas.getContext('2d');
-
-  // Fond transparent
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-  ctx.font = '600 21px Arial';
-  ctx.textBaseline = 'middle';
-
-  const LEFT_X = 25;
-  const LEFT_RR_X = 330;
-
-  const RIGHT_X = 475;
-  const RIGHT_RR_X = 780;
-
-  const formatName = player => {
-    if (!player) return '';
-    return `@${player.displayName}`;
-  };
-
-  for (let i = 0; i < MAX_PLAYERS; i++) {
-    const y =
-      PADDING_TOP +
-      i * ROW_HEIGHT +
-      ROW_HEIGHT / 2;
-
-    const attacker = attackers[i];
-    const defender = defenders[i];
-
-    if (attacker) {
-      ctx.fillStyle = '#e8e8ea';
-
-      ctx.textAlign = 'left';
-      ctx.fillText(
-        formatName(attacker),
-        LEFT_X,
-        y
-      );
-
-      ctx.textAlign = 'right';
-      ctx.fillText(
-        attacker.rrText || '',
-        LEFT_RR_X,
-        y
-      );
-    }
-
-    if (defender) {
-      ctx.fillStyle = '#e8e8ea';
-
-      ctx.textAlign = 'left';
-      ctx.fillText(
-        formatName(defender),
-        RIGHT_X,
-        y
-      );
-
-      ctx.textAlign = 'right';
-      ctx.fillText(
-        defender.rrText || '',
-        RIGHT_RR_X,
-        y
-      );
-    }
-  }
-
-  return canvas.toBuffer('image/png');
 }
+
 
 function buildInGameContainer({
   attackersText,
@@ -1978,6 +1896,32 @@ function buildInGameContainer({
   mapImage,
   footerText
 }) {
+  const attackers = String(attackersText || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const defenders = String(defendersText || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const maxPlayers = Math.max(
+    attackers.length,
+    defenders.length
+  );
+
+  const teamLines = [];
+
+  for (let i = 0; i < maxPlayers; i++) {
+    const attacker = attackers[i] || '';
+    const defender = defenders[i] || '';
+
+    teamLines.push(
+      padTeamLine(attacker, defender)
+    );
+  }
+
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
@@ -1992,8 +1936,7 @@ function buildInGameContainer({
           )
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(mapImage)
+          new ThumbnailBuilder().setURL(mapImage)
         )
     )
 
@@ -2002,10 +1945,9 @@ function buildInGameContainer({
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
-    .addMediaGalleryComponents(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder()
-          .setURL('attachment://teams.png')
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        teamLines.join('\n')
       )
     )
 
@@ -3088,20 +3030,16 @@ const formatPlayers = async (ids) => {
 };
 
 
-const formattedAttackers = await formatPlayers(game.attackers);
-const formattedDefenders = await formatPlayers(game.defenders);
+const attackersText = sortTeamByRank(game.attackers);
+const defendersText = sortTeamByRank(game.defenders);
 
-const teamsBuffer = createTeamsImage(
-  formattedAttackers,
-  formattedDefenders
-);
-
-const teamsAttachment = new AttachmentBuilder(
-  teamsBuffer,
-  {
-    name: 'teams.png'
-  }
-);
+const gameContainer = buildInGameContainer({
+  attackersText,
+  defendersText,
+  mapName: game.mapName,
+  mapImage: game.mapImage,
+  footerText: interaction.member.displayName
+});
 
 const gameContainer = buildInGameContainer({
   mapName: game.mapName,
@@ -3137,7 +3075,6 @@ gameContainer.addActionRowComponents(buttons);
 
 const inGameMsg = await interaction.channel.send({
   components: [gameContainer],
-  files: [teamsAttachment],
   flags: MessageFlags.IsComponentsV2
 });
 
