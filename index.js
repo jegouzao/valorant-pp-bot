@@ -1182,7 +1182,7 @@ function buildInGameContainer({
     // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ　　　　　　　　　　　　ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
+        `### ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ　　　　　　　　　　　　ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
 teamLines.join('\n')
       )
     )
@@ -2856,24 +2856,22 @@ const buttons = new ActionRowBuilder().addComponents(
     .setCustomId('spectate')
     .setLabel('Observer')
     .setEmoji('1493378513791615076')
-    .setStyle(ButtonStyle.Secondary),
+    .setStyle(ButtonStyle.Success),
 
   new ButtonBuilder()
   .setCustomId('attack_win')
-  .setLabel('ATTAQUANTS')
-  .setEmoji('1493266372954820741')
-  .setStyle(ButtonStyle.Danger),
+  .setLabel('Attaquants')
+  .setStyle(ButtonStyle.Secondary),
 
 new ButtonBuilder()
   .setCustomId('defense_win')
-  .setLabel('DÉFENSEURS')
-  .setEmoji('1493266372954820741')
-  .setStyle(ButtonStyle.Success),
+  .setLabel('Défenseurs')
+  .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('cancel_game')
     .setLabel('Annuler')
-    .setStyle(ButtonStyle.Danger)
+    .setStyle(ButtonStyle.Secondary)
 );
 
 gameContainer.addActionRowComponents(buttons);
