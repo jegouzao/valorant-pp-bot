@@ -1144,32 +1144,50 @@ function buildInGameContainer({
 
 const COLUMN_WIDTH = 34;
 
-function getVisibleLength(text) {
-  return text
-    .replace(/<@!?\d+>/g, '@XXXXXXXXXXXX')
-    .replace(/<a?:\w+:\d+>/g, '██')
-    .replace(/\*\*/g, '')
-    .length;
+function getVisualWidth(text) {
+  let width = 0;
+
+  const parts = text.match(
+    /<@!?\d+>|<a?:\w+:\d+>|[^\s]+|\s+/g
+  ) || [];
+
+  for (const part of parts) {
+    // Mention Discord
+    if (/^<@!?\d+>$/.test(part)) {
+      width += 12;
+      continue;
+    }
+
+    // Emoji custom Discord
+    if (/^<a?:\w+:\d+>$/.test(part)) {
+      width += 3;
+      continue;
+    }
+
+    // Espaces
+    if (/^\s+$/.test(part)) {
+      width += part.length * 0.5;
+      continue;
+    }
+
+    // Texte normal / RR
+    width += part.length * 0.75;
+  }
+
+  return width;
 }
 
 function padTeamLine(left, right) {
-  const visibleLength = getVisibleLength(left);
+  const COLUMN_TARGET = 25;
+
+  const currentWidth = getVisualWidth(left);
 
   const spacesNeeded = Math.max(
-    3,
-    COLUMN_WIDTH - visibleLength
+    2,
+    Math.round(COLUMN_TARGET - currentWidth)
   );
 
   return `${left}${'　'.repeat(spacesNeeded)}${right}`;
-}
-
-for (let i = 0; i < maxPlayers; i++) {
-  const attacker = attackers[i] || '';
-  const defender = defenders[i] || '';
-
-  teamLines.push(
-    padTeamLine(attacker, defender)
-  );
 }
 
   const container = new ContainerBuilder()
@@ -1240,13 +1258,13 @@ function buildResultContainer({
   const teamLines = [];
 
   for (let i = 0; i < maxPlayers; i++) {
-    const attacker = attackers[i] || ' ';
-    const defender = defenders[i] || ' ';
+  const attacker = attackers[i] || '';
+  const defender = defenders[i] || '';
 
-    teamLines.push(
-      `${attacker}　　　　　　　　　${defender}`
-    );
-  }
+  teamLines.push(
+    padTeamLine(attacker, defender)
+  );
+}
 
   const winnerText =
     winningSide === 'attack'
