@@ -1577,12 +1577,12 @@ if (choice === 'stats') {
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　　　` +
-      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　　　` +
+      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　　` +
+      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　　` +
       `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**\n` +
-      `<:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　　` +
-      `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　　` +
-      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　　` +
+      `### <:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　` +
+      `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　` +
+      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　` +
       `<:VIDE:1493378253446975619> ᴀᴠᴇʀᴛɪꜱꜱᴇᴍᴇɴᴛꜱ  ${stats.timeouts || 0}`
     )
   )
