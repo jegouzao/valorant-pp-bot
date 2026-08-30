@@ -1122,6 +1122,7 @@ function buildAnnounceContainer({
 function buildInGameContainer({
   attackersText,
   defendersText,
+  mapName,
   mapImage,
   footerIcon,
   footerText
@@ -1130,19 +1131,11 @@ function buildInGameContainer({
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
-    // ── HEADER + AVATAR ──
-    .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE EN COURS\n` +
-            `-# ${footerText}`
-          )
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(footerIcon)
-        )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
+        `-# ${footerText}`
+      )
     )
 
     .addSeparatorComponents(
@@ -1152,29 +1145,20 @@ function buildInGameContainer({
 
     // ── ATTAQUANTS ──
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ\n` +
-        `${attackersText}`
-      )
-    )
+  new TextDisplayBuilder().setContent(
+    `<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ\n` +
+    `${attackersText}`
+  )
+)
 
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
+.addSeparatorComponents(...)
 
-    // ── DÉFENSEURS ──
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
-        `${defendersText}`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    );
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
+    `${defendersText}`
+  )
+)
 
   // ── IMAGE DE LA MAP ──
   if (mapImage) {
@@ -1182,7 +1166,7 @@ function buildInGameContainer({
       new MediaGalleryBuilder()
         .addItems(
           new MediaGalleryItemBuilder()
-            .setURL(mapImage)
+            .setURL('https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a95aa68&is=6a9458e8&hm=f3ca38f4f063667605bb7d934d20f85f89ef673415b6c981dcd00949b95525d5&')
         )
     );
   }
@@ -2839,6 +2823,7 @@ const defendersText = sortTeamByRank(game.defenders);
 const gameContainer = buildInGameContainer({
   attackersText,
   defendersText,
+  mapName: game.mapName,
   mapImage: game.mapImage,
   footerIcon: interaction.user.displayAvatarURL({
     size: 256
