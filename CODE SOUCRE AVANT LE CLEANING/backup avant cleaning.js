@@ -5,6 +5,8 @@ const path = require('path'); // ← mettre path avant son utilisation
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
+const gamesFile = path.join(dataDir, 'games.json');
+if (!fs.existsSync(gamesFile)) fs.writeFileSync(gamesFile, JSON.stringify({ games: [] }, null, 2));
 
 
 
@@ -48,6 +50,9 @@ http.createServer((req, res) => {
 
 
 
+if (!fs.existsSync('./riotData.json')) {
+  fs.writeFileSync('./riotData.json', '{}');
+}
 
 const { 
   Client,
@@ -179,6 +184,29 @@ const SPAM_INTERVAL = 5000; // 5 secondes
 
 const STRIKE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
+const ALLOWED_CLIP_DOMAINS = [
+  'youtube.com',
+  'www.youtube.com',
+  'youtu.be',
+  'm.youtube.com',
+
+  'medal.tv',
+  'www.medal.tv',
+
+  'streamable.com',
+  'www.streamable.com',
+
+  'twitch.tv',
+  'www.twitch.tv',
+  'clips.twitch.tv',
+
+  'tiktok.com',
+  'www.tiktok.com',
+  'vm.tiktok.com',
+
+  'cdn.discordapp.com',
+  'media.discordapp.net'
+];
 
 const SERVER_TAG_ROLE_ID = '1497390571051024615'; // rôle donné quand le membre porte ton tag serveur
 const SERVER_TAG_GUILD_ID = process.env.GUILD_ID;
@@ -256,7 +284,22 @@ function extractUrls(content = '') {
   return content.match(/https?:\/\/[^\s]+/gi) || [];
 }
 
+function normalizeHostname(rawUrl) {
+  try {
+    return new URL(rawUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
 
+function isAllowedClipDomain(url = '') {
+  const hostname = normalizeHostname(url);
+  if (!hostname) return false;
+
+  return ALLOWED_CLIP_DOMAINS.some(domain =>
+    hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+}
 
 function isGifUrl(url = '') {
   const u = url.toLowerCase();
@@ -285,6 +328,32 @@ function isGifUrl(url = '') {
   );
 }
 
+function isAllowedMediaAttachment(att) {
+  const name = (att.name || '').toLowerCase();
+  const contentType = (att.contentType || '').toLowerCase();
+  const url = (att.url || '').toLowerCase();
+
+  // ❌ GIF interdit
+  if (
+    name.endsWith('.gif') ||
+    contentType.includes('gif') ||
+    isGifUrl(url)
+  ) {
+    return false;
+  }
+
+  // ✅ images/vidéos autorisées
+  if (contentType.startsWith('image/')) return true;
+  if (contentType.startsWith('video/')) return true;
+
+  // fallback extensions
+  const allowedExt = [
+    '.png', '.jpg', '.jpeg', '.webp', '.bmp',
+    '.mp4', '.mov', '.webm', '.mkv', '.avi'
+  ];
+
+  return allowedExt.some(ext => name.endsWith(ext));
+}
 
 function messageContainsBlockedGif(message) {
   const urls = extractUrls(message.content);
@@ -307,8 +376,24 @@ function messageContainsBlockedGif(message) {
   return gifInText || gifInAttachments;
 }
 
+function messageHasAllowedWhitelistedLink(message) {
+  const urls = extractUrls(message.content);
+  if (!urls.length) return false;
 
+  return urls.some(url => isAllowedClipDomain(url) && !isGifUrl(url));
+}
 
+function messageHasAllowedAttachment(message) {
+  const attachments = [...message.attachments.values()];
+  return attachments.some(att => isAllowedMediaAttachment(att));
+}
+
+function isValidClipFarmingMessage(message) {
+  return (
+    messageHasAllowedAttachment(message) ||
+    messageHasAllowedWhitelistedLink(message)
+  );
+}
 
 
 const registrationUpdateTimeouts = new Map();
@@ -448,6 +533,8 @@ const WELCOME_CHANNEL_ID = '1474066060528451743';
 
 const ACTIVITIES_CHANNEL_ID = WELCOME_CHANNEL_ID;
 
+const recentBans = new Map();
+const RECENT_BAN_WINDOW_MS = 15000;
 
 async function sendActivityMessage(guild, payload) {
   const channel =
@@ -466,6 +553,8 @@ const EXEMPT_VC_IDS = [
 ];
 
 
+const invitesFile = path.join(__dirname, 'data', 'invites.json');
+if (!fs.existsSync(invitesFile)) fs.writeFileSync(invitesFile, JSON.stringify({}, null, 2));
 const invitesCache = new Map();
 const autoCreateLocks = new Map();
 const gameLocks = {};
@@ -545,23 +634,66 @@ const client = new Client({
   ],
 });
 
+// ===== Storage =====
+const pointsFile = path.join(__dirname, 'data', 'points.json');
+const top15File = path.join(__dirname, 'data', 'top15.json');
 
+if (!fs.existsSync(pointsFile)) fs.writeFileSync(pointsFile, JSON.stringify({}, null, 2));
+if (!fs.existsSync(top15File)) fs.writeFileSync(top15File, JSON.stringify({}, null, 2));
 
+const loadGames = () => JSON.parse(fs.readFileSync(gamesFile, 'utf8'));
+const loadPoints = () => JSON.parse(fs.readFileSync(pointsFile, 'utf8'));
+const loadTop15 = () => JSON.parse(fs.readFileSync(top15File, 'utf8'));
+const loadInvites = () => JSON.parse(fs.readFileSync(invitesFile, 'utf8'));
 
 
 
 // ✅ Variables globales en mémoire
 let gamesData = { games: [] };
+let pointsData = {};
+let invitesData = {};
+let top15Data = {};
 
 
+const moderationFile = path.join(__dirname, 'data', 'moderation.json');
+
+if (!fs.existsSync(moderationFile)) {
+  fs.writeFileSync(
+    moderationFile,
+    JSON.stringify(
+      {
+        bannedUsers: {},
+        flaggedUsers: {}
+      },
+      null,
+      2
+    )
+  );
+}
+
+const loadModeration = () => JSON.parse(fs.readFileSync(moderationFile, 'utf8'));
+
+let moderationData = loadModeration();
+
+function persistModeration() {
+  fs.writeFileSync(moderationFile, JSON.stringify(moderationData, null, 2));
+}
 
 
+// ✅ Fonctions de sauvegarde
+async function persistGames() {
+  for (const game of gamesData.games) {
+    await saveGame(game);
+  }
+}
 
+function persistInvites() {
+  fs.writeFileSync(invitesFile, JSON.stringify(invitesData, null, 2));
+}
 
-
-
-
-
+function persistTop15() {
+  fs.writeFileSync(top15File, JSON.stringify(top15Data, null, 2));
+}
 
 async function getPlayerPoints(userId) {
   let doc = await Points.findOne({ userId });
@@ -608,6 +740,37 @@ async function incrementPlayerTimeouts(userId) {
   );
 }
 
+async function migratePointsJsonToMongo() {
+  const localPoints = loadPoints();
+  const existingCount = await Points.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration points ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localPoints);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun point local à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await Points.updateOne(
+      { userId },
+      {
+        $set: {
+          rr: data.rr ?? 0,
+          games: data.games ?? 0,
+          wins: data.wins ?? 0
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration points.json → MongoDB terminée (${entries.length} joueurs).`);
+}
 
 async function getAllPoints() {
   const docs = await Points.find({});
@@ -670,7 +833,52 @@ async function getAllInvites() {
   return result;
 }
 
+async function migrateInvitesJsonToMongo() {
+  const localInvites = loadInvites();
+  const existingCount = await Invite.countDocuments();
 
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration invites ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localInvites);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun invite local à migrer.');
+    return;
+  }
+
+  for (const [inviterId, data] of entries) {
+    await Invite.updateOne(
+      { inviterId },
+      {
+        $set: {
+          invites: data.invites ?? 0,
+          members: data.members ?? []
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration invites.json → MongoDB terminée (${entries.length} inviteurs).`);
+}
+
+async function getRiotUser(userId) {
+  let doc = await RiotUser.findOne({ userId });
+
+  if (!doc) {
+    doc = await RiotUser.create({
+      userId,
+      pseudo: ''
+    });
+  }
+
+  return {
+    userId: doc.userId,
+    pseudo: doc.pseudo
+  };
+}
 
 async function setRiotUser(userId, data) {
   await RiotUser.updateOne(
@@ -684,7 +892,72 @@ async function setRiotUser(userId, data) {
   );
 }
 
+async function migrateRiotDataJsonToMongo() {
+  const localRiotData = JSON.parse(fs.readFileSync('./riotData.json', 'utf8'));
+  const existingCount = await RiotUser.countDocuments();
 
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration riotData ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const entries = Object.entries(localRiotData);
+  if (!entries.length) {
+    console.log('ℹ️ Aucun riotData local à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await RiotUser.updateOne(
+      { userId },
+      {
+        $set: {
+          pseudo: data.pseudo ?? ''
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration riotData.json → MongoDB terminée (${entries.length} joueurs).`);
+}
+
+async function migrateModerationJsonToMongo() {
+  const localModeration = loadModeration();
+  const existingCount = await Moderation.countDocuments();
+
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration moderation ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const bannedUsers = localModeration.bannedUsers || {};
+  const entries = Object.entries(bannedUsers);
+
+  if (!entries.length) {
+    console.log('ℹ️ Aucune donnée moderation locale à migrer.');
+    return;
+  }
+
+  for (const [userId, data] of entries) {
+    await Moderation.updateOne(
+      { userId },
+      {
+        $set: {
+          userId,
+          banned: true,
+          reason: data.reason ?? '',
+          date: data.date ?? '',
+          riotPseudo: data.riotPseudo ?? '',
+          username: data.username ?? ''
+        }
+      },
+      { upsert: true }
+    );
+  }
+
+  console.log(`✅ Migration moderation.json → MongoDB terminée (${entries.length} bans).`);
+}
 
 
 async function getConfigValue(key, fallback = null) {
@@ -700,11 +973,32 @@ async function setConfigValue(key, value) {
   );
 }
 
+async function migrateTop15JsonToMongo() {
+  const existing = await Config.findOne({ key: 'top15Data' });
+  if (existing) {
+    console.log('ℹ️ Migration top15 ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const localTop15 = loadTop15();
+  await setConfigValue('top15Data', localTop15);
+  console.log('✅ Migration top15.json → MongoDB terminée.');
+}
 
 async function getAllGames() {
   return await Game.find({}).lean();
 }
 
+async function getGameByAnyMessageId(id) {
+  return await Game.findOne({
+    $or: [
+      { id },
+      { messageId: id },
+      { manageMessageId: id },
+      { betMessageId: id }
+    ]
+  });
+}
 
 async function saveGame(gameData) {
   await Game.updateOne(
@@ -718,6 +1012,25 @@ async function deleteGame(gameId) {
   await Game.deleteOne({ id: gameId });
 }
 
+async function migrateGamesJsonToMongo() {
+  const existingCount = await Game.countDocuments();
+  if (existingCount > 0) {
+    console.log('ℹ️ Migration games ignorée : MongoDB contient déjà des données.');
+    return;
+  }
+
+  const localGames = loadGames().games || [];
+  if (!localGames.length) {
+    console.log('ℹ️ Aucun game local à migrer.');
+    return;
+  }
+
+  for (const game of localGames) {
+    await saveGame(game);
+  }
+
+  console.log(`✅ Migration games.json → MongoDB terminée (${localGames.length} parties).`);
+}
 
 
 
@@ -734,6 +1047,12 @@ const BANNERS = {
   onboarding: 'https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&',
 };
 
+function medalFor(index) {
+  if (index === 0) return '🥇';
+  if (index === 1) return '🥈';
+  if (index === 2) return '🥉';
+  return `#${String(index + 1).padStart(2, '0')}`;
+}
 
 // ── Embed Leaderboard ──
 function buildLeaderboardContainer({
@@ -1671,6 +1990,9 @@ function getDiscordVisualWidth(text, guild) {
   return width;
 }
 
+function normalizePlayerLine(text, guild) {
+  return text || '';
+}
 
 
 function padTeamLine(left, right, guild) {
@@ -1680,6 +2002,8 @@ function padTeamLine(left, right, guild) {
   const normalizedLeft = left || '';
 const normalizedRight = right || '';
 
+const RIGHT_PREFIX_TARGET = 4.5;
+const NORMAL_SPACE_WIDTH = 0.42;
 
 if (!normalizedLeft) {
   const blankSpaces = Math.round(
@@ -2924,6 +3248,43 @@ if (TEST_MODE && game.players.length < 1) {
 const defendersText = sortTeamByRank(game.defenders);
 
 
+const formatPlayers = async (ids) => {
+  const data = [];
+
+  for (const id of ids) {
+    const member =
+      interaction.guild.members.cache.get(id) ||
+      await interaction.guild.members.fetch(id).catch(() => null);
+
+    if (!member) continue;
+
+    const rankRole = member.roles?.cache?.find(
+      r => RANK_ORDER[r.name]
+    );
+
+    const rankValue = rankRole
+      ? RANK_ORDER[rankRole.name]
+      : 999;
+
+    const rankEmoji = rankRole
+      ? rankEmojis[rankRole.name]
+      : rankEmojis.Unranked;
+
+    const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
+
+    data.push({
+      id,
+      rankValue,
+      rankEmoji,
+      rrDisplay,
+      displayName: member.displayName
+    });
+  }
+
+  data.sort((a, b) => a.rankValue - b.rankValue);
+
+  return data;
+};
 
 
 
@@ -4178,6 +4539,8 @@ await sendActivityMessage(guild, {
 
 
 const JOUER_CHANNEL_ID = '1461346832591360173';
+const ROLE_ORGANISATEUR_ID = '1461348856100028439';
+const ROLE_NOTIF_PP_ID = '1468458885357502599';
 
 client.on('messageCreate', async (message) => {
   try {
