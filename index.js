@@ -3725,9 +3725,9 @@ client.on('guildMemberAdd', async member => {
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## <:Roles:1493073492856406156> ACCÈS RESTREINT\n` +
+          `## <:Roles:1493073492856406156> COMPTE RESTREINT\n` +
           `-# ${member}\n` +
-          `-# ᴛᴏɴ ᴄᴏᴍᴘᴛᴇ ᴅɪꜱᴄᴏʀᴅ ᴀ ꜱᴇᴜʟᴇᴍᴇɴᴛ **${accountAgeDays} ᴊᴏᴜʀꜱ**`
+          `-# Ton compte a seulement **${accountAgeDays} jours**`
         )
       )
       .setThumbnailAccessory(
@@ -3869,9 +3869,9 @@ const welcomeContainer = new ContainerBuilder()
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n` +
+          `## <:Roles:1493046347337699499> NOUVEAU MEMBRE\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ꜱᴜʀ ᴅɪꜱᴄᴏʀᴅ ᴅᴇᴘᴜɪꜱ : **${accountAge} ᴊᴏᴜʀꜱ**\n` +
+          `-# Actif sur Discord depuis ${accountAge} jours\n` +
           inviterText
         )
       )
@@ -3938,7 +3938,7 @@ client.on('guildMemberRemove', async member => {
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ᴀᴜʀᴀ ᴛᴇɴᴜ **${serverDuration}** ꜱᴜʀ ʟᴇ ꜱᴇʀᴠᴇᴜʀ`
+          `-# aura tenu ${serverDuration} sur le serveur`
         )
       )
       .setThumbnailAccessory(
@@ -3974,7 +3974,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         new TextDisplayBuilder().setContent(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# ʟᴇ ʙᴏɴᴜꜱ ᴠɪᴇɴᴛ ᴅ'ᴇᴛʀᴇ ᴀᴄᴛɪᴠᴇ ᴘᴏᴜʀ ᴛᴇꜱ ᴘʀᴏᴄʜᴀɪɴᴇꜱ ᴠɪᴄᴛᴏɪʀᴇꜱ`
+          `-# Le bonus vient d'être activé`
         )
       )
       .setThumbnailAccessory(
@@ -4002,8 +4002,7 @@ await sendActivityMessage(newMember.guild, {
         new TextDisplayBuilder().setContent(
           `## <:Bonus20:1543305540594045068> BOOST EXPIRÉ\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# ʟᴇ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ ᴀ **ᴇxᴘɪʀᴇ**\n` +
-          `-# ʟᴇ ʙᴏɴᴜꜱ ᴀꜱꜱᴏᴄɪᴇ ᴀᴜ ʙᴏᴏꜱᴛ ᴀ ᴇᴛᴇ ʀᴇᴛɪʀᴇ`
+          `-# Le boost a expiré, le bonus associé a été retiré`
         )
       )
       .setThumbnailAccessory(
@@ -4077,7 +4076,7 @@ const timeoutContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# ʀᴀɪꜱᴏɴ : **${reason}** • ᴛᴇᴍᴘꜱ ʀᴇꜱᴛᴀɴᴛ : <t:${endUnix}:R>` +
+          `-# Banni pendant <t:${endUnix}:R> pour ${reason}` +
           moderatorText
         )
       )
@@ -4158,7 +4157,7 @@ const banContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> BANNISSEMENT\n` +
           `-# **${user.tag}** (<@${user.id}>)\n` +
-          `-# ʀᴀɪꜱᴏɴ : **${reason}**` +
+          `-# Banni pour ${reason}` +
           moderatorText
         )
       )
