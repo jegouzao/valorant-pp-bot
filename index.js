@@ -1076,7 +1076,7 @@ function buildAnnounceContainer({
             `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
             `-# ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ : \`${remaining}\`\n` +
             `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\`\n` +
-            `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...`
+            `-# ᴄᴏᴅᴇ ᴅᴇ ɢʀᴏᴜᴘᴇ : \`${code}\``
           )
         )
         .setThumbnailAccessory(
@@ -1092,7 +1092,7 @@ function buildAnnounceContainer({
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
+        `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
         `${playersText || '-# ᴀᴜᴄᴜɴ'}`
       )
     )
