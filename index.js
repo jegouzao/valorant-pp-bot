@@ -139,6 +139,7 @@ const RANK_ROLES = {
       Iron1: '1461352715631460516'
     };
 
+const TEST_MODE = true;
 
 const RANK_ORDER = {
   'Radiant': 1, 
@@ -150,6 +151,7 @@ const RANK_ORDER = {
   'Silver 3': 17, 'Silver 2': 18, 'Silver 1': 19,
   'Bronze 3': 20, 'Bronze 2': 21, 'Bronze 1': 22,
   'Iron 3': 23, 'Iron 2': 24, 'Iron 1': 25};
+  
 
 function getRankEmojiFromMember(member) {
   if (!member) return rankEmojis.Unranked || '';
@@ -1116,17 +1118,76 @@ function buildAnnounceContainer({
 }
 
 // ── Embed "Partie en cours" ──
-function buildInGameEmbed({ attackersText, defendersText, mapImage, footerIcon, footerText }) {
-  return new EmbedBuilder()
-    .setDescription(`## ⚔️ Partie en cours`)
-    .addFields(
-      { name: '<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛs', value: attackersText, inline: true },
-      { name: '<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴsᴇᴜʀs', value: defendersText, inline: true }
+// ── Container "Partie en cours" ──
+function buildInGameContainer({
+  attackersText,
+  defendersText,
+  mapImage,
+  footerIcon,
+  footerText
+}) {
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    // ── HEADER + AVATAR ──
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE EN COURS\n` +
+            `-# ${footerText}`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(footerIcon)
+        )
     )
-    .setColor(EMBED_COLOR)
-    .setImage(mapImage || null)
-    .setFooter({ iconURL: footerIcon, text: footerText })
-    .setTimestamp();
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // ── ATTAQUANTS ──
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ\n` +
+        `${attackersText}`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // ── DÉFENSEURS ──
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
+        `${defendersText}`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    );
+
+  // ── IMAGE DE LA MAP ──
+  if (mapImage) {
+    container.addMediaGalleryComponents(
+      new MediaGalleryBuilder()
+        .addItems(
+          new MediaGalleryItemBuilder()
+            .setURL(mapImage)
+        )
+    );
+  }
+
+  return container;
 }
 
 // ── Embed "Résultat de partie" ──
@@ -2547,11 +2608,17 @@ const msg = await interaction.channel.send({
             return interaction.editReply({ content: '⚠️ Rôle Vérifié introuvable.' });
           }
 
-          if (game.players.length !== 10) {
-            return interaction.editReply({
-              content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
-            });
-          }
+          if (!TEST_MODE && game.players.length !== 10) {
+  return interaction.editReply({
+    content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
+  });
+}
+
+if (TEST_MODE && game.players.length < 1) {
+  return interaction.editReply({
+    content: '❌ Il faut au moins 1 joueur pour lancer le test.'
+  });
+}
 
           const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
           if (registrationMsg?.deletable) {
@@ -2559,40 +2626,97 @@ const msg = await interaction.channel.send({
           }
 
           function balanceTeams(players) {
-            if (players.length !== 10) {
-              throw new Error(`Équilibrage impossible : ${players.length} joueurs au lieu de 10.`);
-            }
 
-            players.sort((a, b) => b.rankValue - a.rankValue);
-            let best = null;
+  players.sort((a, b) => b.rankValue - a.rankValue);
 
-            function combinations(arr, k, start = 0, combo = [], result = []) {
-              if (combo.length === k) { result.push([...combo]); return result; }
-              for (let i = start; i < arr.length; i++) {
-                combo.push(arr[i]);
-                combinations(arr, k, i + 1, combo, result);
-                combo.pop();
-              }
-              return result;
-            }
+  // ── MODE TEST : fonctionne avec 1, 2, 3... joueurs ──
+  if (TEST_MODE && players.length !== 10) {
 
-            const allAttackCombinations = combinations(players, 5);
+    const attackers = [];
+    const defenders = [];
 
-            for (const attackers of allAttackCombinations) {
-              const attackerIds = new Set(attackers.map(p => p.id));
-              const defenders = players.filter(p => !attackerIds.has(p.id));
+    let sumA = 0;
+    let sumB = 0;
 
-              const sumA = attackers.reduce((sum, p) => sum + p.rankValue, 0);
-              const sumB = defenders.reduce((sum, p) => sum + p.rankValue, 0);
-              const diff = Math.abs(sumA - sumB);
+    for (const player of players) {
 
-              if (!best || diff < best.diff) {
-                best = { attackers, defenders, diff };
-              }
-            }
+      if (sumA <= sumB) {
+        attackers.push(player);
+        sumA += player.rankValue;
+      } else {
+        defenders.push(player);
+        sumB += player.rankValue;
+      }
+    }
 
-            return { attackers: best.attackers, defenders: best.defenders };
-          }
+    return {
+      attackers,
+      defenders
+    };
+  }
+
+  // ── MODE NORMAL : vrai 5v5 ──
+  if (players.length !== 10) {
+    throw new Error(
+      `Équilibrage impossible : ${players.length} joueurs au lieu de 10.`
+    );
+  }
+
+  let best = null;
+
+  function combinations(arr, k, start = 0, combo = [], result = []) {
+    if (combo.length === k) {
+      result.push([...combo]);
+      return result;
+    }
+
+    for (let i = start; i < arr.length; i++) {
+      combo.push(arr[i]);
+      combinations(arr, k, i + 1, combo, result);
+      combo.pop();
+    }
+
+    return result;
+  }
+
+  const allAttackCombinations = combinations(players, 5);
+
+  for (const attackers of allAttackCombinations) {
+
+    const attackerIds = new Set(
+      attackers.map(p => p.id)
+    );
+
+    const defenders = players.filter(
+      p => !attackerIds.has(p.id)
+    );
+
+    const sumA = attackers.reduce(
+      (sum, p) => sum + p.rankValue,
+      0
+    );
+
+    const sumB = defenders.reduce(
+      (sum, p) => sum + p.rankValue,
+      0
+    );
+
+    const diff = Math.abs(sumA - sumB);
+
+    if (!best || diff < best.diff) {
+      best = {
+        attackers,
+        defenders,
+        diff
+      };
+    }
+  }
+
+  return {
+    attackers: best.attackers,
+    defenders: best.defenders
+  };
+}
 
           const RANK_VALUES_BY_ID = {
             '1114187578866933790': 70, '1114182691550658650': 61, '1461352160850870427': 55,
@@ -2615,9 +2739,14 @@ const msg = await interaction.channel.send({
           });
 
           const balanced = balanceTeams(sortedPlayers);
-          if (balanced.attackers.length !== 5 || balanced.defenders.length !== 5) {
-            return interaction.editReply({ content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.' });
-          }
+          if (
+  !TEST_MODE &&
+  (balanced.attackers.length !== 5 || balanced.defenders.length !== 5)
+) {
+  return interaction.editReply({
+    content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.'
+  });
+}
 
           game.attackers = balanced.attackers.map(p => ({ id: p.id, member: p.member }));
           game.defenders = balanced.defenders.map(p => ({ id: p.id, member: p.member }));
@@ -2705,29 +2834,52 @@ const msg = await interaction.channel.send({
           };
 
           const attackersText = sortTeamByRank(game.attackers);
-          const defendersText = sortTeamByRank(game.defenders);
+const defendersText = sortTeamByRank(game.defenders);
 
-          const gameEmbed = buildInGameEmbed({
-            attackersText,
-            defendersText,
-            mapImage: game.mapImage,
-            footerIcon: interaction.user.displayAvatarURL({ dynamic: true, size: 32 }),
-            footerText: `Partie lancée par ${interaction.member.displayName}`
-          });
+const gameContainer = buildInGameContainer({
+  attackersText,
+  defendersText,
+  mapImage: game.mapImage,
+  footerIcon: interaction.user.displayAvatarURL({
+    size: 256
+  }),
+  footerText: `Partie lancée par ${interaction.member.displayName}`
+});
 
-          const buttons = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('spectate').setLabel('Observer').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('attack_win').setLabel('Attaquants gagnants').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('defense_win').setLabel('Défenseurs gagnants').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('cancel_game').setLabel('Annuler').setStyle(ButtonStyle.Danger)
-          );
+const buttons = new ActionRowBuilder().addComponents(
 
-          const inGameMsg = await interaction.channel.send({ embeds: [gameEmbed], components: [buttons] });
+  new ButtonBuilder()
+    .setCustomId('spectate')
+    .setLabel('Observer')
+    .setStyle(ButtonStyle.Secondary),
+
+  new ButtonBuilder()
+    .setCustomId('attack_win')
+    .setLabel('Attaquants gagnants')
+    .setStyle(ButtonStyle.Primary),
+
+  new ButtonBuilder()
+    .setCustomId('defense_win')
+    .setLabel('Défenseurs gagnants')
+    .setStyle(ButtonStyle.Primary),
+
+  new ButtonBuilder()
+    .setCustomId('cancel_game')
+    .setLabel('Annuler')
+    .setStyle(ButtonStyle.Danger)
+);
+
+gameContainer.addActionRowComponents(buttons);
+
+const inGameMsg = await interaction.channel.send({
+  components: [gameContainer],
+  flags: MessageFlags.IsComponentsV2
+});
 
           game.manageMessageId = inGameMsg.id;
-          await saveGame(game);
+await saveGame(game);
 
-          await interaction.editReply('✅ Partie lancée');
+await interaction.editReply('✅ Partie lancée');
           break;
         }
 
@@ -2772,18 +2924,6 @@ const msg = await interaction.channel.send({
               return;
             }
 
-            try {
-              if (interaction.message?.editable) {
-                const disabledRows = interaction.message.components.map(row =>
-                  new ActionRowBuilder().addComponents(
-                    row.components.map(component => ButtonBuilder.from(component).setDisabled(true))
-                  )
-                );
-                await interaction.message.edit({ components: disabledRows }).catch(() => {});
-              }
-            } catch (err) {
-              console.error('Erreur désactivation boutons fin de partie :', err);
-            }
 
             const attChannel = interaction.guild.channels.cache.get(game.attVC);
             const defChannel = interaction.guild.channels.cache.get(game.defVC);
