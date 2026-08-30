@@ -1182,19 +1182,19 @@ function buildLeaderboardContainer({
     .setSpacing(SeparatorSpacingSize.Large)
 );
 
-  for (const line of lines) {
-  container
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(line)
-    )
+  for (let i = 0; i < lines.length; i++) {
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(lines[i])
+  );
 
-    .addSeparatorComponents(
+  // Séparateur uniquement entre les joueurs
+  if (i < lines.length - 1) {
+    container.addSeparatorComponents(
       new SeparatorBuilder()
         .setSpacing(SeparatorSpacingSize.Large)
     );
+  }
 }
-
-
 
   return container;
 }
