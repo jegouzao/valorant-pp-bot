@@ -1607,7 +1607,7 @@ const statsContainer = new ContainerBuilder()
   // ── RÔLES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `${roleNames}`
+      `\n${roleNames}`
     )
   );
 
