@@ -1862,7 +1862,7 @@ if (choice === 'reglement') {
 
 return interaction.reply({
   content: '❌ Rubrique inconnue.',
-  ephemeral: true
+  flags: MessageFlags.Ephemeral
 });
 }
 
@@ -2427,12 +2427,16 @@ if (
       }
 
       if (interaction.customId === 'close_ticket') {
-        await interaction.deferReply({ ephemeral: true });
-        const ch = interaction.channel;
-        if (!ch) return interaction.editReply('❌ Salon introuvable.');
-        await ch.delete().catch(() => {});
-        return;
-      }
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const ch = interaction.channel;
+  if (!ch) return interaction.editReply('❌ Salon introuvable.');
+
+  await ch.delete().catch(() => {});
+  return;
+}
 
       if (interaction.customId.startsWith('manage_add_') || interaction.customId.startsWith('manage_remove_')) {
         const isAdd = interaction.customId.startsWith('manage_add_');
@@ -2453,69 +2457,118 @@ if (
       }
 
       if (interaction.customId.startsWith('manage_reset_')) {
-        await interaction.deferReply({ ephemeral: true });
-        const userId = interaction.customId.split('_').pop();
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
 
-        await setPlayerPoints(userId, { rr: 0, games: 0, wins: 0, timeouts: 0 });
-        await updateTop15Embed();
+  const userId = interaction.customId.split('_').pop();
 
-        return interaction.editReply(`🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`);
-      }
-    }
+  await setPlayerPoints(userId, {
+    rr: 0,
+    games: 0,
+    wins: 0,
+    timeouts: 0
+  });
+
+  await updateTop15Embed();
+
+  return interaction.editReply(
+    `🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`
+  );
+}
 
     if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
-      const roleId = ROLE_NOTIF_PP;
-      const member = interaction.member;
+  const roleId = ROLE_NOTIF_PP;
+  const member = interaction.member;
 
-      if (!member || !member.roles) {
-        return interaction.reply({ content: '❌ Membre introuvable.', ephemeral: true });
-      }
+  if (!member || !member.roles) {
+    return interaction.reply({
+      content: '❌ Membre introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
-      const hasRole = member.roles.cache.has(roleId);
+  const hasRole = member.roles.cache.has(roleId);
 
-      try {
-        if (hasRole) {
-          await member.roles.remove(roleId);
-          return interaction.reply({ content: '🔕 Tu ne recevras plus les notifications PP.', ephemeral: true });
-        } else {
-          await member.roles.add(roleId);
-          return interaction.reply({ content: '🔔 Tu recevras désormais les notifications PP.', ephemeral: true });
-        }
-      } catch (err) {
-        console.error(err);
-        return interaction.reply({ content: '❌ Impossible de modifier ton rôle de notification.', ephemeral: true });
-      }
+  try {
+    if (hasRole) {
+      await member.roles.remove(roleId);
+
+      return interaction.reply({
+        content: '🔕 Tu ne recevras plus les notifications PP.',
+        flags: MessageFlags.Ephemeral
+      });
+
+    } else {
+      await member.roles.add(roleId);
+
+      return interaction.reply({
+        content: '🔔 Tu recevras désormais les notifications PP.',
+        flags: MessageFlags.Ephemeral
+      });
     }
+
+  } catch (err) {
+    console.error(err);
+
+    return interaction.reply({
+      content: '❌ Impossible de modifier ton rôle de notification.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+}
 
     // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
-    if (interaction.isButton()) {
+if (interaction.isButton()) {
 
-      const gameButtons = [
-  'join_game',
-  'change_map',
-  'start',
-  'cancel_registration',
-  'spectate',
-  'attack_win',
-  'defense_win',
-  'cancel_game'
-];
+  const gameButtons = [
+    'join_game',
+    'change_map',
+    'start',
+    'cancel_registration',
+    'spectate',
+    'attack_win',
+    'defense_win',
+    'cancel_game'
+  ];
 
-      if (gameButtons.includes(interaction.customId) && !game) {
-        return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-      }
+  if (gameButtons.includes(interaction.customId) && !game) {
+    return interaction.reply({
+      content: "Cette partie n'existe plus.",
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
-      const ownerOnlyButtons = ['start', 'cancel_registration', 'attack_win', 'defense_win', 'cancel_game'];
+  const ownerOnlyButtons = [
+    'start',
+    'cancel_registration',
+    'attack_win',
+    'defense_win',
+    'cancel_game'
+  ];
 
-      if (ownerOnlyButtons.includes(interaction.customId) && !canManageThisGame) {
-        return interaction.reply({ content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.', ephemeral: true });
-      }
+  if (
+    ownerOnlyButtons.includes(interaction.customId) &&
+    !canManageThisGame
+  ) {
+    return interaction.reply({
+      content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
-      const verifiedOnly = ['spectate'];
-      if (verifiedOnly.includes(interaction.customId) && !isVerified) {
-        return interaction.reply({ content: '⛔ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
-      }
-    }
+  const verifiedOnly = ['spectate'];
+
+  if (
+    verifiedOnly.includes(interaction.customId) &&
+    !isVerified
+  ) {
+    return interaction.reply({
+      content: '⛔ Seuls les membres Vérifiés peuvent observer.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+}
 
     const waitingVC = game ? interaction.guild.channels.cache.get(game.waitingVC) : null;
 
@@ -2537,9 +2590,12 @@ if (
 
     // ── COMMANDES SLASH ──
     if (interaction.isChatInputCommand() && interaction.commandName === 'pp') {
-      if (!isMod) {
-        return interaction.reply({ content: '⛔ Seuls les Organisateur de parties peuvent créer une partie.', ephemeral: true });
-      }
+  if (!isMod) {
+    return interaction.reply({
+      content: '⛔ Seuls les Organisateur de parties peuvent créer une partie.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
       const modal = new ModalBuilder().setCustomId('pp_create_modal').setTitle('Créer une partie personnalisée');
       const valorantCodeInput = new TextInputBuilder()
@@ -2555,7 +2611,9 @@ if (
     }
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({
+  flags: MessageFlags.Ephemeral
+});
 
       try {
         const result = await Points.updateMany({}, { $set: { rr: 0, games: 0, wins: 0 } });
@@ -2700,14 +2758,19 @@ const msg = await interaction.channel.send({
     }
 
     // ── SELECT MENU OBSERVER ──
-    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
-      if (!isVerified) {
-        return interaction.reply({ content: '⛔ Seuls les Vérifiés peuvent observer.', ephemeral: true });
-      }
+    if (!isVerified) {
+  return interaction.reply({
+    content: '⛔ Seuls les Vérifiés peuvent observer.',
+    flags: MessageFlags.Ephemeral
+  });
+}
 
-      if (!game) {
-        return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
-      }
+if (!game) {
+  return interaction.reply({
+    content: "Cette partie n'existe plus.",
+    flags: MessageFlags.Ephemeral
+  });
+}
 
       await interaction.deferUpdate();
 
@@ -2734,15 +2797,53 @@ const msg = await interaction.channel.send({
       });
     }
 
+    if (gameButtons.includes(interaction.customId) && !game) {
+  return interaction.reply({
+    content: "Cette partie n'existe plus.",
+    flags: MessageFlags.Ephemeral
+  });
+}
+
+const ownerOnlyButtons = [
+  'start',
+  'cancel_registration',
+  'attack_win',
+  'defense_win',
+  'cancel_game'
+];
+
+if (
+  ownerOnlyButtons.includes(interaction.customId) &&
+  !canManageThisGame
+) {
+  return interaction.reply({
+    content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.',
+    flags: MessageFlags.Ephemeral
+  });
+}
+
+const verifiedOnly = ['spectate'];
+
+if (
+  verifiedOnly.includes(interaction.customId) &&
+  !isVerified
+) {
+  return interaction.reply({
+    content: '⛔ Seuls les membres Vérifiés peuvent observer.',
+    flags: MessageFlags.Ephemeral
+  });
+}
+
     if (interaction.isButton()) {
       switch (interaction.customId) {
 
-        case 'join_game': {
+        
+case 'join_game': {
 
   if (!game) {
     return interaction.reply({
       content: "❌ Cette partie n'existe plus.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -2751,28 +2852,28 @@ const msg = await interaction.channel.send({
   if (!prepVC) {
     return interaction.reply({
       content: '❌ Le salon vocal de préparation est introuvable.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (game.players.includes(interaction.user.id)) {
     return interaction.reply({
       content: '✅ Tu participes déjà à cette partie.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (game.players.length >= 10) {
     return interaction.reply({
       content: '❌ La partie est déjà complète.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (!interaction.member.voice?.channel) {
     return interaction.reply({
       content: '❌ Connecte-toi d’abord à un salon vocal du serveur.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -2782,28 +2883,39 @@ const msg = await interaction.channel.send({
 
   return interaction.reply({
     content: '✅ Tu as rejoint la partie.',
-    ephemeral: true
+    flags: MessageFlags.Ephemeral
   });
 }
 
         case 'change_map': {
-          if (!game) return interaction.reply({ content: "Cette partie n'existe plus.", ephemeral: true });
+          if (!game) {
+  return interaction.reply({
+    content: "Cette partie n'existe plus.",
+    flags: MessageFlags.Ephemeral
+  });
+}
 
           const voterId = interaction.user.id;
           const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
           const inPrepVC = prepVC?.members?.has(voterId);
 
           if (!inPrepVC) {
-            return interaction.reply({ content: "❌ Tu dois être dans le vocal de préparation pour voter.", ephemeral: true });
-          }
+  return interaction.reply({
+    content: "❌ Tu dois être dans le vocal de préparation pour voter.",
+    flags: MessageFlags.Ephemeral
+  });
+}
 
-          if (!game.changeMapVotes) game.changeMapVotes = [];
+if (!game.changeMapVotes) game.changeMapVotes = [];
 
-          if (game.changeMapVotes.includes(voterId)) {
-            return interaction.reply({ content: "✅ Tu as déjà voté pour changer la map.", ephemeral: true });
-          }
+if (game.changeMapVotes.includes(voterId)) {
+  return interaction.reply({
+    content: "✅ Tu as déjà voté pour changer la map.",
+    flags: MessageFlags.Ephemeral
+  });
+}
 
-          game.changeMapVotes.push(voterId);
+game.changeMapVotes.push(voterId);
 
           const needed = 6;
           const votes = game.changeMapVotes.length;
@@ -2821,15 +2933,18 @@ const msg = await interaction.channel.send({
             await updateRegistrationEmbed(interaction.guild, game);
 
             return interaction.reply({
-              content: `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`,
-              ephemeral: true
-            });
+  content: `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`,
+  flags: MessageFlags.Ephemeral
+});
           }
 
           await saveGame(game);
           await updateRegistrationEmbed(interaction.guild, game);
 
-          return interaction.reply({ content: `✅ Vote enregistré (${votes}/${needed}).`, ephemeral: true });
+          return interaction.reply({
+  content: `✅ Vote enregistré (${votes}/${needed}).`,
+  flags: MessageFlags.Ephemeral
+});
         }
 
         case 'cancel_registration': {
@@ -2837,7 +2952,10 @@ const msg = await interaction.channel.send({
           const lobbyVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
           if (!lobbyVC) {
-            return interaction.reply({ content: "❌ Salon 'salle d'attente' introuvable.", ephemeral: true });
+            return interaction.reply({
+  content: "❌ Salon 'salle d'attente' introuvable.",
+  flags: MessageFlags.Ephemeral
+});
           }
 
           if (game.players?.length) {
@@ -2875,9 +2993,15 @@ const msg = await interaction.channel.send({
 
           try {
             if (!interaction.replied && !interaction.deferred) {
-              await interaction.reply({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
+              await interaction.reply({
+  content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.",
+  flags: MessageFlags.Ephemeral
+});
             } else {
-              await interaction.followUp({ content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.", ephemeral: true });
+              await interaction.followUp({
+  content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.",
+  flags: MessageFlags.Ephemeral
+});
             }
           } catch {}
 
@@ -2886,7 +3010,9 @@ const msg = await interaction.channel.send({
         }
 
         case 'start': {
-          await interaction.deferReply({ ephemeral: true });
+          await interaction.deferReply({
+  flags: MessageFlags.Ephemeral
+});
 
           const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
           if (!verifiedRole) {
@@ -3212,27 +3338,40 @@ await interaction.editReply('✅ Partie lancée');
         }
 
         case 'spectate': {
-          const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
-          if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
-            return interaction.reply({ content: '❌ Seuls les membres Vérifiés peuvent observer.', ephemeral: true });
-          }
+  const verifiedRole = interaction.guild.roles.cache.find(
+    r => r.name === 'Vérifié'
+  );
 
-          if (game.players.includes(interaction.user.id)) {
-            return interaction.reply({ content: '❌ Tu es déjà inscrit à la partie.', ephemeral: true });
-          }
+  if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
+    return interaction.reply({
+      content: '❌ Seuls les membres Vérifiés peuvent observer.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
-          const selectMenu = new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-              .setCustomId(`spectate_select_${game.id}`)
-              .setPlaceholder('Assure toi d\'être dans un salon vocal !')
-              .addOptions([
-                { label: 'Observer les attaquants', value: 'attack' },
-                { label: 'Observer les défenseurs', value: 'defense' }
-              ])
-          );
+  if (game.players.includes(interaction.user.id)) {
+    return interaction.reply({
+      content: '❌ Tu es déjà inscrit à la partie.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
-          return interaction.reply({ content: '', components: [selectMenu], ephemeral: true });
-        }
+  const selectMenu = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`spectate_select_${game.id}`)
+      .setPlaceholder('Assure toi d\'être dans un salon vocal !')
+      .addOptions([
+        { label: 'Observer les attaquants', value: 'attack' },
+        { label: 'Observer les défenseurs', value: 'defense' }
+      ])
+  );
+
+  return interaction.reply({
+    content: '',
+    components: [selectMenu],
+    flags: MessageFlags.Ephemeral
+  });
+}
 
         case 'attack_win':
         case 'defense_win':
@@ -3523,9 +3662,9 @@ await interaction.channel.send({
 
       if (!memberHasSelectedRank(interaction.member)) {
         return interaction.reply({
-          content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
-          ephemeral: true
-        });
+  content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
+  flags: MessageFlags.Ephemeral
+});
       }
 
       const modal = new ModalBuilder().setCustomId('riot_modal').setTitle('Vérification Riot ID');
@@ -3554,7 +3693,7 @@ await interaction.channel.send({
 
       await interaction.reply({
   content: 'Vérification en cours…',
-  ephemeral: true
+  flags: MessageFlags.Ephemeral
 });
 
 await interaction.deleteReply().catch(() => {});
@@ -3656,14 +3795,16 @@ return;
   });
 
   return interaction.reply({
-    content: '✅ Règles envoyées',
-    ephemeral: true
-  });
+  content: '✅ Règles envoyées',
+  flags: MessageFlags.Ephemeral
+});
 }
 
     // ── Gestion du modal TICKET REASON ──
     if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({
+  flags: MessageFlags.Ephemeral
+});
 
       const guild = interaction.guild;
       const member = interaction.member;
@@ -3682,26 +3823,33 @@ return;
 
       const configFile = path.join(__dirname, 'data', 'config.json');
       if (!fs.existsSync(configFile)) {
-        return interaction.editReply({ content: '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.', ephemeral: true });
-      }
+  return interaction.editReply({
+    content: '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.'
+  });
+}
 
       const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
       const ticketCategoryId = config.ticketCategoryId;
 
       const existingTicket = guild.channels.cache.find(ch =>
-        ch.parentId === ticketCategoryId &&
-        ch.name.startsWith('┃ticket-') &&
-        ch.permissionOverwrites?.cache?.has(member.id)
-      );
+  ch.parentId === ticketCategoryId &&
+  ch.name.startsWith('┃ticket-') &&
+  ch.permissionOverwrites?.cache?.has(member.id)
+);
 
-      if (existingTicket) {
-        return interaction.editReply({ content: `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`, ephemeral: true });
-      }
+if (existingTicket) {
+  return interaction.editReply({
+    content: `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`
+  });
+}
 
-      const staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
-      if (!staffRole) {
-        return interaction.editReply({ content: '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.', ephemeral: true });
-      }
+const staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
+
+if (!staffRole) {
+  return interaction.editReply({
+    content: '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.'
+  });
+}
 
       const ticketChannel = await guild.channels.create({
         name: `┃ticket-${finalReason}`,
@@ -3778,14 +3926,15 @@ await ticketChannel.send({
 });
 
 return interaction.editReply({
-  content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`,
-  ephemeral: true
+  content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`
 });
 }
 
     // ── Gestion du modal MANAGE ──
     if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({
+  flags: MessageFlags.Ephemeral
+});
 
       const [, , type, userId] = interaction.customId.split('_');
       const amount = parseInt(interaction.fields.getTextInputValue('rr_amount'));
