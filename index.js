@@ -1551,6 +1551,20 @@ if (choice === 'stats') {
     .map(r => `<@&${r.id}>`)
     .join(', ') || 'Aucun';
 
+    const maxRR = sorted[0]?.[1]?.rr || 1;
+const barLength = 27;
+
+const rawBars = (stats.rr / maxRR) * barLength;
+
+const filledBars = Math.max(
+  0,
+  Math.min(barLength, Math.round(rawBars))
+);
+
+const progressBar =
+  '▰'.repeat(filledBars) +
+  '▱'.repeat(barLength - filledBars);
+
   const statsContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
 
@@ -1577,13 +1591,13 @@ if (choice === 'stats') {
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　　` +
-      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　　` +
+      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　` +
+      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　` +
       `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**\n` +
       `### <:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　` +
       `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　` +
-      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　` +
-      `<:VIDE:1493378253446975619> ᴀᴠᴇʀᴛɪꜱꜱᴇᴍᴇɴᴛꜱ  ${stats.timeouts || 0}`
+      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴇꜱ  ${invitesData.invites}　` +
+      `<:VIDE:1493378253446975619> ᴛɪᴍᴇᴏᴜᴛꜱ  ${stats.timeouts || 0}`
     )
   )
 
