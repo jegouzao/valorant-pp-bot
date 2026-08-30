@@ -1592,7 +1592,7 @@ const statsContainer = new ContainerBuilder()
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1493266536813690970>#${position} 　` +
+      `### #${position}<:VIDE:1493266536813690970> 　` +
       `${stats.rr}<:VIDE:1541125087384829962>      ` +
       `${winrate}<:VIDE:1541167342535319603>%  　` +
       `${stats.games}<:VIDE:1472667851239456935>　` +
