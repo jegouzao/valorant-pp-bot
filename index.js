@@ -3664,6 +3664,12 @@ await ticketChannel.send({
   flags: MessageFlags.IsComponentsV2
 });
 
+return interaction.editReply({
+  content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`,
+  ephemeral: true
+});
+}
+
     // ── Gestion du modal MANAGE ──
     if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
       await interaction.deferReply({ ephemeral: true });
