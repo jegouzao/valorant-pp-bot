@@ -1429,7 +1429,7 @@ const ONBOARDING_TOPICS = [
   { value: 'jouer', label: 'Comment jouer une PP', emoji: { name: '2', id: '1493046369076777110' }},
   { value: 'reglement', label: 'Règlement du serveur', emoji: { name: '3', id: '1466611512646045739' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
-  { value: 'signaler', label: 'Notifications PP • Contact', emoji: { name: '7E', id: '1493378160639741992' }}];
+  { value: 'signaler', label: 'Notifications PP    •    Contact', emoji: { name: '7E', id: '1493378160639741992' }}];
 
 function buildOnboardingContainer() {
   return new ContainerBuilder()
