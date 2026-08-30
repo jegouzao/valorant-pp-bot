@@ -1166,7 +1166,9 @@ function buildLeaderboardContainer({
       new TextDisplayBuilder().setContent(
         `## <:VIDE:1493046347337699499> LEADERBOARD ꜱᴇᴘᴛᴇᴍʙʀᴇ\n` +
         `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
+        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`` +
+        `-# ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ : ...`
+
       )
     )
     .setThumbnailAccessory(
