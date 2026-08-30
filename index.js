@@ -1295,7 +1295,6 @@ async function syncServerTagRole(userId, user = null) {
         new TextDisplayBuilder().setContent(
           `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ᴍᴇʀᴄɪ ᴅ'ᴀᴠᴏɪʀ ᴀᴊᴏᴜᴛᴇ ʟᴇ **ᴛᴀɢ VALORANT PP**\n` +
           `-# ʟᴇ ʙᴏɴᴜꜱ ᴠɪᴇɴᴛ ᴅ'ᴇᴛʀᴇ ᴀᴄᴛɪᴠᴇ ᴘᴏᴜʀ ᴛᴇꜱ ᴘʀᴏᴄʜᴀɪɴᴇꜱ ᴠɪᴄᴛᴏɪʀᴇꜱ`
         )
       )
@@ -1329,7 +1328,6 @@ await sendActivityMessage(guild, {
         new TextDisplayBuilder().setContent(
           `## <:tag:1543303374974357695> TAG DU SERVEUR RETIRÉ\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ᴀ ʀᴇᴛɪʀᴇ ʟᴇ **ᴛᴀɢ VALORANT PP**\n` +
           `-# ʟᴇ ʙᴏɴᴜꜱ ᴀꜱꜱᴏᴄɪᴇ ᴀᴜ ᴛᴀɢ ꜱᴇʀᴠᴇᴜʀ ᴀ ᴇᴛᴇ ʀᴇᴛɪʀᴇ`
         )
       )
@@ -3997,7 +3995,6 @@ const welcomeContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493046347337699499> BIENVENUE SUR VALORANT PP\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ɪɴᴠɪᴛᴇ ᴘᴀʀ : **${inviterTag}**\n` +
           `-# ꜱᴜʀ ᴅɪꜱᴄᴏʀᴅ ᴅᴇᴘᴜɪꜱ : **${accountAge} ᴊᴏᴜʀꜱ**\n` +
           inviterText
         )
@@ -4104,7 +4101,6 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         new TextDisplayBuilder().setContent(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# ᴍᴇʀᴄɪ ᴅ'ᴀᴠᴏɪʀ ʙᴏᴏꜱᴛᴇ ʟᴇ **ꜱᴇʀᴠᴇᴜʀ VALORANT PP**\n` +
           `-# ʟᴇ ʙᴏɴᴜꜱ ᴠɪᴇɴᴛ ᴅ'ᴇᴛʀᴇ ᴀᴄᴛɪᴠᴇ ᴘᴏᴜʀ ᴛᴇꜱ ᴘʀᴏᴄʜᴀɪɴᴇꜱ ᴠɪᴄᴛᴏɪʀᴇꜱ`
         )
       )
@@ -4208,8 +4204,7 @@ const timeoutContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# ᴛᴇᴍᴘꜱ ʀᴇꜱᴛᴀɴᴛ : <t:${endUnix}:R>\n` +
-          `-# ʀᴀɪꜱᴏɴ : **${reason}**` +
+          `-# ʀᴀɪꜱᴏɴ : **${reason}** • ᴛᴇᴍᴘꜱ ʀᴇꜱᴛᴀɴᴛ : <t:${endUnix}:R>` +
           moderatorText
         )
       )
