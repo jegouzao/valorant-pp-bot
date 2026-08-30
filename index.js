@@ -3050,9 +3050,14 @@ const formatPlayers = async (ids) => {
 
     if (!member) continue;
 
-    const rankRole = member.roles.cache.find(
-      r => RANK_ORDER[r.name]
-    );
+
+    if (!member?.roles?.cache) {
+  console.log('⚠️ Membre incomplet dans formatPlayers:', id);
+}
+
+    const rankRole = member.roles?.cache?.find(
+  r => RANK_ORDER[r.name]
+) || null;
 
     const rankValue = rankRole
       ? RANK_ORDER[rankRole.name]
