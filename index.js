@@ -2015,7 +2015,76 @@ function buildRulesEmbed() {
     .setColor(EMBED_COLOR);
 }
 
+function buildInGameContainer({
+  attackersText,
+  defendersText,
+  mapName,
+  mapImage,
+  footerText
+}) {
+  const attackers = String(attackersText || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
 
+  const defenders = String(defendersText || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  const maxPlayers = Math.max(
+    attackers.length,
+    defenders.length
+  );
+
+  const teamLines = [];
+
+  for (let i = 0; i < maxPlayers; i++) {
+    const attacker = attackers[i] || '';
+    const defender = defenders[i] || '';
+
+    teamLines.push(
+      padTeamLine(attacker, defender)
+    );
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
+            `-# ᴘᴀʀᴛɪᴇ ʟᴀɴᴄᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
+            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ\n` +
+            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(mapImage)
+        )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        teamLines.join('\n')
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    );
+
+  return container;
+}
 
 // ===== Interaction Handler =====
 client.on('interactionCreate', async (interaction) => {
