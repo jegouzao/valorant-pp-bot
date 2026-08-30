@@ -492,6 +492,7 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('join_game')
     .setLabel('Rejoindre la partie')
+        .setEmoji('1493378313224192233')
     .setStyle(ButtonStyle.Success),
 
   new ButtonBuilder()
@@ -501,8 +502,8 @@ const row = new ActionRowBuilder().addComponents(
 
   new ButtonBuilder()
     .setCustomId('start')
-    .setLabel('Lancer')
-    .setStyle(ButtonStyle.Primary),
+    .setLabel('Équilibrer les équipes')
+    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('cancel_registration')
@@ -2373,13 +2374,11 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('change_map')
     .setLabel('Changer la map')
-    .setEmoji('1493378253446975619')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('start')
     .setLabel('Équilibrer les équipes')
-    .setEmoji('1472667851239456935')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
