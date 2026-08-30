@@ -1561,7 +1561,7 @@ if (choice === 'stats') {
         new TextDisplayBuilder().setContent(
           `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
           `-# Tes statistiques personnelles sur VALORANT PP\n` +
-          `-# Arrivé le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
+          `-# <:VIDE:1493046369076777110> Membre depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
         )
       )
       .setThumbnailAccessory(
@@ -1577,23 +1577,20 @@ if (choice === 'stats') {
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**` +
-      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**` +
-      `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**`
+      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　　　　` +
+      `### <:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　　　　` +
+      `### <:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**`
     )
   )
 
-  .addSeparatorComponents(
-    new SeparatorBuilder()
-  )
-  
+
   // ── STATS SECONDAIRES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `<:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　　` +
-      `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}\n` +
-      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　　` +
-      `<:VIDE:1493378253446975619> ᴀᴠᴇʀᴛɪꜱꜱᴇᴍᴇɴᴛꜱ  ${stats.timeouts || 0}`
+      `### <:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　　` +
+      `### <:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　　` +
+      `### <:VIDE:1472667823875559708> ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ  ${invitesData.invites}　　` +
+      `### <:VIDE:1493378253446975619> ᴀᴠᴇʀᴛɪꜱꜱᴇᴍᴇɴᴛꜱ  ${stats.timeouts || 0}`
     )
   )
 
