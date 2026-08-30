@@ -1928,8 +1928,8 @@ const NORMAL_SPACE_WIDTH = 0.42;
 
 if (!normalizedLeft) {
   const blankSpaces = Math.round(
-    COLUMN_TARGET / FULL_SPACE_WIDTH
-  );
+  COLUMN_TARGET / FULL_SPACE_WIDTH
+) + 1;
 
   return `${'　'.repeat(blankSpaces)}${normalizedRight}`;
 }
