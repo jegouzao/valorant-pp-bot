@@ -1552,7 +1552,7 @@ if (choice === 'stats') {
     .join(', ') || 'Aucun';
 
     const maxRR = sorted[0]?.[1]?.rr || 1;
-const barLength = 27;
+const barLength = 35;
 
 const rawBars = (stats.rr / maxRR) * barLength;
 
@@ -1592,16 +1592,14 @@ const statsContainer = new ContainerBuilder()
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　` +
-      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　` +
-      `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**\n` +
-
-      `> ${progressBar}\n` +
-
-      `### <:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　` +
-      `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　` +
-      `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴇꜱ  ${invitesData.invites}　` +
-      `<:VIDE:1493378253446975619> ᴛɪᴍᴇᴏᴜᴛꜱ  ${stats.timeouts || 0}`
+      `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ : **#${position}**　` +
+      `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ : **${stats.rr}<:VIDE:1541125087384829962>**　` +
+      `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ : **${winrate}<:VIDE:1541167342535319603>%**\n` +
+      `### ${progressBar}\n` +
+      `### <:VIDE:1472667851239456935> ${stats.games} ᴘᴀʀᴛɪᴇꜱ　` +
+      `<:VIDE:1493266372954820741> ${stats.wins} ᴠɪᴄᴛᴏɪʀᴇꜱ　` +
+      `<:VIDE:1472667823875559708> ${invitesData.invites} ɪɴᴠɪᴛᴇꜱ　` +
+      `<:VIDE:1493378253446975619> ${stats.timeouts || 0} ᴛɪᴍᴇᴏᴜᴛꜱ`
     )
   )
 
