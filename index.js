@@ -1162,7 +1162,8 @@ function buildInGameContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**`
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**` +
+            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ`
           )
         )
 
@@ -1180,10 +1181,25 @@ function buildInGameContainer({
     // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `**ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ**　　　　　　　　　　　　**ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ**\n\n` +
-        teamLines.join('\n')
+        `**ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ**　　　　　　　　　　　　**ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ**\n` +
+teamLines.join('\n')
       )
-    );
+    )
+
+    .addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+)
+
+.addMediaGalleryComponents(
+  new MediaGalleryBuilder()
+    .addItems(
+      new MediaGalleryItemBuilder()
+        .setURL(
+          'https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a95aa68&is=6a9458e8&hm=f3ca38f4f063667605bb7d934d20f85f89ef673415b6c981dcd00949b95525d5&'
+        )
+    )
+);
 
   return container;
 }
