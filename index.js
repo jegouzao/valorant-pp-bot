@@ -2135,7 +2135,7 @@ function buildResultContainer({
   function buildPlayerText(player) {
     if (!player) return '';
 
-    return `${player.rankEmoji} <@${player.id}>  ${player.rrDisplay}`;
+    return `${player.rankEmoji} <@${player.id}>${player.rrDisplay}`;
   }
 
   for (let i = 0; i < maxPlayers; i++) {
