@@ -1289,10 +1289,6 @@ function buildOnboardingContainer() {
       )
     )
 
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    )
-
     .addActionRowComponents(
       buildOnboardingSelectRow()
     );
