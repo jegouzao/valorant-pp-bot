@@ -3030,8 +3030,6 @@ const formatPlayers = async (ids) => {
 };
 
 
-const attackersText = sortTeamByRank(game.attackers);
-const defendersText = sortTeamByRank(game.defenders);
 
 const gameContainer = buildInGameContainer({
   attackersText,
