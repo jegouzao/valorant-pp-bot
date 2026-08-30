@@ -1599,12 +1599,8 @@ const statsContainer = new ContainerBuilder()
       `${stats.wins}<:VIDE:1493266372954820741>　` +
       `${invitesData.invites}<:VIDE:1472667823875559708>　` +
       `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n` +
-      `-# ${progressBar}`
+      `-# ${progressBar}\n`
     )
-  )
-
-  .addSeparatorComponents(
-    new SeparatorBuilder()
   )
 
   // ── RÔLES ──
