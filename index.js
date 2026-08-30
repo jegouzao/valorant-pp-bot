@@ -1923,22 +1923,28 @@ function normalizePlayerLine(text, guild) {
 
   const beforeMention = text
     .slice(0, mentionIndex)
-    .trimEnd();
+    .trim();
 
   const afterMention = text
     .slice(mentionIndex + mention.length);
-
-  const PREFIX_TARGET = 4.4;
 
   const prefixWidth = getDiscordVisualWidth(
     beforeMention,
     guild
   );
 
+  const PREFIX_TARGET = 4.4;
+  const NORMAL_SPACE_WIDTH = 0.42;
+
+  const missingWidth = Math.max(
+    0,
+    PREFIX_TARGET - prefixWidth
+  );
+
   const spacesNeeded = Math.max(
     1,
     Math.round(
-      (PREFIX_TARGET - prefixWidth) / 0.42
+      missingWidth / NORMAL_SPACE_WIDTH
     )
   );
 
