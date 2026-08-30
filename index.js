@@ -3617,27 +3617,52 @@ return;
         ]
       });
 
-      const ticketEmbed = new EmbedBuilder()
-        .setDescription(
-          `- Motif : **${reason || 'Demande'}**\n` +
-          `> Merci de nous expliquer la raison de ta demande.\n` +
-          `> L'équipe a été notifiée et viendra t'aider.\n\n`
-        )
-        .setColor(EMBED_COLOR)
-        .setImage('https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&');
-
       const closeButton = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('close_ticket')
-          .setEmoji({ id: '1466470349351686194' })
-          .setLabel('┃Clôturer la discussion')
-          .setStyle(ButtonStyle.Secondary)
-      );
+  new ButtonBuilder()
+    .setCustomId('close_ticket')
+    .setEmoji({ id: '1466470349351686194' })
+    .setLabel('┃Clôturer la discussion')
+    .setStyle(ButtonStyle.Secondary)
+);
 
-      await ticketChannel.send({ content: `${member} ${staffRole}`, embeds: [ticketEmbed], components: [closeButton] });
+const ticketContainer = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
 
-      return interaction.editReply({ content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`, ephemeral: true });
-    }
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `${member} ${staffRole}`
+    )
+  )
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Large)
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `- Motif : **${reason || 'Demande'}**\n` +
+      `> Merci de nous expliquer la raison de ta demande.\n` +
+      `> L'équipe a été notifiée et viendra t'aider.`
+    )
+  )
+
+  .addMediaGalleryComponents(
+    new MediaGalleryBuilder().addItems(
+      new MediaGalleryItemBuilder().setURL(
+        'https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&'
+      )
+    )
+  )
+
+  .addActionRowComponents(
+    closeButton
+  );
+
+await ticketChannel.send({
+  components: [ticketContainer],
+  flags: MessageFlags.IsComponentsV2
+});
 
     // ── Gestion du modal MANAGE ──
     if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
