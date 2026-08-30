@@ -1299,7 +1299,6 @@ function buildOnboardingContainer() {
     new ButtonBuilder()
       .setCustomId('open_ticket')
       .setLabel('Ouvrir un ticket')
-      .setEmoji('1466470365269070026')
       .setStyle(ButtonStyle.Secondary)
   )
 );
