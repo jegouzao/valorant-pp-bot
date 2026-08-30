@@ -1592,13 +1592,13 @@ const statsContainer = new ContainerBuilder()
   // ── STATS PRINCIPALES ──
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:VIDE:1472667851239456935> ${stats.games} ᴘᴀʀᴛɪᴇꜱ　` +
-      `<:VIDE:1493266372954820741> ${stats.wins} ᴠɪᴄᴛᴏɪʀᴇꜱ　` +
-      `<:VIDE:1472667823875559708> ${invitesData.invites} ɪɴᴠɪᴛᴇꜱ　` +
-      `<:VIDE:1493378253446975619> ${stats.timeouts || 0} ᴛɪᴍᴇᴏᴜᴛꜱ\n` +
-      `### <:VIDE:1493266536813690970> **#${position}**　` +
-      `<:VIDE:1472667816468418631> **${stats.rr}<:VIDE:1541125087384829962>**　` +
-      `<:VIDE:1493266679504048148> **${winrate}<:VIDE:1541167342535319603>%**\n` +
+      `### <:VIDE:1493266536813690970> #${position}　` +
+      `${stats.rr}<:VIDE:1541125087384829962>　` +
+      `${winrate}<:VIDE:1541167342535319603>%` +
+      `${stats.games} <:VIDE:1472667851239456935>　` +
+      `${stats.wins} <:VIDE:1493266372954820741>　` +
+      `${invitesData.invites} <:VIDE:1472667823875559708>　` +
+      `${stats.timeouts || 0} <:VIDE:1493378253446975619>　` +
       `-# ${progressBar}`
     )
   )
