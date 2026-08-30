@@ -1053,177 +1053,6 @@ function medalFor(index) {
   return `#${String(index + 1).padStart(2, '0')}`;
 }
 
-// ── Embed "Annonce Custom" (partie créée / inscription) ──
-function buildAnnounceContainer({
-  waitingVCId,
-  mode,
-  code,
-  organisateur,
-  remaining,
-  votes,
-  needed,
-  playersText,
-  mapName,
-  mapImage,
-  footerIcon
-}) {
-
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
-            `-# \`${remaining}\` ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ ᴘᴏᴜʀ ʟᴇ ʟᴏʙʙʏ \`${code}\`\n` +
-            `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\``
-          )
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(footerIcon)
-        )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
-        `${playersText || '-# ᴀᴜᴄᴜɴ'}`
-      )
-    )
-
-.addSeparatorComponents(
-  new SeparatorBuilder()
-    .setSpacing(SeparatorSpacingSize.Large)
-);
-
-  if (mapImage) {
-    container.addMediaGalleryComponents(
-      new MediaGalleryBuilder()
-        .addItems(
-          new MediaGalleryItemBuilder()
-            .setURL(mapImage)
-        )
-    );
-  }
-
-  return container;
-}
-
-// ── Embed "Partie en cours" ──
-// ── Container "Partie en cours" ──
-function buildResultContainer({
-  attackers,
-  defenders,
-  mapName,
-  mapImage,
-  validatedBy,
-  winningSide
-}) {
-
-  const maxPlayers = Math.max(
-    attackers.length,
-    defenders.length
-  );
-
-  const teamLines = [];
-
-  function buildPlayerText(player) {
-    if (!player) return '';
-
-    return `${player.rankEmoji} <@${player.id}>  ${player.rrDisplay}`;
-  }
-
-  function estimatePlayerWidth(player) {
-    if (!player) return 0;
-
-    // Emoji de rang
-    const emojiWidth = 3;
-
-    // Largeur approximative du vrai pseudo affiché par Discord
-    const nameWidth = player.displayName.length * 0.8;
-
-    // RR affichés
-    const rrWidth = player.rrDisplay
-      ? player.rrDisplay.length * 0.45
-      : 0;
-
-    return emojiWidth + nameWidth + rrWidth;
-  }
-
-  const COLUMN_TARGET = 24;
-
-  for (let i = 0; i < maxPlayers; i++) {
-    const attacker = attackers[i] || null;
-    const defender = defenders[i] || null;
-
-    const attackerText = buildPlayerText(attacker);
-    const defenderText = buildPlayerText(defender);
-
-    if (!attacker) {
-      teamLines.push(
-        `${'　'.repeat(COLUMN_TARGET)}${defenderText}`
-      );
-      continue;
-    }
-
-    const attackerWidth = estimatePlayerWidth(attacker);
-
-    const spacesNeeded = Math.max(
-      2,
-      Math.round(COLUMN_TARGET - attackerWidth)
-    );
-
-    teamLines.push(
-      `${attackerText}${'　'.repeat(spacesNeeded)}${defenderText}`
-    );
-  }
-
-  const winnerText =
-    winningSide === 'attack'
-      ? 'ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ'
-      : 'ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ';
-
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴠᴀʟɪᴅᴇᴇ ᴘᴀʀ : **${validatedBy}**\n` +
-            `-# ᴠɪᴄᴛᴏɪʀᴇ ᴅᴇꜱ : **${winnerText}**\n` +
-            `-# ʟᴇ ᴄᴀʟᴄᴜʟ ᴘʀᴇɴᴅ ᴇɴ ᴄᴏᴍᴘᴛᴇ ʟᴇꜱ ᴀᴠᴀɴᴛᴀɢᴇꜱ ᴛᴀɢ ᴇᴛ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ`
-          )
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(mapImage)
-        )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        teamLines.join('\n')
-      )
-    );
-
-  return container;
-}
-
 // ── Embed Leaderboard ──
 function buildLeaderboardContainer({
   sorted,
@@ -2015,6 +1844,48 @@ function buildRulesEmbed() {
     .setColor(EMBED_COLOR);
 }
 
+function getVisualWidth(text) {
+  let width = 0;
+
+  const parts = text.match(
+    /<@!?\d+>|<a?:\w+:\d+>|[^\s]+|\s+/g
+  ) || [];
+
+  for (const part of parts) {
+    if (/^<@!?\d+>$/.test(part)) {
+      width += 12;
+      continue;
+    }
+
+    if (/^<a?:\w+:\d+>$/.test(part)) {
+      width += 3;
+      continue;
+    }
+
+    if (/^\s+$/.test(part)) {
+      width += part.length * 0.5;
+      continue;
+    }
+
+    width += part.length * 0.75;
+  }
+
+  return width;
+}
+
+function padTeamLine(left, right) {
+  const COLUMN_TARGET = 25;
+
+  const currentWidth = getVisualWidth(left);
+
+  const spacesNeeded = Math.max(
+    2,
+    Math.round(COLUMN_TARGET - currentWidth)
+  );
+
+  return `${left}${'　'.repeat(spacesNeeded)}${right}`;
+} 
+
 function buildInGameContainer({
   attackersText,
   defendersText,
@@ -2081,6 +1952,177 @@ function buildInGameContainer({
     .addSeparatorComponents(
       new SeparatorBuilder()
         .setSpacing(SeparatorSpacingSize.Large)
+    );
+
+  return container;
+}
+
+// ── Embed "Annonce Custom" (partie créée / inscription) ──
+function buildAnnounceContainer({
+  waitingVCId,
+  mode,
+  code,
+  organisateur,
+  remaining,
+  votes,
+  needed,
+  playersText,
+  mapName,
+  mapImage,
+  footerIcon
+}) {
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
+            `-# \`${remaining}\` ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ ᴘᴏᴜʀ ʟᴇ ʟᴏʙʙʏ \`${code}\`\n` +
+            `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\``
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(footerIcon)
+        )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+        `${playersText || '-# ᴀᴜᴄᴜɴ'}`
+      )
+    )
+
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+);
+
+  if (mapImage) {
+    container.addMediaGalleryComponents(
+      new MediaGalleryBuilder()
+        .addItems(
+          new MediaGalleryItemBuilder()
+            .setURL(mapImage)
+        )
+    );
+  }
+
+  return container;
+}
+
+// ── Embed "Partie en cours" ──
+// ── Container "Partie en cours" ──
+function buildResultContainer({
+  attackers,
+  defenders,
+  mapName,
+  mapImage,
+  validatedBy,
+  winningSide
+}) {
+
+  const maxPlayers = Math.max(
+    attackers.length,
+    defenders.length
+  );
+
+  const teamLines = [];
+
+  function buildPlayerText(player) {
+    if (!player) return '';
+
+    return `${player.rankEmoji} <@${player.id}>  ${player.rrDisplay}`;
+  }
+
+  function estimatePlayerWidth(player) {
+    if (!player) return 0;
+
+    // Emoji de rang
+    const emojiWidth = 3;
+
+    // Largeur approximative du vrai pseudo affiché par Discord
+    const nameWidth = player.displayName.length * 0.8;
+
+    // RR affichés
+    const rrWidth = player.rrDisplay
+      ? player.rrDisplay.length * 0.45
+      : 0;
+
+    return emojiWidth + nameWidth + rrWidth;
+  }
+
+  const COLUMN_TARGET = 24;
+
+  for (let i = 0; i < maxPlayers; i++) {
+    const attacker = attackers[i] || null;
+    const defender = defenders[i] || null;
+
+    const attackerText = buildPlayerText(attacker);
+    const defenderText = buildPlayerText(defender);
+
+    if (!attacker) {
+      teamLines.push(
+        `${'　'.repeat(COLUMN_TARGET)}${defenderText}`
+      );
+      continue;
+    }
+
+    const attackerWidth = estimatePlayerWidth(attacker);
+
+    const spacesNeeded = Math.max(
+      2,
+      Math.round(COLUMN_TARGET - attackerWidth)
+    );
+
+    teamLines.push(
+      `${attackerText}${'　'.repeat(spacesNeeded)}${defenderText}`
+    );
+  }
+
+  const winnerText =
+    winningSide === 'attack'
+      ? 'ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ'
+      : 'ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴠᴀʟɪᴅᴇᴇ ᴘᴀʀ : **${validatedBy}**\n` +
+            `-# ᴠɪᴄᴛᴏɪʀᴇ ᴅᴇꜱ : **${winnerText}**\n` +
+            `-# ʟᴇ ᴄᴀʟᴄᴜʟ ᴘʀᴇɴᴅ ᴇɴ ᴄᴏᴍᴘᴛᴇ ʟᴇꜱ ᴀᴠᴀɴᴛᴀɢᴇꜱ ᴛᴀɢ ᴇᴛ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(mapImage)
+        )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        teamLines.join('\n')
+      )
     );
 
   return container;
