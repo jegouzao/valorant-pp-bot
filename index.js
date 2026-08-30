@@ -1163,7 +1163,8 @@ function buildInGameContainer({
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
             `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
-            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ`
+            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ` +
+            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
           )
         )
 
