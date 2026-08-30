@@ -419,7 +419,7 @@ function scheduleRegistrationUpdate(guild, game) {
 
 // ===== BUILD PLAYER LIST =====
 async function buildPlayerList(guild, playerIds) {
-  if (!playerIds.length) return 'ᴀᴜᴄᴜɴ';
+  if (!playerIds.length) return '-# ᴀᴜᴄᴜɴ';
 
   const list = [];
 
@@ -1068,10 +1068,9 @@ function buildAnnounceContainer({
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE LANCÉE ${mapName || ''}\n` +
             `-# Partie organisée par **${organisateur}**\n` +
-            `\n` +
-            `ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
-            `**ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ :** \`${remaining}\`\n` +
-            `**ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ :** \`${votes}/${needed}\``
+            `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+            `-# ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ : \`${remaining}\`\n` +
+            `-# ᴠᴏᴛᴇ ʀᴏᴛᴀᴛᴇ ᴍᴀᴘ : \`${votes}/${needed}\``
           )
         )
         .setThumbnailAccessory(
@@ -1087,8 +1086,9 @@ function buildAnnounceContainer({
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
-        `${playersText || 'ᴀᴜᴄᴜɴ'}`
+        `-# ᴊᴏᴜᴇᴜʀꜱ ɪɴꜱᴄʀɪᴛꜱ\n` +
+        `${playersText || '-# ᴀᴜᴄᴜɴ'}` +
+        `\n`
       )
     );
 
@@ -2279,7 +2279,7 @@ if (
   remaining: 10,
   votes: 0,
   needed: 6,
-  playersText: 'ᴀᴜᴄᴜɴ',
+  playersText: '-# ᴀᴜᴄᴜɴ',
   mapName: map.name,
   mapImage: map?.image,
   footerIcon: interaction.user.displayAvatarURL({
