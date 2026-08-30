@@ -1182,7 +1182,7 @@ function buildInGameContainer({
     // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ　　　　　　　　　　　　ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
+        `ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ　　　　　　　　　　　　ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
 teamLines.join('\n')
       )
     )
