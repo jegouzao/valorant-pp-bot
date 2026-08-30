@@ -1921,46 +1921,18 @@ function padTeamLine(left, right, guild) {
   const FULL_SPACE_WIDTH = 1.35;
 
   const normalizedLeft = left || '';
-let normalizedRight = right || '';
+const normalizedRight = right || '';
 
-if (normalizedRight) {
-  const rightMention = normalizedRight.match(/<@!?\d+>/);
-
-  if (rightMention) {
-    const mention = rightMention[0];
-    const mentionIndex = normalizedRight.indexOf(mention);
-
-    const prefix = normalizedRight
-      .slice(0, mentionIndex)
-      .trim();
-
-    const suffix = normalizedRight
-      .slice(mentionIndex + mention.length);
-
-    const prefixWidth = getDiscordVisualWidth(
-      prefix,
-      guild
-    );
-
-    const RIGHT_PREFIX_TARGET = 6.5;
+const RIGHT_PREFIX_TARGET = 4.5;
 const NORMAL_SPACE_WIDTH = 0.42;
 
-    const padding = Math.max(
-      1,
-      Math.round(
-        (RIGHT_PREFIX_TARGET - prefixWidth) /
-        NORMAL_SPACE_WIDTH
-      )
-    );
-
-    normalizedRight =
-      `${prefix}${' '.repeat(padding)}${mention}${suffix}`;
-  }
-}
-
 if (!normalizedLeft) {
-      return `${'　'.repeat(16)}${normalizedRight}`;
-  }
+  const blankSpaces = Math.round(
+    COLUMN_TARGET / FULL_SPACE_WIDTH
+  );
+
+  return `${'　'.repeat(blankSpaces)}${normalizedRight}`;
+}
 
   const mentionMatch = normalizedLeft.match(/<@!?\d+>/);
 
@@ -1979,7 +1951,21 @@ if (!normalizedLeft) {
     guild
   );
 
-  const RR_ZONE = 4.8;
+  let RR_ZONE = 0;
+
+if (mentionMatch) {
+  const mentionEnd =
+    normalizedLeft.indexOf(mentionMatch[0]) +
+    mentionMatch[0].length;
+
+  const suffix = normalizedLeft
+    .slice(mentionEnd)
+    .trim();
+
+  if (suffix) {
+    RR_ZONE = 4.8;
+  }
+}
 
   const spacesNeeded = Math.max(
     2,
