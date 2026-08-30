@@ -1105,7 +1105,7 @@ function buildLeaderboardContainer({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-  const barLength = 27;
+  const barLength = 35;
 
   const lines = sorted.map(([id, data], idx) => {
 
@@ -1183,13 +1183,10 @@ function buildLeaderboardContainer({
     );
 }
 
-container.addSectionComponents(
-  new SectionBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('\u200B')
-    )
-    .setThumbnailAccessory(
-      new ThumbnailBuilder()
+container.addMediaGalleryComponents(
+  new MediaGalleryBuilder()
+    .addItems(
+      new MediaGalleryItemBuilder()
         .setURL(BANNERS.onboarding)
     )
 );
