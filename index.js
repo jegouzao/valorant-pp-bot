@@ -1947,7 +1947,7 @@ function normalizePlayerLine(text, guild) {
 
 
 function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 28;
+  const COLUMN_TARGET = 24;
   const FULL_SPACE_WIDTH = 1.35;
 
   const normalizedLeft = normalizePlayerLine(
@@ -1961,7 +1961,7 @@ function padTeamLine(left, right, guild) {
   );
 
   if (!normalizedLeft) {
-    return `${'　'.repeat(20)}${normalizedRight}`;
+    return `${'　'.repeat(17)}${normalizedRight}`;
   }
 
   const leftWidth = getDiscordVisualWidth(
@@ -2124,9 +2124,9 @@ function buildResultContainer({
   mapName,
   mapImage,
   validatedBy,
-  winningSide
+  winningSide,
+  guild
 }) {
-
   const maxPlayers = Math.max(
     attackers.length,
     defenders.length
@@ -2140,25 +2140,6 @@ function buildResultContainer({
     return `${player.rankEmoji} <@${player.id}>  ${player.rrDisplay}`;
   }
 
-  function estimatePlayerWidth(player) {
-    if (!player) return 0;
-
-    // Emoji de rang
-    const emojiWidth = 3;
-
-    // Largeur approximative du vrai pseudo affiché par Discord
-    const nameWidth = (player.displayName || 'Utilisateur').length * 0.8;
-
-    // RR affichés
-    const rrWidth = player.rrDisplay
-      ? player.rrDisplay.length * 0.45
-      : 0;
-
-    return emojiWidth + nameWidth + rrWidth;
-  }
-
-  const COLUMN_TARGET = 24;
-
   for (let i = 0; i < maxPlayers; i++) {
     const attacker = attackers[i] || null;
     const defender = defenders[i] || null;
@@ -2166,22 +2147,12 @@ function buildResultContainer({
     const attackerText = buildPlayerText(attacker);
     const defenderText = buildPlayerText(defender);
 
-    if (!attacker) {
-      teamLines.push(
-        `${'　'.repeat(COLUMN_TARGET)}${defenderText}`
-      );
-      continue;
-    }
-
-    const attackerWidth = estimatePlayerWidth(attacker);
-
-    const spacesNeeded = Math.max(
-      2,
-      Math.round(COLUMN_TARGET - attackerWidth)
-    );
-
     teamLines.push(
-      `${attackerText}${'　'.repeat(spacesNeeded)}${defenderText}`
+      padTeamLine(
+        attackerText,
+        defenderText,
+        guild
+      )
     );
   }
 
@@ -2204,8 +2175,7 @@ function buildResultContainer({
           )
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(mapImage)
+          new ThumbnailBuilder().setURL(mapImage)
         )
     )
 
@@ -3326,15 +3296,11 @@ const resultContainer = buildResultContainer({
   mapName: game.mapName,
   mapImage: game.mapImage,
   validatedBy: interaction.member.displayName,
-  winningSide
+  winningSide,
+  guild: interaction.guild
 });
 
 console.log('RESULT STEP 4');
-
-await interaction.channel.send({
-  components: [resultContainer],
-  flags: MessageFlags.IsComponentsV2
-}).catch(console.error);
 
 console.log('RESULT STEP 5');
 
