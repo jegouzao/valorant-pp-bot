@@ -2367,17 +2367,20 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('join_game')
     .setLabel('Rejoindre la partie')
+    .setEmoji('1493378313224192233')
     .setStyle(ButtonStyle.Success),
 
   new ButtonBuilder()
     .setCustomId('change_map')
     .setLabel('Changer la map')
+    .setEmoji('1493378253446975619')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('start')
     .setLabel('Équilibrer les équipes')
-    .setStyle(ButtonStyle.Primary),
+    .setEmoji('1472667851239456935')
+    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('cancel_registration')
@@ -2853,17 +2856,20 @@ const buttons = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('spectate')
     .setLabel('Observer')
+    .setEmoji('1493378513791615076')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
-    .setCustomId('attack_win')
-    .setLabel('Attaquants gagnants')
-    .setStyle(ButtonStyle.Primary),
+  .setCustomId('attack_win')
+  .setLabel('ATTAQUANTS')
+  .setEmoji('1493266372954820741')
+  .setStyle(ButtonStyle.Danger),
 
-  new ButtonBuilder()
-    .setCustomId('defense_win')
-    .setLabel('Défenseurs gagnants')
-    .setStyle(ButtonStyle.Primary),
+new ButtonBuilder()
+  .setCustomId('defense_win')
+  .setLabel('DÉFENSEURS')
+  .setEmoji('1493266372954820741')
+  .setStyle(ButtonStyle.Success),
 
   new ButtonBuilder()
     .setCustomId('cancel_game')
