@@ -1565,7 +1565,8 @@ const progressBar =
   '▰'.repeat(filledBars) +
   '▱'.repeat(barLength - filledBars);
 
-  const statsContainer = new ContainerBuilder()
+
+const statsContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
 
   // ── EN-TÊTE ──
@@ -1575,7 +1576,7 @@ const progressBar =
         new TextDisplayBuilder().setContent(
           `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
           `-# Tes statistiques personnelles sur VALORANT PP\n` +
-          `-# <:VIDE:1493046369076777110> Membre depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
+          `-# Membre <:VIDE:1493046369076777110> depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
         )
       )
       .setThumbnailAccessory(
@@ -1594,6 +1595,9 @@ const progressBar =
       `### <:VIDE:1493266536813690970> ᴘᴏꜱɪᴛɪᴏɴ  **#${position}**　　　` +
       `<:VIDE:1472667816468418631> ᴘᴏɪɴᴛꜱ  **${stats.rr} RR**　　　` +
       `<:VIDE:1493266679504048148> ᴡɪɴʀᴀᴛᴇ  **${winrate}%**\n` +
+
+      `> ${progressBar}\n` +
+
       `### <:VIDE:1472667851239456935> ᴘᴀʀᴛɪᴇꜱ  ${stats.games}　` +
       `<:VIDE:1493266372954820741> ᴠɪᴄᴛᴏɪʀᴇꜱ  ${stats.wins}　` +
       `<:VIDE:1472667823875559708> ɪɴᴠɪᴛᴇꜱ  ${invitesData.invites}　` +
