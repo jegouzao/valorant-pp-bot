@@ -1072,24 +1072,22 @@ function buildResultEmbed({ attackersText, defendersText, footerIcon, footerText
 }
 
 // ── Embed Leaderboard ──
-function buildLeaderboardContainer({
+function buildLeaderboardEmbed({
   sorted,
   totalInvitesPerMember,
   guildMembersCache,
   playerCount,
   seasonLabel = 'Saison 1'
 }) {
-
   if (!sorted.length) {
-    return new ContainerBuilder()
-      .setAccentColor(EMBED_COLOR)
-
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:VIDE:1493046347337699499> LEADERBOARD\n` +
-          `-# ᴄᴀʟᴄᴜʟ ᴇɴ ᴄᴏᴜʀꜱ...`
-        )
-      );
+    return new EmbedBuilder()
+      .setDescription('## 🏆 Classement — Valorant PP')
+      .setImage(BANNERS.leaderboard)
+      .addFields({
+        name: 'ᴄᴀʟᴄᴜʟ ᴇɴ ᴄᴏᴜʀꜱ...',
+        value: '...'
+      })
+      .setColor(EMBED_COLOR);
   }
 
   // ── TOP INVITER ──
@@ -1107,7 +1105,6 @@ function buildLeaderboardContainer({
   const barLength = 27;
 
   const lines = sorted.map(([id, data], idx) => {
-
     const invites = totalInvitesPerMember[id] || 0;
 
     const wins = data.wins || 0;
@@ -1144,42 +1141,34 @@ function buildLeaderboardContainer({
       badges += `${BADGES.TOP_INVITER}`;
     }
 
-    return (
-      `**#${idx + 1}** <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges}` +
-      `　**•**　**${data.rr || 0}**<:VIDE:1541125087384829962>` +
-      `　**•**　**${invites}**<:VIDE:1472667823875559708>` +
-      `　**•**　**${timeouts}**<:VIDE:1493378253446975619>` +
-      `　**•**　**${winrate}**<:VIDE:1541167342535319603>**%**\n` +
-      `-# ${bar}`
-    );
+return (
+  `\n> **#${idx + 1}** <@${id}> ${rankEmoji ? rankEmoji +'':''}${badges}` +
+  `  **•**  **${data.rr || 0}** <:VIDE:1541125087384829962>`+
+  `**•**  **${invites}**<:VIDE:1472667823875559708>`+
+  `  **•**  **${timeouts}**<:VIDE:1493378253446975619>`+
+  `  **•**  **${winrate}**<:VIDE:1541167342535319603>**%**`+
+  `\n> ${bar}\n`
+);
+});
+
+const leaderboardFields = [];
+
+for (let i = 0; i < lines.length; i += 1) {
+  leaderboardFields.push({
+    name: '\u200B',
+    value: lines.slice(i, i + 1).join('\n')
   });
+}
 
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n` +
-        `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    );
-
-  for (const line of lines) {
-    container
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(line)
-      )
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-      );
-  }
-
-  return container;
+return new EmbedBuilder()
+  .setDescription(
+    `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n\n` +
+    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
+  )
+  .addFields(leaderboardFields)
+  .setImage(BANNERS.onboarding)
+  .setColor(EMBED_COLOR);
 }
 
 
@@ -1421,17 +1410,14 @@ const sorted = activePlayers
 
 const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
 const playerCount = Math.round(currentMembers * 0.85);
-const container = buildLeaderboardContainer({
+const embed = buildLeaderboardEmbed({
   sorted,
   totalInvitesPerMember,
   guildMembersCache: guild?.members?.cache || null,
   playerCount
 });
 
-await msg.edit({
-  components: [container],
-  flags: MessageFlags.IsComponentsV2
-}).catch(console.error);
+  await msg.edit({ embeds: [embed] }).catch(() => {});
 }
 
 
