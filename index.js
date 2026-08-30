@@ -1552,7 +1552,7 @@ if (choice === 'stats') {
     .join(', ') || 'Aucun';
 
     const maxRR = sorted[0]?.[1]?.rr || 1;
-const barLength = 40;
+const barLength = 35;
 
 const rawBars = (stats.rr / maxRR) * barLength;
 
@@ -1575,9 +1575,9 @@ const statsContainer = new ContainerBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
-          `-# Tes statistiques personnelles sur VALORANT PP\n` +
+          `-# Tes statistiques personnelles sur **VALORANT PP**\n` +
           `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
-          `-# #${position} au classement général\n` +
+          `-# **#${position}** au classement général\n` +
           `-# ${progressBar}`
         )
       )
