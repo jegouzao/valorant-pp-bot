@@ -3039,6 +3039,50 @@ if (TEST_MODE && game.players.length < 1) {
           const attackersText = sortTeamByRank(game.attackers);
 const defendersText = sortTeamByRank(game.defenders);
 
+
+const formatPlayers = async (ids) => {
+  let data = [];
+
+  for (const id of ids) {
+    const member =
+      interaction.guild.members.cache.get(id) ||
+      await interaction.guild.members.fetch(id).catch(() => null);
+
+    if (!member) continue;
+
+    const rankRole = member.roles.cache.find(
+      r => RANK_ORDER[r.name]
+    );
+
+    const rankValue = rankRole
+      ? RANK_ORDER[rankRole.name]
+      : 999;
+
+    const rankEmoji = rankRole
+      ? rankEmojis[rankRole.name]
+      : rankEmojis.Unranked;
+
+    const rrValue = matchRR[id];
+
+    data.push({
+      id,
+      rankValue,
+      rankEmoji,
+      displayName: member.displayName,
+
+      rrText:
+        rrValue > 0
+          ? `+${rrValue} RR`
+          : `${rrValue} RR`
+    });
+  }
+
+  data.sort((a, b) => a.rankValue - b.rankValue);
+
+  return data;
+};
+
+
 const formattedAttackers = await formatPlayers(game.attackers);
 const formattedDefenders = await formatPlayers(game.defenders);
 
@@ -3205,47 +3249,7 @@ await interaction.editReply('✅ Partie lancée');
             gamesData.games = gamesData.games.filter(g => g.id !== game.id);
             await deleteGame(game.id);
 
-           const formatPlayers = async (ids) => {
-  let data = [];
-
-  for (const id of ids) {
-    const member =
-      interaction.guild.members.cache.get(id) ||
-      await interaction.guild.members.fetch(id).catch(() => null);
-
-    if (!member) continue;
-
-    const rankRole = member.roles.cache.find(
-      r => RANK_ORDER[r.name]
-    );
-
-    const rankValue = rankRole
-      ? RANK_ORDER[rankRole.name]
-      : 999;
-
-    const rankEmoji = rankRole
-      ? rankEmojis[rankRole.name]
-      : rankEmojis.Unranked;
-
-    const rrValue = matchRR[id];
-
-    data.push({
-      id,
-      rankValue,
-      rankEmoji,
-      displayName: member.displayName,
-
-      rrText:
-        rrValue > 0
-          ? `+${rrValue} RR`
-          : `${rrValue} RR`
-    });
-  }
-
-  data.sort((a, b) => a.rankValue - b.rankValue);
-
-  return data;
-};
+  
 
 const resultContainer = buildResultContainer({
   attackers: await formatPlayers(attackers),
