@@ -1124,18 +1124,52 @@ function buildInGameContainer({
   defendersText,
   mapName,
   mapImage,
-  footerIcon,
   footerText
 }) {
+
+  const attackers = attackersText
+    .split('\n')
+    .filter(Boolean);
+
+  const defenders = defendersText
+    .split('\n')
+    .filter(Boolean);
+
+  const maxPlayers = Math.max(
+    attackers.length,
+    defenders.length
+  );
+
+  const teamLines = [];
+
+  for (let i = 0; i < maxPlayers; i++) {
+
+    const attacker = attackers[i] || ' ';
+    const defender = defenders[i] || ' ';
+
+    teamLines.push(
+      `${attacker}　　　　　　　　　${defender}`
+    );
+  }
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-        `-# ${footerText}`
-      )
+    // ── HEADER + THUMBNAIL MAP ──
+    .addSectionComponents(
+      new SectionBuilder()
+
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**`
+          )
+        )
+
+        .setThumbnailAccessory(
+          new ThumbnailBuilder()
+            .setURL(mapImage)
+        )
     )
 
     .addSeparatorComponents(
@@ -1143,36 +1177,13 @@ function buildInGameContainer({
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
-    // ── ATTAQUANTS ──
+    // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
     .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `<:VIDE:1465704930160410847> ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ\n` +
-    `${attackersText}`
-  )
-)
-
-.addSeparatorComponents(
-  new SeparatorBuilder()
-    .setSpacing(SeparatorSpacingSize.Large)
-)
-
-.addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `<:VIDE:1465704930160410847> ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ\n` +
-    `${defendersText}`
-  )
-)
-
-  // ── IMAGE DE LA MAP ──
-  if (mapImage) {
-    container.addMediaGalleryComponents(
-      new MediaGalleryBuilder()
-        .addItems(
-          new MediaGalleryItemBuilder()
-            .setURL('https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a95aa68&is=6a9458e8&hm=f3ca38f4f063667605bb7d934d20f85f89ef673415b6c981dcd00949b95525d5&')
-        )
+      new TextDisplayBuilder().setContent(
+        `**ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ**　　　　　　　　　　　　**ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ**\n\n` +
+        teamLines.join('\n')
+      )
     );
-  }
 
   return container;
 }
@@ -2828,10 +2839,7 @@ const gameContainer = buildInGameContainer({
   defendersText,
   mapName: game.mapName,
   mapImage: game.mapImage,
-  footerIcon: interaction.user.displayAvatarURL({
-    size: 256
-  }),
-  footerText: `Partie lancée par ${interaction.member.displayName}`
+  footerText: interaction.member.displayName
 });
 
 const buttons = new ActionRowBuilder().addComponents(
