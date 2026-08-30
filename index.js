@@ -1161,12 +1161,12 @@ function buildLeaderboardContainer({
     .setAccentColor(EMBED_COLOR)
 
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> LEADERBOARD ꜱᴇᴘᴛᴇᴍʙʀᴇ\n` +
-        `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
-        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
-      )
-    )
+  new TextDisplayBuilder().setContent(
+    `## <:VIDE:1493046347337699499> LEADERBOARD ꜱᴇᴘᴛᴇᴍʙʀᴇ\n` +
+    `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+    `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
+  )
+)
 
     .addSeparatorComponents(
   new SeparatorBuilder()
@@ -1185,13 +1185,7 @@ function buildLeaderboardContainer({
     );
 }
 
-container.addMediaGalleryComponents(
-  new MediaGalleryBuilder()
-    .addItems(
-      new MediaGalleryItemBuilder()
-        .setURL(BANNERS.onboarding)
-    )
-);
+
 
   return container;
 }
