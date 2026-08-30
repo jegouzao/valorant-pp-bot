@@ -1913,13 +1913,13 @@ function getDiscordVisualWidth(text, guild) {
 
 
 function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 29;
+const COLUMN_TARGET = 28;
   const FULL_SPACE_WIDTH = 1.35;
 
   // Ligne sans joueur à gauche
   if (!left) {
-    return `${'　'.repeat(21)}${right}`;
-  }
+  return `${'　'.repeat(20)}${right}`;
+}
 
   const leftWidth = getDiscordVisualWidth(
     left,
@@ -2104,7 +2104,7 @@ function buildResultContainer({
     const emojiWidth = 3;
 
     // Largeur approximative du vrai pseudo affiché par Discord
-    const nameWidth = player.displayName.length * 0.8;
+    const nameWidth = (player.displayName || 'Utilisateur').length * 0.8;
 
     // RR affichés
     const rrWidth = player.rrDisplay
@@ -3033,7 +3033,7 @@ const defendersText = sortTeamByRank(game.defenders);
 
 
 const formatPlayers = async (ids) => {
-  let data = [];
+  const data = [];
 
   for (const id of ids) {
     const member =
@@ -3042,14 +3042,9 @@ const formatPlayers = async (ids) => {
 
     if (!member) continue;
 
-
-    if (!member?.roles?.cache) {
-  console.log('⚠️ Membre incomplet dans formatPlayers:', id);
-}
-
     const rankRole = member.roles?.cache?.find(
-  r => RANK_ORDER[r.name]
-) || null;
+      r => RANK_ORDER[r.name]
+    );
 
     const rankValue = rankRole
       ? RANK_ORDER[rankRole.name]
@@ -3059,18 +3054,14 @@ const formatPlayers = async (ids) => {
       ? rankEmojis[rankRole.name]
       : rankEmojis.Unranked;
 
-    const rrValue = matchRR[id];
+    const rrDisplay = formatRRDeltaEmoji(matchRR[id]);
 
     data.push({
       id,
       rankValue,
       rankEmoji,
-      displayName: member.displayName,
-
-      rrText:
-        rrValue > 0
-          ? `+${rrValue} RR`
-          : `${rrValue} RR`
+      rrDisplay,
+      displayName: member.displayName
     });
   }
 
