@@ -1151,7 +1151,10 @@ function buildInGameContainer({
   )
 )
 
-.addSeparatorComponents(...)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+)
 
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
