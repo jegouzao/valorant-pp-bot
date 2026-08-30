@@ -1148,7 +1148,7 @@ function buildLeaderboardContainer({
     return (
   ` **#${idx + 1}** <@${id}> ${rankEmoji ? rankEmoji + ' ' : ''}${badges} ` +
   `    **${data.rr || 0}**<:VIDE:1541125087384829962>` +
-  `    **${winrate}**<:VIDE:1541167342535319603>**%**` +
+  `    **${winrate}**<:VIDE:1541167342535319603>**%** ` +
   `    **${games}**<:VIDE:1472667851239456935>` +
   `    **${wins}**<:VIDE:1493266372954820741>` +
   `    **${invites}**<:VIDE:1472667823875559708>` +
