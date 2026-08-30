@@ -1162,7 +1162,7 @@ function buildInGameContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**` +
+            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
             `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ`
           )
         )
@@ -1185,11 +1185,6 @@ function buildInGameContainer({
 teamLines.join('\n')
       )
     )
-
-    .addSeparatorComponents(
-  new SeparatorBuilder()
-    .setSpacing(SeparatorSpacingSize.Large)
-)
 
 .addMediaGalleryComponents(
   new MediaGalleryBuilder()
