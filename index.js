@@ -1426,7 +1426,7 @@ const embed = buildLeaderboardEmbed({
 // ===== Contenu de la commande /onboarding =====
 const ONBOARDING_TOPICS = [
   { value: 'verification', label: 'Débloquer l\'accés au serveur', emoji: { name: '1', id: '1493378334326001816' }},
-  { value: 'jouer', label: 'Comment jouer un PP', emoji: { name: '2', id: '1493046369076777110' }},
+  { value: 'jouer', label: 'Comment jouer une PP', emoji: { name: '2', id: '1493046369076777110' }},
   { value: 'reglement', label: 'Règlement du serveur', emoji: { name: '3', id: '1466611512646045739' }},
   { value: 'stats', label: 'Mes statistiques', emoji: { name: '4', id: '1466957289813442721' }},
   { value: 'signaler', label: 'Notifications PP • Contact', emoji: { name: '7E', id: '1493378160639741992' }}];
