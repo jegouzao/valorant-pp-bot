@@ -1219,10 +1219,10 @@ function padTeamLine(left, right) {
 
     // ── DEUX ÉQUIPES SUR LA MÊME LIGNE ──
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        teamLines.join('\n')
-      )
-    )
+  new TextDisplayBuilder().setContent(
+    teamLines.join('\n') || '\u200B'
+  )
+)
 
     .addSeparatorComponents(
       new SeparatorBuilder()
@@ -1296,10 +1296,10 @@ function buildResultContainer({
     )
 
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        teamLines.join('\n')
-      )
-    );
+  new TextDisplayBuilder().setContent(
+    teamLines.join('\n') || '\u200B'
+  )
+);
 
   return container;
 }
