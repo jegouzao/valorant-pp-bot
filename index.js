@@ -1913,14 +1913,18 @@ function getDiscordVisualWidth(text, guild) {
 
 
 function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 25;
+  const COLUMN_TARGET = 29;
+  const FULL_SPACE_WIDTH = 1.35;
+
+  // Ligne sans joueur à gauche
+  if (!left) {
+    return `${'　'.repeat(21)}${right}`;
+  }
 
   const leftWidth = getDiscordVisualWidth(
     left,
     guild
   );
-
-  const FULL_SPACE_WIDTH = 1.75;
 
   const spacesNeeded = Math.max(
     2,
