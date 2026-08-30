@@ -1274,17 +1274,17 @@ function buildOnboardingContainer() {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('open_rules')
-      .setLabel('Règlement')
+      .setLabel('Règlement du serveur')
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
       .setCustomId('toggle_notif_pp')
-      .setLabel('Notifications PP')
+      .setLabel('Régler les notifications')
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
       .setCustomId('open_ticket')
-      .setLabel('Ouvrir un ticket')
+      .setLabel('Contacter l\'équipe')
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -1293,9 +1293,13 @@ function buildOnboardingContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:Roles:1493046347337699499> ACCUEIL — VALORANT PP\n` +
+        `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP\n` +
         `-# Retrouve ici les informations et outils principaux du serveur.`
       )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
     )
 
     .addMediaGalleryComponents(
