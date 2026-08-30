@@ -1159,7 +1159,7 @@ function buildLeaderboardContainer({
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> LEADERBOARD ᴀᴏᴜᴛ\n` +
+        `## <:VIDE:1493046347337699499> LEADERBOARD ꜱᴇᴘᴛᴇᴍʙʀᴇ\n` +
         `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
         `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\``
       )
@@ -1170,14 +1170,25 @@ function buildLeaderboardContainer({
     );
 
   for (const line of lines) {
-    container
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(line)
-      )
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-      );
-  }
+  container
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(line)
+    )
+
+    // espace après la barre
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('\u200B')
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+
+    // espace avant le joueur suivant
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('\u200B')
+    );
+}
 
   return container;
 }
