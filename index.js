@@ -1208,7 +1208,7 @@ const pagePlayers = sorted.slice(
       .setSpacing(SeparatorSpacingSize.Large)
   );
 }
-};
+}
 
 .addSeparatorComponents(
   new SeparatorBuilder()
