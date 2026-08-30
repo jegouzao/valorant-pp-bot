@@ -1576,7 +1576,9 @@ const statsContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
           `-# Tes statistiques personnelles sur VALORANT PP\n` +
-          `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}`
+          `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
+          `-# #${position} au classement général\n` +
+          `-# ${progressBar}`
         )
       )
       .setThumbnailAccessory(
@@ -1593,12 +1595,11 @@ const statsContainer = new ContainerBuilder()
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
-      `${winrate}<:VIDE:1541167342535319603>%  　` +
+      `${winrate}<:VIDE:1541167342535319603>%   　` +
       `${stats.games}<:VIDE:1472667851239456935>　` +
       `${stats.wins}<:VIDE:1493266372954820741>　` +
       `${invitesData.invites}<:VIDE:1472667823875559708>　` +
-      `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n` +
-      `-# ${position} ${progressBar}\n\n`
+      `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
     )
   )
 
