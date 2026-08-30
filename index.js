@@ -1164,7 +1164,7 @@ function buildInGameContainer({
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
             `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
             `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ\n` +
-            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ\n`
+            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
           )
         )
 
@@ -2303,13 +2303,24 @@ if (
     }
 
     // ── MODAL SUBMIT ──
-    if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
-      await interaction.deferReply({ ephemeral: true });
-      const valorantCode = interaction.fields.getTextInputValue('valorant_code');
-      const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
-      if (!verifiedRole) return interaction.editReply("⚠️ Le rôle Vérifié n'existe pas.");
+if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
+  if (interaction.replied || interaction.deferred) return;
 
-      const category = await interaction.guild.channels.create({
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const valorantCode = interaction.fields.getTextInputValue('valorant_code');
+
+  const verifiedRole = interaction.guild.roles.cache.find(
+    r => r.name === 'Vérifié'
+  );
+
+  if (!verifiedRole) {
+    return interaction.editReply("⚠️ Le rôle Vérifié n'existe pas.");
+  }
+
+  const category = await interaction.guild.channels.create({
         name: 'ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ',
         type: 4,
         permissionOverwrites: [
