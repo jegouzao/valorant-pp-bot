@@ -76,6 +76,7 @@ const {
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
   SeparatorBuilder,
+  SeparatorSpacingSize,
   MessageFlags,
   SectionBuilder,
   ThumbnailBuilder,
@@ -1175,18 +1176,9 @@ function buildLeaderboardContainer({
       new TextDisplayBuilder().setContent(line)
     )
 
-    // espace après la barre
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('\u200B')
-    )
-
     .addSeparatorComponents(
       new SeparatorBuilder()
-    )
-
-    // espace avant le joueur suivant
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('\u200B')
+        .setSpacing(SeparatorSpacingSize.Large)
     );
 }
 
