@@ -1173,7 +1173,7 @@ function buildLeaderboardContainer({
     )
     .setThumbnailAccessory(
       new ThumbnailBuilder()
-        .setURL(BANNERS.onboarding)
+        .setURL('https://cdn.discordapp.com/attachments/1461761854563942400/1543614174788190259/Copie_de_Guide_TRADE_REPUBLIC_12.png?ex=6a95823a&is=6a9430ba&hm=ad6142c6ac5dd3768e3e1973d2461e2850d0ea14e976cc7b66bf874fe14adb16&é')
     )
 )
 
