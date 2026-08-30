@@ -501,7 +501,7 @@ const row = new ActionRowBuilder().addComponents(
 
   new ButtonBuilder()
     .setCustomId('start')
-    .setLabel('Équilibrer les équipes')
+    .setLabel('Lancer')
     .setStyle(ButtonStyle.Primary),
 
   new ButtonBuilder()
