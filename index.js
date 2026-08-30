@@ -1189,17 +1189,9 @@ function buildLeaderboardContainer({
 
   // Séparateur uniquement entre les joueurs
   if (i < lines.length - 1) {
-  // Entre les joueurs : espace + ligne
   container.addSeparatorComponents(
     new SeparatorBuilder()
       .setSpacing(SeparatorSpacingSize.Large)
-  );
-} else {
-  // Après le dernier joueur : espace uniquement, sans ligne
-  container.addSeparatorComponents(
-    new SeparatorBuilder()
-      .setSpacing(SeparatorSpacingSize.Large)
-      .setDivider(false)
   );
 }
 }
