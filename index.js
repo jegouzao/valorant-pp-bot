@@ -1242,7 +1242,7 @@ function buildResultContainer({
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
             `-# ᴘᴀʀᴛɪᴇ ᴠᴀʟɪᴅᴇᴇ ᴘᴀʀ : **${validatedBy}**\n` +
-            `-# ᴠɪᴄᴛᴏɪʀᴇ ᴅᴇꜱ **${winnerText}**\n` +
+            `-# ᴠɪᴄᴛᴏɪʀᴇ ᴅᴇꜱ : **${winnerText}**\n` +
             `-# ʟᴇ ᴄᴀʟᴄᴜʟ ᴘʀᴇɴᴅ ᴇɴ ᴄᴏᴍᴘᴛᴇ ʟᴇꜱ ᴀᴠᴀɴᴛᴀɢᴇꜱ ᴛᴀɢ ᴇᴛ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ`
           )
         )
@@ -1259,7 +1259,6 @@ function buildResultContainer({
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `**ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ**　　　　　　　　　　　　**ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ**\n` +
         teamLines.join('\n')
       )
     );
