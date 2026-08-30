@@ -1213,7 +1213,6 @@ const pagePlayers = sorted.slice(
 container.addSeparatorComponents(
   new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Large)
-    .setDivider(false)
 );
 
 const paginationRow = new ActionRowBuilder().addComponents(
