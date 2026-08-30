@@ -20,13 +20,10 @@ const maps = require('./config/maps');
 const mongoose = require('mongoose');
 
 async function initMongo() {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB connecté');
-  } catch (err) {
-    console.error('❌ MongoDB erreur :', err);
-  }
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log('✅ MongoDB connecté');
 }
+
 
 
 const http = require('http');
@@ -609,8 +606,29 @@ async function incrementPlayerTimeouts(userId) {
 }
 
 
+async function incrementPlayerStats(userId, rrDelta, isWinner) {
+  await Points.updateOne(
+    { userId },
+    {
+      $inc: {
+        rr: rrDelta,
+        games: 1,
+        wins: isWinner ? 1 : 0
+      }
+    },
+    { upsert: true }
+  );
+
+  // Empêche les RR négatifs
+  await Points.updateOne(
+    { userId, rr: { $lt: 0 } },
+    { $set: { rr: 0 } }
+  );
+}
+
+
 async function getAllPoints() {
-  const docs = await Points.find({});
+  const docs = await Points.find({}).lean();
   const result = {};
 
   for (const doc of docs) {
@@ -656,8 +674,19 @@ async function setInviteData(inviterId, data) {
   );
 }
 
+async function incrementInvite(inviterId, memberId) {
+  await Invite.updateOne(
+    { inviterId },
+    {
+      $inc: { invites: 1 },
+      $addToSet: { members: memberId }
+    },
+    { upsert: true }
+  );
+}
+
 async function getAllInvites() {
-  const docs = await Invite.find({});
+  const docs = await Invite.find({}).lean();
   const result = {};
 
   for (const doc of docs) {
@@ -1044,9 +1073,15 @@ client.once(Events.ClientReady, async () => {
   const guild = client.guilds.cache.get(process.env.GUILD_ID);
   if (!guild) return;
 
+  try {
   await initMongo();
+
   gamesData.games = await getAllGames();
   console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
+} catch (err) {
+  console.error('❌ Impossible de démarrer MongoDB :', err);
+  return;
+}
 
   await guild.members.fetch();
   console.log('✅ Tous les membres du serveur ont été chargés en cache');
@@ -1130,6 +1165,40 @@ client.on(Events.UserUpdate, async (oldUser, newUser) => {
   await syncServerTagRole(newUser.id, newUser);
 });
 
+function sortLeaderboardPlayers(pointsData, totalInvitesPerMember, guildMembersCache) {
+  return Object.entries(pointsData)
+    .filter(([id]) => guildMembersCache.has(id))
+    .sort(([idA, a], [idB, b]) => {
+      // 1. Plus de RR
+      const rrDiff = (b.rr || 0) - (a.rr || 0);
+      if (rrDiff !== 0) return rrDiff;
+
+      // 2. Meilleur winrate
+      const winrateA = (a.games || 0)
+        ? (a.wins || 0) / a.games
+        : 0;
+
+      const winrateB = (b.games || 0)
+        ? (b.wins || 0) / b.games
+        : 0;
+
+      const winrateDiff = winrateB - winrateA;
+      if (winrateDiff !== 0) return winrateDiff;
+
+      // 3. Plus d'invitations
+      const invitesA = totalInvitesPerMember[idA] || 0;
+      const invitesB = totalInvitesPerMember[idB] || 0;
+
+      const invitesDiff = invitesB - invitesA;
+      if (invitesDiff !== 0) return invitesDiff;
+
+      // 4. Moins de timeouts
+      return (a.timeouts || 0) - (b.timeouts || 0);
+    });
+}
+
+
+
 async function updateTop15Embed() {
   const top15Data = await getConfigValue('top15Data', {});
   if (!top15Data.messageId || !top15Data.channelId) return;
@@ -1151,47 +1220,13 @@ async function updateTop15Embed() {
 
 const guild = channel.guild;
 
-// On s'assure d'avoir les membres du serveur en cache
-await guild.members.fetch().catch(() => {});
 
 // On garde uniquement les joueurs encore présents sur le serveur
-const activePlayers = Object.entries(pointsData).filter(([id]) =>
-  guild.members.cache.has(id)
+const sorted = sortLeaderboardPlayers(
+  pointsData,
+  totalInvitesPerMember,
+  guild.members.cache
 );
-
-// Classement uniquement parmi les membres présents
-const sorted = activePlayers
-  .sort(([idA, a], [idB, b]) => {
-
-    // 1. Plus de RR
-    const rrDiff = (b.rr || 0) - (a.rr || 0);
-    if (rrDiff !== 0) return rrDiff;
-
-    // 2. Meilleur winrate
-    const winrateA = (a.games || 0)
-      ? (a.wins || 0) / a.games
-      : 0;
-
-    const winrateB = (b.games || 0)
-      ? (b.wins || 0) / b.games
-      : 0;
-
-    const winrateDiff = winrateB - winrateA;
-    if (winrateDiff !== 0) return winrateDiff;
-
-    // 3. Plus d'invitations
-    const invitesA = totalInvitesPerMember[idA] || 0;
-    const invitesB = totalInvitesPerMember[idB] || 0;
-
-    const invitesDiff = invitesB - invitesA;
-    if (invitesDiff !== 0) return invitesDiff;
-
-    // 4. Moins de timeouts
-    const timeoutsA = a.timeouts || 0;
-    const timeoutsB = b.timeouts || 0;
-
-    return timeoutsA - timeoutsB;
-  });
 
 const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
 const playerCount = Math.round(currentMembers * 0.85);
@@ -1297,22 +1332,39 @@ if (choice === 'stats') {
   flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
 });
 
-  const stats = await getPlayerPoints(member.id);
-  const allPoints = await getAllPoints();
+const allPoints = await getAllPoints();
+const allInvites = await getAllInvites();
 
-  const sorted = Object.entries(allPoints)
-    .sort((a, b) => b[1].rr - a[1].rr);
+const stats = allPoints[member.id] || {
+  rr: 0,
+  games: 0,
+  wins: 0,
+  timeouts: 0
+};
 
-  const position =
-    sorted.findIndex(([id]) => id === member.id) + 1 || '—';
+const invitesData = allInvites[member.id] || {
+  invites: 0,
+  members: []
+};
 
-  const invitesData = await getInviteData(member.id);
+const totalInvitesPerMember = {};
+
+for (const [id, data] of Object.entries(allInvites)) {
+  totalInvitesPerMember[id] = data.invites || 0;
+}
+
+const sorted = sortLeaderboardPlayers(
+  allPoints,
+  totalInvitesPerMember,
+  guild.members.cache
+);
+
+const positionIndex = sorted.findIndex(([id]) => id === member.id);
+const position = positionIndex !== -1 ? positionIndex + 1 : '—';
+
 
   // ── RANK ──
   const rankEmoji = getRankEmojiFromMember(member);
-
-  // ── TOP INVITER ──
-  const allInvites = await getAllInvites();
 
   let topInviterId = null;
   let maxInvites = -1;
@@ -2010,8 +2062,6 @@ if (
 
   const guild = interaction.guild;
 
-  await guild.members.fetch().catch(() => {});
-
   // ── INVITATIONS ──
   const invitesData = await getAllInvites();
   const totalInvitesPerMember = {};
@@ -2024,41 +2074,13 @@ if (
   // ── POINTS ──
   const pointsData = await getAllPoints();
 
-  const activePlayers = Object.entries(pointsData).filter(([id]) =>
-    guild.members.cache.has(id)
-  );
+  const sorted = sortLeaderboardPlayers(
+  pointsData,
+  totalInvitesPerMember,
+  guild.members.cache
+);
 
-  // ── CLASSEMENT ──
-  const sorted = activePlayers.sort(([idA, a], [idB, b]) => {
-
-    // RR
-    const rrDiff = (b.rr || 0) - (a.rr || 0);
-    if (rrDiff !== 0) return rrDiff;
-
-    // WINRATE
-    const winrateA = (a.games || 0)
-      ? (a.wins || 0) / a.games
-      : 0;
-
-    const winrateB = (b.games || 0)
-      ? (b.wins || 0) / b.games
-      : 0;
-
-    const winrateDiff = winrateB - winrateA;
-    if (winrateDiff !== 0) return winrateDiff;
-
-    // INVITATIONS
-    const invitesA = totalInvitesPerMember[idA] || 0;
-    const invitesB = totalInvitesPerMember[idB] || 0;
-
-    const invitesDiff = invitesB - invitesA;
-    if (invitesDiff !== 0) return invitesDiff;
-
-    // TIMEOUTS
-    return (a.timeouts || 0) - (b.timeouts || 0);
-  });
-
-  const playerCount = activePlayers.length;
+  const playerCount = sorted.length;
 
   const container = buildLeaderboardContainer({
     sorted,
@@ -3072,25 +3094,20 @@ await interaction.editReply('✅ Partie lancée');
             const matchRR = {};
 
             for (const playerId of allPlayers) {
-              const currentStats = await getPlayerPoints(playerId);
-              const member = interaction.guild.members.cache.get(playerId) || await interaction.guild.members.fetch(playerId).catch(() => null);
-              const isWinner = (winningSide === 'attack' && attackers.includes(playerId)) || (winningSide === 'defense' && defenders.includes(playerId));
-              const delta = getPlayerRRDelta(member, isWinner);
+  const member =
+    interaction.guild.members.cache.get(playerId) ||
+    await interaction.guild.members.fetch(playerId).catch(() => null);
 
-              currentStats.rr = Math.max(0, currentStats.rr + delta);
-              currentStats.games += 1;
-              if (isWinner) currentStats.wins += 1;
+  const isWinner =
+    (winningSide === 'attack' && attackers.includes(playerId)) ||
+    (winningSide === 'defense' && defenders.includes(playerId));
 
-              await setPlayerPoints(playerId, currentStats);
-              matchRR[playerId] = delta;
-            }
+  const delta = getPlayerRRDelta(member, isWinner);
 
-            await updateTop15Embed();
+  await incrementPlayerStats(playerId, delta, isWinner);
 
-            for (const id of [game.attVC, game.defVC, game.categoryId]) {
-              const ch = interaction.guild.channels.cache.get(id);
-              if (ch) await ch.delete().catch(() => {});
-            }
+  matchRR[playerId] = delta;
+}
 
             gamesData.games = gamesData.games.filter(g => g.id !== game.id);
             await deleteGame(game.id);
@@ -3136,13 +3153,10 @@ await interaction.editReply('✅ Partie lancée');
 };
 
 
-console.log('RESULT STEP 1');
 
 const formattedAttackers = await formatResultPlayers(attackers);
-console.log('RESULT STEP 2', formattedAttackers);
 
 const formattedDefenders = await formatResultPlayers(defenders);
-console.log('RESULT STEP 3', formattedDefenders);
 
 
 const resultContainer = buildResultContainer({
@@ -3154,10 +3168,6 @@ const resultContainer = buildResultContainer({
   winningSide,
   guild: interaction.guild
 });
-
-console.log('RESULT STEP 4');
-
-console.log('RESULT STEP 5');
 
 await interaction.channel.send({
   components: [resultContainer],
@@ -3884,10 +3894,7 @@ if (usedInvite) {
   const inviterId = usedInvite.inviter?.id;
 
   if (inviterId) {
-    const currentInviteData = await getInviteData(inviterId);
-    currentInviteData.invites += 1;
-    currentInviteData.members.push(member.id);
-    await setInviteData(inviterId, currentInviteData);
+    await incrementInvite(inviterId, member.id);
   }
 }
 
@@ -4285,11 +4292,6 @@ process.on('uncaughtException', (error) => {
 });
 
 const token = (process.env.TOKEN || '').trim();
-
-console.log("TOKEN présent ?", !!token);
-console.log("CLIENT_ID présent ?", !!process.env.CLIENT_ID);
-console.log("GUILD_ID présent ?", !!process.env.GUILD_ID);
-console.log("Longueur TOKEN :", token.length);
 
 client.on('error', (err) => {
   console.error("❌ client error :", err);
