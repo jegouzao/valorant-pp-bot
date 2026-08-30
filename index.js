@@ -2864,7 +2864,7 @@ const buttons = new ActionRowBuilder().addComponents(
 
   new ButtonBuilder()
     .setCustomId('spectate')
-    .setLabel('Observer')
+    .setLabel('Observer la partie')
     .setEmoji('1493378513791615076')
     .setStyle(ButtonStyle.Success),
 
