@@ -1210,6 +1210,11 @@ const pagePlayers = sorted.slice(
 }
 }
 
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+);
+
 const paginationRow = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId(`leaderboard_page_${page - 1}`)
