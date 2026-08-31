@@ -2278,10 +2278,52 @@ if (
   }
 
   const oldRoleId = RANK_ROLES[currentRank];
-  const newRoleId = RANK_ROLES[selectedRank];
+const newRoleId = RANK_ROLES[selectedRank];
 
-  await interaction.member.roles.remove(oldRoleId).catch(() => {});
-  await interaction.member.roles.add(newRoleId).catch(() => {});
+await interaction.member.roles.remove(oldRoleId).catch(() => {});
+await interaction.member.roles.add(newRoleId).catch(() => {});
+
+const newRankLabel = RANK_LABELS[selectedRank];
+const newRankEmoji = rankEmojis[newRankLabel] || rankEmojis.Unranked;
+
+const rankUpActivityContainer = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
+  .addSectionComponents(
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## ${newRankEmoji} RANK UP\n` +
+          `-# **${interaction.member.displayName}** (<@${interaction.user.id}>)\n` +
+          `-# Vient de passer de **${RANK_LABELS[currentRank]}** à **${newRankLabel}**.`
+        )
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder().setURL(
+          interaction.user.displayAvatarURL({
+            extension: 'png',
+            size: 256
+          })
+        )
+      )
+  );
+
+await sendActivityMessage(interaction.guild, {
+  components: [rankUpActivityContainer],
+  flags: MessageFlags.IsComponentsV2
+});
+
+const rankUpDoneContainer = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `## ✅ RANK UP\n` +
+      `-# **${RANK_LABELS[currentRank]}** → **${RANK_LABELS[selectedRank]}**`
+    )
+  );
+
+return interaction.update({
+  components: [rankUpDoneContainer]
+});
 
   const rankUpDoneContainer = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
@@ -2635,7 +2677,7 @@ if (!isBotOwner && !isAdministrator) {
   );
 }
 
-    if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
+if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
   const roleId = ROLE_NOTIF_PP;
   const member = interaction.member;
 
@@ -2676,7 +2718,10 @@ if (!isBotOwner && !isAdministrator) {
   }
 }
 
-    // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
+// ← AJOUTE ÇA
+}
+
+// ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
 if (interaction.isButton()) {
 
   const gameButtons = [
