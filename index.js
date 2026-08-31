@@ -2324,19 +2324,6 @@ const rankUpDoneContainer = new ContainerBuilder()
 return interaction.update({
   components: [rankUpDoneContainer]
 });
-
-  const rankUpDoneContainer = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## ✅ RANK UP\n` +
-        `-# **${RANK_LABELS[currentRank]}** → **${RANK_LABELS[selectedRank]}**`
-      )
-    );
-
-  return interaction.update({
-    components: [rankUpDoneContainer]
-  });
 }
 
     // ✅ Boutons hors "game" (doivent répondre vite)
