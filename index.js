@@ -4031,7 +4031,7 @@ const ticketContainer = new ContainerBuilder()
           `## <:VIDE:1493046347337699499> NOUVELLE DEMANDE\n` +
           `-# Ticket ouvert par **${member.displayName}**\n` +
           `-# Motif : **${reason || 'Demande'}**\n` +
-          `-# Explique nous plus précisemment la raison de ta demande, l'équipe viendra t'aider'`
+          `-# Décris-nous ta demande plus en détail afin que l'équipe puisse t'aider`
         )
       )
       .setThumbnailAccessory(
