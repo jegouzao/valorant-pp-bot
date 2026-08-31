@@ -959,9 +959,7 @@ const commands = [
     default_member_permissions: PermissionFlagsBits.Administrator.toString()
   },
   { name: 'pp', description: 'Créer une partie personnalisée' },
-  { name: 'top15', description: 'Créer l\'embed TOP 15', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
-  { name: 'regles', description: 'Afficher l\'embed des règles', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
-  { name: 'invites', description: 'Afficher le top des invitations', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
+  { name: 'leaderboard', description: 'Créer l\'embed TOP 15', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'manage', description: 'Gérer les RR d\'un joueur', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Le joueur à gérer', type: 6, required: true }] },
   { name: 'onboarding', description: 'Afficher le menu d\'aide et d\'informations du serveur', default_member_permissions: PermissionFlagsBits.Administrator.toString() }
 ];
@@ -1162,7 +1160,7 @@ client.once(Events.ClientReady, async () => {
     console.error(`${colors.red}❌ Erreur lors de la création automatique:${colors.reset}`, error);
   }
 
-  await updateTop15Embed();
+  await updateleaderboardEmbed();
   console.log(`${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.reset}`);
 });
 
@@ -1204,15 +1202,15 @@ function sortLeaderboardPlayers(pointsData, totalInvitesPerMember, guildMembersC
 
 
 
-async function updateTop15Embed() {
-  const top15Data = await getConfigValue('top15Data', {});
-  if (!top15Data.messageId || !top15Data.channelId) return;
+async function updateleaderboardEmbed() {
+  const leaderboardData = await getConfigValue('leaderboardData', {});
+  if (!leaderboardData.messageId || !leaderboardData.channelId) return;
 
-  const channel = client.channels.cache.get(top15Data.channelId)
-    || await client.channels.fetch(top15Data.channelId).catch(() => null);
+  const channel = client.channels.cache.get(leaderboardData.channelId)
+    || await client.channels.fetch(leaderboardData.channelId).catch(() => null);
   if (!channel) return;
 
-  const msg = await channel.messages.fetch(top15Data.messageId).catch(() => null);
+  const msg = await channel.messages.fetch(leaderboardData.messageId).catch(() => null);
   if (!msg) return console.log('❌ Message leaderboard introuvable');
 
   const invitesData = await getAllInvites();
@@ -1250,7 +1248,7 @@ if (!msg.flags.has(MessageFlags.IsComponentsV2)) {
     flags: MessageFlags.IsComponentsV2
   });
 
-  await setConfigValue('top15Data', {
+  await setConfigValue('leaderboardData', {
     messageId: newMsg.id,
     channelId: channel.id
   });
@@ -1264,9 +1262,6 @@ await msg.edit({
   components: [container]
 }).catch(console.error);
 }
-
-
-
 
 // ===== Contenu de la commande /onboarding =====
 
@@ -1315,15 +1310,6 @@ function buildOnboardingContainer() {
 
     .addActionRowComponents(row);
 }
-
-
-
-
-
-
-
-    
-
 
   async function showPlayerStats(interaction) {
   const member = interaction.member;
@@ -2064,7 +2050,7 @@ if (interaction.customId === 'open_rules') {
     timeouts: 0
   });
 
-  await updateTop15Embed();
+  await updateleaderboardEmbed();
 
   return interaction.editReply(
     `🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`
@@ -2211,7 +2197,7 @@ if (interaction.isButton()) {
 
       try {
         const result = await Points.updateMany({}, { $set: { rr: 0, games: 0, wins: 0 } });
-        await updateTop15Embed();
+        await updateleaderboardEmbed();
 
         return interaction.editReply(
           `✅ Nouvelle saison initialisée.\n` +
@@ -3286,7 +3272,7 @@ if (thread?.isThread?.()) {
 return;
     }
 
-    if (interaction.isChatInputCommand() && interaction.commandName === 'top15') {
+    if (interaction.isChatInputCommand() && interaction.commandName === 'leaderboard') {
 
   await interaction.deferReply({
     flags: MessageFlags.Ephemeral
@@ -3304,46 +3290,18 @@ return;
     flags: MessageFlags.IsComponentsV2
   });
 
-  await setConfigValue('top15Data', {
+  await setConfigValue('leaderboardData', {
     messageId: msg.id,
     channelId: interaction.channel.id
   });
 
-  await updateTop15Embed();
+  await updateleaderboardEmbed();
 
   return interaction.editReply({
-    content: '✅ TOP15 créé dans ce salon'
+    content: '✅ leaderboard créé dans ce salon'
   });
 }
 
-    if (interaction.isChatInputCommand() && interaction.commandName === 'regles') {
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('open_ticket')
-      .setLabel('┃Ouvrir un ticket')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji({ id: '1466470365269070026' }),
-
-    new ButtonBuilder()
-      .setCustomId('toggle_notif_pp')
-      .setLabel('Notifications PP')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  const rulesContainer = buildRulesContainer();
-
-  rulesContainer.addActionRowComponents(row);
-
-  await interaction.channel.send({
-    components: [rulesContainer],
-    flags: MessageFlags.IsComponentsV2
-  });
-
-  return interaction.reply({
-  content: '✅ Règles envoyées',
-  flags: MessageFlags.Ephemeral
-});
-}
 
     // ── Gestion du modal TICKET REASON ──
     if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
@@ -3498,7 +3456,7 @@ return interaction.editReply({
       }
 
       await setPlayerPoints(userId, currentStats);
-      await updateTop15Embed();
+      await updateleaderboardEmbed();
 
       const actionText = type === 'add' ? 'ajouté' : 'retiré';
       return interaction.editReply(`✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`);
