@@ -43,7 +43,7 @@ http.createServer((req, res) => {
 });
 
 
-
+const TEST_MODE = true;
 
 
 const { 
@@ -195,8 +195,6 @@ function getMemberRankKey(member) {
   )?.[0] || null;
 }
 
-
-const TEST_MODE = false;
 
 const RANK_ORDER = {
   'Radiant': 1, 
@@ -2007,9 +2005,9 @@ const container = new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ʟᴀɴᴄᴇᴇ ᴘᴀʀ : **${footerText}**\n` +
-            `-# ᴍᴏᴅᴇ ꜱᴘᴇᴄᴛᴀᴛᴇᴜʀ ᴅɪꜱᴘᴏɴɪʙʟᴇ\n` +
-            `-# ʀᴇᴊᴏɪɴꜱ ᴜɴ ꜱᴀʟᴏɴ ᴠᴏᴄᴀʟ ᴀᴠᴀɴᴛ ᴅᴇ ᴄʜᴏɪꜱɪʀ ʟᴇ ꜱɪᴅᴇ ᴀ ᴏʙꜱᴇʀᴠᴇʀ`
+            `-# Partie lancée par **${footerText}**\n` +
+            `-# Mode spectateur disponible\n` +
+            `-# Rejoins un salon vocal avant de choisir le side à observer`
           )
         )
         .setThumbnailAccessory(
@@ -2059,9 +2057,9 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴏʀɢᴀɴɪꜱᴇᴇ ᴘᴀʀ : **${organisateur}**\n` +
-            `-# \`${remaining}\` ꜱʟᴏᴛꜱ ʀᴇꜱᴛᴀɴᴛꜱ ᴘᴏᴜʀ ʟᴇ ʟᴏʙʙʏ \`${code}\`\n` +
-            `-# ᴠᴏᴛᴇꜱ ᴘᴏᴜʀ ᴄʜᴀɴɢᴇʀ ʟᴀ ᴍᴀᴘ : \`${votes}/${needed}\``
+            `-# Partie organisée par **${organisateur}**\n` +
+            `-# \`${remaining}\` slots restant pour le lobby \`${code}\`\n` +
+            `-# \`${votes}/${needed}\` votes pour changer la map`
           )
         )
         .setThumbnailAccessory(
@@ -2077,7 +2075,7 @@ function buildAnnounceContainer({
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ᴇɴ ᴀᴛᴛᴇɴᴛᴇ ᴅᴇ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ...\n` +
+        `-# En attente de participants...\n` +
         `${playersText || '-# ᴀᴜᴄᴜɴ'}`
       )
     )
@@ -2153,9 +2151,9 @@ function buildResultContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
-            `-# ᴘᴀʀᴛɪᴇ ᴠᴀʟɪᴅᴇᴇ ᴘᴀʀ : **${validatedBy}**\n` +
-            `-# ᴠɪᴄᴛᴏɪʀᴇ ᴅᴇꜱ : **${winnerText}**\n` +
-            `-# ʟᴇ ᴄᴀʟᴄᴜʟ ᴘʀᴇɴᴅ ᴇɴ ᴄᴏᴍᴘᴛᴇ ʟᴇꜱ ᴀᴠᴀɴᴛᴀɢᴇꜱ ᴛᴀɢ ᴇᴛ ʙᴏᴏꜱᴛ ᴅᴜ ꜱᴇʀᴠᴇᴜʀ`
+            `-# Partie validée par **${validatedBy}**\n` +
+            `-# Victoire des **${winnerText}**\n` +
+            `-# Le calcul prend en compte les avantages Tag et Boost de serveur`
           )
         )
         .setThumbnailAccessory(
