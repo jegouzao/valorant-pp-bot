@@ -1503,65 +1503,100 @@ function sortLeaderboardPlayers(pointsData, totalInvitesPerMember, guildMembersC
 
 
 async function updateleaderboardEmbed() {
-  const leaderboardData = await getConfigValue('leaderboardData', {});
-  if (!leaderboardData.messageId || !leaderboardData.channelId) return;
+  try {
+    const leaderboardData = await getConfigValue('leaderboardData', {});
 
-  const channel = client.channels.cache.get(leaderboardData.channelId)
-    || await client.channels.fetch(leaderboardData.channelId).catch(() => null);
-  if (!channel) return;
+    console.log('🔄 Update leaderboard demandé');
+    console.log('Leaderboard config :', leaderboardData);
 
-  const msg = await channel.messages.fetch(leaderboardData.messageId).catch(() => null);
-  if (!msg) return console.log('❌ Message leaderboard introuvable');
+    if (!leaderboardData.messageId || !leaderboardData.channelId) {
+      console.log('❌ leaderboardData incomplet');
+      return;
+    }
 
-  const invitesData = await getAllInvites();
-  const totalInvitesPerMember = {};
-  for (const inviterId in invitesData) {
-    totalInvitesPerMember[inviterId] = invitesData[inviterId].invites || 0;
+    const channel =
+      client.channels.cache.get(leaderboardData.channelId) ||
+      await client.channels.fetch(leaderboardData.channelId).catch(() => null);
+
+    if (!channel) {
+      console.log('❌ Salon leaderboard introuvable');
+      return;
+    }
+
+    const msg = await channel.messages
+      .fetch(leaderboardData.messageId)
+      .catch(err => {
+        console.error('❌ Impossible de fetch le message leaderboard :', err);
+        return null;
+      });
+
+    if (!msg) {
+      console.log('❌ Message leaderboard introuvable');
+      return;
+    }
+
+    const invitesData = await getAllInvites();
+
+    const totalInvitesPerMember = {};
+
+    for (const inviterId in invitesData) {
+      totalInvitesPerMember[inviterId] =
+        invitesData[inviterId].invites || 0;
+    }
+
+    const pointsData = await getAllPoints();
+
+    const guild = channel.guild;
+
+    await guild.members.fetch().catch(() => {});
+
+    const sorted = sortLeaderboardPlayers(
+      pointsData,
+      totalInvitesPerMember,
+      guild.members.cache
+    );
+
+    const currentMembers =
+      guild.members.cache.filter(member => !member.user.bot).size;
+
+    const playerCount = Math.round(currentMembers * 0.85);
+
+    const container = buildLeaderboardContainer({
+      sorted,
+      totalInvitesPerMember,
+      guildMembersCache: guild.members.cache,
+      playerCount,
+      page: 0
+    });
+
+    if (!msg.flags.has(MessageFlags.IsComponentsV2)) {
+      const newMsg = await channel.send({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2
+      });
+
+      await setConfigValue('leaderboardData', {
+        messageId: newMsg.id,
+        channelId: channel.id
+      });
+
+      await msg.delete().catch(() => {});
+
+      console.log('✅ Leaderboard recréé en Components V2');
+      return;
+    }
+
+    await msg.edit({
+      components: [container]
+    });
+
+    console.log('✅ Leaderboard mis à jour');
+
+  } catch (err) {
+    console.error('❌ ERREUR UPDATE LEADERBOARD :', err);
   }
-
-  const pointsData = await getAllPoints();
-
-const guild = channel.guild;
-
-
-// On garde uniquement les joueurs encore présents sur le serveur
-const sorted = sortLeaderboardPlayers(
-  pointsData,
-  totalInvitesPerMember,
-  guild.members.cache
-);
-
-const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
-const playerCount = Math.round(currentMembers * 0.85);
-const container = buildLeaderboardContainer({
-  sorted,
-  totalInvitesPerMember,
-  guildMembersCache: guild?.members?.cache || null,
-  playerCount,
-  page: 0
-});
-
-// ── ANCIEN MESSAGE : on ne tente PAS de le convertir ──
-if (!msg.flags.has(MessageFlags.IsComponentsV2)) {
-  const newMsg = await channel.send({
-    components: [container],
-    flags: MessageFlags.IsComponentsV2
-  });
-
-  await setConfigValue('leaderboardData', {
-    messageId: newMsg.id,
-    channelId: channel.id
-  });
-
-  await msg.delete().catch(() => {});
-  return;
 }
 
-// ── MESSAGE DÉJÀ V2 : PAS DE FLAG ICI ──
-await msg.edit({
-  components: [container]
-}).catch(console.error);
-}
 
 // ===== Contenu de la commande /onboarding =====
 
@@ -3580,7 +3615,7 @@ await interaction.editReply('✅ Partie lancée');
             const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
             const matchRR = {};
 
-            for (const playerId of allPlayers) {
+for (const playerId of allPlayers) {
   const member =
     interaction.guild.members.cache.get(playerId) ||
     await interaction.guild.members.fetch(playerId).catch(() => null);
@@ -3595,6 +3630,10 @@ await interaction.editReply('✅ Partie lancée');
 
   matchRR[playerId] = delta;
 }
+
+await updateleaderboardEmbed().catch(err =>
+  console.error('Erreur update leaderboard après partie :', err)
+);
 
             gamesData.games = gamesData.games.filter(g => g.id !== game.id);
             await deleteGame(game.id);
