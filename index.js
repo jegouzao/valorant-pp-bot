@@ -3871,6 +3871,11 @@ if (timeoutApplied) {
       console.error('Erreur incrementPlayerTimeouts :', err)
     );
 
+  await updateleaderboardEmbed()
+    .catch(err =>
+      console.error('Erreur update leaderboard après timeout :', err)
+    );
+
   let reason = 'Non fournie';
   let moderator = null;
 
@@ -3910,7 +3915,7 @@ const timeoutContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# Banni pendant <t:${endUnix}:R> pour ${reason}` +
+          `-# Exclu pendant <t:${endUnix}:R> pour ${reason}` +
           moderatorText
         )
       )
