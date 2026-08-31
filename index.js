@@ -2396,43 +2396,6 @@ if (!game) {
       });
     }
 
-    if (gameButtons.includes(interaction.customId) && !game) {
-  return interaction.reply({
-    content: "Cette partie n'existe plus.",
-    flags: MessageFlags.Ephemeral
-  });
-}
-
-const ownerOnlyButtons = [
-  'start',
-  'cancel_registration',
-  'attack_win',
-  'defense_win',
-  'cancel_game'
-];
-
-if (
-  ownerOnlyButtons.includes(interaction.customId) &&
-  !canManageThisGame
-) {
-  return interaction.reply({
-    content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.',
-    flags: MessageFlags.Ephemeral
-  });
-}
-
-const verifiedOnly = ['spectate'];
-
-if (
-  verifiedOnly.includes(interaction.customId) &&
-  !isVerified
-) {
-  return interaction.reply({
-    content: '⛔ Seuls les membres Vérifiés peuvent observer.',
-    flags: MessageFlags.Ephemeral
-  });
-}
-
     if (interaction.isButton()) {
       switch (interaction.customId) {
 
