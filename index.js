@@ -2413,7 +2413,9 @@ if (interaction.customId === 'rank_up') {
 
   const currentIndex = RANK_UP_ORDER.indexOf(currentRank);
 
-  const availableRanks = RANK_UP_ORDER.slice(currentIndex + 1);
+  const availableRanks = RANK_UP_ORDER
+  .slice(currentIndex + 1)
+  .reverse();
 
   if (!availableRanks.length) {
     return interaction.reply({
@@ -2426,11 +2428,26 @@ if (interaction.customId === 'rank_up') {
     .setCustomId('rank_up_select')
     .setPlaceholder('Sélectionne ton nouveau rang')
     .addOptions(
-      availableRanks.map(rankKey => ({
-        label: RANK_LABELS[rankKey],
-        value: rankKey
-      }))
+  availableRanks.map(rankKey => {
+    const rankLabel = RANK_LABELS[rankKey];
+    const emojiString = rankEmojis[rankLabel];
+
+    const emojiMatch = emojiString?.match(
+      /<a?:([^:]+):(\d+)>/
     );
+
+    return {
+      label: rankLabel,
+      value: rankKey,
+      ...(emojiMatch && {
+        emoji: {
+          name: emojiMatch[1],
+          id: emojiMatch[2]
+        }
+      })
+    };
+  })
+);
 
   const rankUpContainer = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
