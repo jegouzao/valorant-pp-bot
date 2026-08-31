@@ -3915,7 +3915,7 @@ const timeoutContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# Exclu pendant <t:${endUnix}:R> pour ${reason}` +
+          `-# L'exclusion prendra fin <t:${endUnix}:R> pour ${reason}` +
           moderatorText
         )
       )
