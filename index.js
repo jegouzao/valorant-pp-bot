@@ -1576,7 +1576,7 @@ function buildOnboardingContainer() {
 
     new ButtonBuilder()
     .setCustomId('toggle_notif_pp')
-    .setLabel('Régler les notifications')
+    .setLabel('Notifications PP')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
@@ -1591,7 +1591,7 @@ function buildOnboardingContainer() {
 
   new ButtonBuilder()
     .setCustomId('open_ticket')
-    .setLabel('Nous contacter')
+    .setLabel('Support')
     .setStyle(ButtonStyle.Secondary)
 );
 
