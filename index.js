@@ -953,15 +953,11 @@ container.addActionRowComponents(openLeaderboardRow);
 
 // ===== Slash Commands =====
 const commands = [
-  {
-    name: 'resetseason',
-    description: 'Réinitialiser toute la saison compétitive',
-    default_member_permissions: PermissionFlagsBits.Administrator.toString()
-  },
+  { name: 'resetseason', description: 'Reinitialiser toutes les données', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'pp', description: 'Créer une partie personnalisée' },
-  { name: 'leaderboard', description: 'Créer l\'embed TOP 15', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
-  { name: 'manage', description: 'Gérer les RR d\'un joueur', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Le joueur à gérer', type: 6, required: true }] },
-  { name: 'onboarding', description: 'Afficher le menu d\'aide et d\'informations du serveur', default_member_permissions: PermissionFlagsBits.Administrator.toString() }
+  { name: 'leaderboard', description: 'Afficher le leaderboard', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
+  { name: 'manage', description: 'Gérer les données', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Joueur', type: 6, required: true }] },
+  { name: 'onboarding', description: 'Afficher l’onboarding', default_member_permissions: PermissionFlagsBits.Administrator.toString() }
 ];
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands })
@@ -2006,13 +2002,36 @@ if (interaction.customId === 'open_rules') {
         return interaction.showModal(modal);
       }
 
-      if (interaction.customId === 'close_ticket') {
+      if (interaction.customId.startsWith('close_ticket_')) {
+  const ticketOwnerId = interaction.customId.replace('close_ticket_', '');
+
+  if (interaction.user.id === ticketOwnerId) {
+    return interaction.reply({
+      content: '❌ Seule l’équipe peut clôturer ce ticket.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const staffRole = interaction.guild.roles.cache.find(
+    r => r.name === 'Administrateur'
+  );
+
+  if (!staffRole || !interaction.member.roles.cache.has(staffRole.id)) {
+    return interaction.reply({
+      content: '❌ Seule l’équipe peut clôturer ce ticket.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
   await interaction.deferReply({
     flags: MessageFlags.Ephemeral
   });
 
   const ch = interaction.channel;
-  if (!ch) return interaction.editReply('❌ Salon introuvable.');
+
+  if (!ch) {
+    return interaction.editReply('❌ Salon introuvable.');
+  }
 
   await ch.delete().catch(() => {});
   return;
@@ -3384,7 +3403,7 @@ if (!staffRole) {
 
       const closeButton = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
-    .setCustomId('close_ticket')
+    .setCustomId(`close_ticket_${member.id}`)
     .setEmoji({ id: '1466470349351686194' })
     .setLabel('┃Clôturer la discussion')
     .setStyle(ButtonStyle.Secondary)
