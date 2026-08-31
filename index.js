@@ -3726,8 +3726,8 @@ await thread.send({
   if (!welcomeChannel) return;
 
   const inviterText = usedInvite?.inviter
-  ? `-# ɪɴᴠɪᴛᴇ ᴘᴀʀ : **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
-  : `-# ɪɴᴠɪᴛᴇ ᴠɪᴀ : **.gg/valorant-pp**`;
+  ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
+  : `-# Invité via **.gg/valorant-pp**`;
 
 const welcomeContainer = new ContainerBuilder()
   .setAccentColor(0xc5b174)
