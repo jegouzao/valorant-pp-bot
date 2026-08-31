@@ -1948,7 +1948,8 @@ if (
   guild.members.cache
 );
 
-  const playerCount = sorted.length;
+  const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
+const playerCount = Math.round(currentMembers * 0.85);
 
   const container = buildLeaderboardContainer({
     sorted,
