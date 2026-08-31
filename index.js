@@ -1311,10 +1311,6 @@ function buildOnboardingContainer() {
   const member = interaction.member;
   const guild = interaction.guild;
 
-  await interaction.deferReply({
-    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
-  });
-
   const allPoints = await getAllPoints();
   const allInvites = await getAllInvites();
 
@@ -1459,9 +1455,10 @@ function buildOnboardingContainer() {
       )
     );
 
-  return interaction.editReply({
-    components: [statsContainer]
-  });
+  return interaction.reply({
+  components: [statsContainer],
+  flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+});
 }
 
 
