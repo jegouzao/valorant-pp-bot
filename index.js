@@ -1874,6 +1874,37 @@ client.on('interactionCreate', async (interaction) => {
     const isMod = interaction.member?.roles?.cache?.has(MOD_ROLE_ID);
     const isVerified = interaction.member?.roles?.cache?.has(VERIFIED_ROLE_ID);
 
+    // --------------------------------------
+// BOUTON RIOT
+// --------------------------------------
+if (interaction.isButton() && interaction.customId === 'verify_riot') {
+  if (interaction.replied || interaction.deferred) return;
+
+  if (!memberHasSelectedRank(interaction.member)) {
+    return interaction.reply({
+      content: '❌ Tu dois d’abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId('riot_modal')
+    .setTitle('Vérification Riot ID');
+
+  const pseudoInput = new TextInputBuilder()
+    .setCustomId('riot_pseudo')
+    .setLabel('Pseudo sur VALORANT, sans le #TAG')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(pseudoInput)
+  );
+
+  await interaction.showModal(modal);
+  return;
+}
+
     function findGame(interaction) {
       if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
         const gameId = interaction.customId.replace('spectate_select_', '');
@@ -2354,7 +2385,7 @@ const msg = await interaction.channel.send({
       return interaction.editReply('✅ Partie créée.');
     }
 
-    // ── SELECT MENU OBSERVER ──
+// ── SELECT MENU OBSERVER ──
 if (
   interaction.isStringSelectMenu() &&
   interaction.customId.startsWith('spectate_select_')
@@ -2399,6 +2430,7 @@ if (
     content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
     components: []
   });
+}
 }
 
       await interaction.deferUpdate();
@@ -3197,31 +3229,6 @@ await interaction.channel.send({
   return;
 }
 
-    // --------------------------------------
-    // BOUTON RIOT
-    // --------------------------------------
-    if (interaction.isButton() && interaction.customId === 'verify_riot') {
-      if (interaction.replied || interaction.deferred) return;
-
-      if (!memberHasSelectedRank(interaction.member)) {
-        return interaction.reply({
-  content: '❌ Tu dois d\u2019abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
-  flags: MessageFlags.Ephemeral
-});
-      }
-
-      const modal = new ModalBuilder().setCustomId('riot_modal').setTitle('Vérification Riot ID');
-
-      const pseudoInput = new TextInputBuilder()
-        .setCustomId('riot_pseudo')
-        .setLabel('Pseudo sur VALORANT, sans le #TAG')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      modal.addComponents(new ActionRowBuilder().addComponents(pseudoInput));
-      await interaction.showModal(modal);
-      return;
-    }
 
     // --------------------------------------
     // MODAL RIOT
