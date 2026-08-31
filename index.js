@@ -2938,13 +2938,9 @@ if (
   await interaction.deferUpdate();
 
   const choice = interaction.values[0];
-
   const att = interaction.guild.channels.cache.get(game.attVC);
   const def = interaction.guild.channels.cache.get(game.defVC);
-
-  const vc =
-    (choice === 'attack' ? att : def) ||
-    waitingVC;
+  const vc = (choice === 'attack' ? att : def) || waitingVC;
 
   if (!vc) {
     return interaction.editReply({
@@ -2955,9 +2951,7 @@ if (
 
   await moveVerifiedToVC(interaction.member, vc);
 
-  if (!game.spectators) {
-    game.spectators = {};
-  }
+  if (!game.spectators) game.spectators = {};
 
   game.spectators[interaction.user.id] = choice;
 
@@ -2969,12 +2963,11 @@ if (
   );
 
   return interaction.editReply({
-    content:
-      `Tu observes les ${
-        choice === 'attack'
-          ? 'attaquants'
-          : 'défenseurs'
-      } !`,
+    content: `Tu observes les ${
+      choice === 'attack'
+        ? 'attaquants'
+        : 'défenseurs'
+    } !`,
     components: []
   });
 }
