@@ -2386,50 +2386,46 @@ const msg = await interaction.channel.send({
     }
 
 // ── SELECT MENU OBSERVER ──
-if (
-  interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith('spectate_select_')
-) {
-  if (!isVerified) {
-    return interaction.reply({
-      content: '⛔ Seuls les Vérifiés peuvent observer.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+if (!isVerified) {
+  return interaction.reply({
+    content: '⛔ Seuls les Vérifiés peuvent observer.',
+    flags: MessageFlags.Ephemeral
+  });
+}
 
-  if (!game) {
-    return interaction.reply({
-      content: "Cette partie n'existe plus.",
-      flags: MessageFlags.Ephemeral
-    });
-  }
+if (!game) {
+  return interaction.reply({
+    content: "Cette partie n'existe plus.",
+    flags: MessageFlags.Ephemeral
+  });
+}
 
-  await interaction.deferUpdate();
+await interaction.deferUpdate();
 
-  const choice = interaction.values[0];
-  const att = interaction.guild.channels.cache.get(game.attVC);
-  const def = interaction.guild.channels.cache.get(game.defVC);
-  const vc = (choice === 'attack' ? att : def) || waitingVC;
+const choice = interaction.values[0];
+const att = interaction.guild.channels.cache.get(game.attVC);
+const def = interaction.guild.channels.cache.get(game.defVC);
+const vc = (choice === 'attack' ? att : def) || waitingVC;
 
-  if (!vc) {
-    return interaction.editReply({
-      content: '❌ Aucun salon disponible.',
-      components: []
-    });
-  }
-
-  await moveVerifiedToVC(interaction.member, vc);
-
-  if (!game.spectators) game.spectators = {};
-  game.spectators[interaction.user.id] = choice;
-
-  saveGameDebounced(game);
-  await updateRegistrationEmbed(interaction.guild, game);
-
+if (!vc) {
   return interaction.editReply({
-    content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
+    content: '❌ Aucun salon disponible.',
     components: []
   });
+}
+
+await moveVerifiedToVC(interaction.member, vc);
+
+if (!game.spectators) game.spectators = {};
+game.spectators[interaction.user.id] = choice;
+
+saveGameDebounced(game);
+await updateRegistrationEmbed(interaction.guild, game);
+
+return interaction.editReply({
+  content: `Tu observes les ${choice === 'attack' ? 'attaquants' : 'défenseurs'} !`,
+  components: []
+});
 }
 
 if (interaction.isButton()) {
