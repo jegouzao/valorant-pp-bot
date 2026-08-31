@@ -3603,14 +3603,29 @@ await interaction.editReply('✅ Partie lancée');
             }
 
             if (interaction.customId === 'cancel_game') {
-              for (const id of [game.attVC, game.defVC, game.categoryId]) {
-                const ch = interaction.guild.channels.cache.get(id);
-                if (ch) await ch.delete().catch(() => {});
-              }
-              gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-              await deleteGame(game.id);
-              return;
-            }
+
+  for (const id of [game.attVC, game.defVC]) {
+    const ch = interaction.guild.channels.cache.get(id);
+
+    if (ch) {
+      await ch.delete().catch(() => {});
+    }
+  }
+
+  if (game.categoryId) {
+    const category =
+      interaction.guild.channels.cache.get(game.categoryId);
+
+    if (category) {
+      await category.delete().catch(() => {});
+    }
+  }
+
+  gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+  await deleteGame(game.id);
+
+  return;
+}
 
             const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
             const matchRR = {};
@@ -3635,8 +3650,31 @@ await updateleaderboardEmbed().catch(err =>
   console.error('Erreur update leaderboard après partie :', err)
 );
 
-            gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-            await deleteGame(game.id);
+// Supprime les vocaux Attaquants / Défenseurs puis la catégorie
+for (const id of [game.attVC, game.defVC]) {
+  const ch = interaction.guild.channels.cache.get(id);
+
+  if (ch) {
+    await ch.delete().catch(err =>
+      console.error(`Erreur suppression salon ${id} :`, err)
+    );
+  }
+}
+
+// La catégorie doit être supprimée APRÈS ses salons
+if (game.categoryId) {
+  const category =
+    interaction.guild.channels.cache.get(game.categoryId);
+
+  if (category) {
+    await category.delete().catch(err =>
+      console.error('Erreur suppression catégorie de partie :', err)
+    );
+  }
+}
+
+gamesData.games = gamesData.games.filter(g => g.id !== game.id);
+await deleteGame(game.id);
 
   
 
