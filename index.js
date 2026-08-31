@@ -1275,7 +1275,7 @@ function buildOnboardingContainer() {
 
     new ButtonBuilder()
       .setCustomId('open_ticket')
-      .setLabel('Contacter l\'équipe')
+      .setLabel('Nous contacter')
       .setStyle(ButtonStyle.Secondary)
   );
 
