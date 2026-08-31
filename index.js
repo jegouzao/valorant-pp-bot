@@ -1571,7 +1571,12 @@ function buildOnboardingContainer() {
   const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('open_rules')
-    .setLabel('Règlement du serveur')
+    .setLabel('Règlement')
+    .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+    .setCustomId('toggle_notif_pp')
+    .setLabel('Régler les notifications')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
@@ -1579,19 +1584,14 @@ function buildOnboardingContainer() {
     .setLabel('Rank Up')
     .setStyle(ButtonStyle.Secondary),
 
-  new ButtonBuilder()
-    .setCustomId('toggle_notif_pp')
-    .setLabel('Régler les notifications')
+     new ButtonBuilder()
+    .setCustomId('apply_organizer')
+    .setLabel('Devenir organisateur')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('open_ticket')
     .setLabel('Nous contacter')
-    .setStyle(ButtonStyle.Secondary),
-
-  new ButtonBuilder()
-    .setCustomId('apply_organizer')
-    .setLabel('Devenir organisateur')
     .setStyle(ButtonStyle.Secondary)
 );
 
