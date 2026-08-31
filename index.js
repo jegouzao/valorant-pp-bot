@@ -3985,7 +3985,7 @@ client.on('guildBanAdd', async (ban) => {
     }
 
     const moderatorText = moderator
-  ? `Appliqué par **${moderator.globalName || moderator.username}**`
+  ? `Appliquée par **${moderator.globalName || moderator.username}**`
   : '';
 
 const banContainer = new ContainerBuilder()
@@ -3996,6 +3996,7 @@ const banContainer = new ContainerBuilder()
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> BANNISSEMENT\n` +
           `-# **${user.tag}** (<@${user.id}>)\n` +
+          `-# L'exclusion est définitive\n` +
           `-# ${moderatorText} pour ${reason}`
         )
       )
