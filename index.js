@@ -3904,7 +3904,7 @@ if (timeoutApplied) {
   const endUnix = Math.floor(newTimeoutTs / 1000);
 
   const moderatorText = moderator
-  ? `\n-# Appliquée par **${moderator.displayName || moderator.tag}**`
+  ? `Appliquée par **${moderator.displayName || moderator.tag}**`
   : '';
 
 const timeoutContainer = new ContainerBuilder()
