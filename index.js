@@ -4017,8 +4017,7 @@ if (!staffRole) {
       const closeButton = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId(`close_ticket_${member.id}`)
-    .setEmoji({ id: '1466470349351686194' })
-    .setLabel('┃Clôturer la discussion')
+    .setLabel('Clôturer la discussion')
     .setStyle(ButtonStyle.Secondary)
 );
 
@@ -4029,11 +4028,10 @@ const ticketContainer = new ContainerBuilder()
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## <:VIDE:1493046347337699499> NOUVEAU TICKET\n` +
-          `-# ᴛɪᴄᴋᴇᴛ ᴏᴜᴠᴇʀᴛ ᴘᴀʀ : **${member.displayName}**\n` +
-          `-# ᴍᴏᴛɪꜰ : **${reason || 'Demande'}**\n` +
-          `-# ᴇxᴘʟɪǫᴜᴇ ɴᴏᴜꜱ ʟᴀ ʀᴀɪꜱᴏɴ ᴅᴇ ᴛᴀ ᴅᴇᴍᴀɴᴅᴇ\n` +
-          `-# ʟ'ᴇǫᴜɪᴘᴇ ᴀ ᴇᴛᴇ ɴᴏᴛɪꜰɪᴇᴇ ᴇᴛ ᴠɪᴇɴᴅʀᴀ ᴛ'ᴀɪᴅᴇʀ`
+          `## <:VIDE:1493046347337699499> NOUVELLE DEMANDE\n` +
+          `-# Ticket ouvert par **${member.displayName}**\n` +
+          `-# Motif : **${reason || 'Demande'}**\n` +
+          `-# Explique nous plus précisemment la raison de ta demande, l'équipe viendra t'aider'`
         )
       )
       .setThumbnailAccessory(
