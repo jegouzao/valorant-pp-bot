@@ -3904,7 +3904,7 @@ if (timeoutApplied) {
   const endUnix = Math.floor(newTimeoutTs / 1000);
 
   const moderatorText = moderator
-  ? `\n-# ᴇxᴄʟᴜꜱɪᴏɴ ᴀᴘᴘʟɪǫᴜᴇᴇ ᴘᴀʀ : **${moderator.displayName || moderator.tag}**`
+  ? `\n-# Appliquée par **${moderator.displayName || moderator.tag}**`
   : '';
 
 const timeoutContainer = new ContainerBuilder()
@@ -3913,11 +3913,11 @@ const timeoutContainer = new ContainerBuilder()
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
-          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# L'exclusion prendra fin <t:${endUnix}:R> pour ${reason}` +
-          moderatorText
-        )
+  `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
+  `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+  `-# L'exclusion prendra fin <t:${endUnix}:R>\n` +
+  `-# ${moderatorText} pour ${reason}`
+)
       )
       .setThumbnailAccessory(
         new ThumbnailBuilder().setURL(
