@@ -938,7 +938,7 @@ function buildLeaderboardContainer({
   const maxRR = sorted[0][1].rr || 1;
 const barLength = 5;
 
-const playersPerPage = 10;
+const playersPerPage = 15;
 const totalPages = Math.max(
   1,
   Math.ceil(sorted.length / playersPerPage)
@@ -1001,7 +1001,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   }
 
   return (
-  `## #${globalIndex + 1} <@${id}> ` +
+  `### #${globalIndex + 1} <@${id}> ` +
   `${rankEmoji ? rankEmoji : ''}` +
   `${badges ? ` ${badges}` : ''}  ` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962>  ` +
