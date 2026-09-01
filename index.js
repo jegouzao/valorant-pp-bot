@@ -488,7 +488,11 @@ const row = new ActionRowBuilder().addComponents(
 container.addActionRowComponents(row);
 
 await registrationMsg.edit({
-  components: [container]
+  components: [container],
+  files: [{
+    attachment: `./assets/maps/${game.mapImage}`,
+    name: game.mapImage
+  }]
 });
 
   } catch (err) {
@@ -2318,14 +2322,14 @@ function buildAnnounceContainer({
 );
 
   if (mapImage) {
-    container.addMediaGalleryComponents(
-      new MediaGalleryBuilder()
-        .addItems(
-          new MediaGalleryItemBuilder()
-            .setURL(mapImage)
-        )
-    );
-  }
+  container.addMediaGalleryComponents(
+    new MediaGalleryBuilder()
+      .addItems(
+        new MediaGalleryItemBuilder()
+          .setURL(`attachment://${mapImage}`)
+      )
+  );
+}
 
   return container;
 }
@@ -3285,6 +3289,10 @@ container.addActionRowComponents(row);
 
 const msg = await interaction.channel.send({
   components: [container],
+  files: [{
+    attachment: `./assets/maps/${map.image}`,
+    name: map.image
+  }],
   flags: MessageFlags.IsComponentsV2
 });
 
