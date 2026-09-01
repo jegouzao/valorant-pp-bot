@@ -2289,7 +2289,7 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# Partie organisée par **${organisateur}**. Les membres <@&${ROLE_NOTIF_PP}> ont été avertis\n` +
+            `-# Partie organisée par **${organisateur}** ||<@&${ROLE_NOTIF_PP}>||\n` +
             `-# \`${remaining}\` slots restant pour le lobby \`${code}\`\n` +
             `-# \`${votes}/${needed}\` votes pour changer la map`
           )
