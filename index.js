@@ -2752,11 +2752,11 @@ if (interaction.customId === 'apply_organizer') {
   )
 
   .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `### <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
-      `-# Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.` +
-    )
+  new TextDisplayBuilder().setContent(
+    `### <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
+    `-# Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.`
   )
+)
   
   .addSeparatorComponents(
     new SeparatorBuilder()
