@@ -1970,28 +1970,30 @@ const barLength = 15;
         )
     )
 
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    )
 
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
-        `${winrate}<:VIDE:1541167342535319603>%  　` +
-        `${stats.games}<:VIDE:1472667851239456935>　` +
-        `${stats.wins}<:VIDE:1493266372954820741>　` +
-        `${invitesData.invites}<:VIDE:1472667823875559708>　` +
-        `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
-      )
-    )
+  new TextDisplayBuilder().setContent(
+    `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
+    `${winrate}<:VIDE:1541167342535319603>%  　` +
+    `${stats.games}<:VIDE:1472667851239456935>　` +
+    `${stats.wins}<:VIDE:1493266372954820741>　` +
+    `${invitesData.invites}<:VIDE:1472667823875559708>　` +
+    `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
+  )
+)
 
-    .addTextDisplayComponents(
+.addSeparatorComponents(
+  new SeparatorBuilder()
+)
+
+.addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     championshipLine
       ? `### ${BADGES.WINNER} PALMARÈS\n` +
         `-# ${championshipLine}\n\n${roleNames}`
       : `${roleNames}`
   )
+)
 );
 
   return interaction.editReply({
