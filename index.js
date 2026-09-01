@@ -2020,10 +2020,10 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
-        `-# ᴀꜰᴋ / ʟᴇᴀᴠᴇ / ꜰᴀᴜx ᴘᴇᴀᴋ ʀᴀɴᴋ ꜱᴀɴᴄᴛɪᴏɴɴÉꜱ\n` +
-        `-# À part ça, **NO RULES**.\n` +
-        `-# Pas de limites d'équipement ou de décibels.\n` +
-        `-# On est là pour **créer du rire et rentrer des clips**.`
+        `-# AFK / Leave / faux peak rank sanctionnés\n` +
+        `-# À part ça, **NO RULES**\n` +
+        `-# Pas de limites d'équipement ou de décibels\n` +
+        `-# On est là pour **créer du rire et rentrer des clips**`
       )
     )
 
@@ -2034,10 +2034,10 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `### <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-        `-# **PARTIE GAGNÉE : <:36:1497395169224556686><:36:1497395178045050992>avec le boost de serveur\n` +
-        `-# **PARTIE GAGNÉE : <:33:1497395187415126127><:36:1497395194289455114>avec le tag de serveur\n` +
-        `-# **PARTIE GAGNÉE : <:30:1493259044893360200><:36:1493259054804369408>pour un membre standard\n` +
-        `-# **PARTIE PERDUE : <:15:1493259005584343080><:36:1493259016686538932>pour un membre standard`
+        `-# **PARTIE GAGNÉE** :  <:36:1497395169224556686><:36:1497395178045050992>avec le boost de serveur\n` +
+        `-# **PARTIE GAGNÉE** :  <:33:1497395187415126127><:36:1497395194289455114>avec le tag de serveur\n` +
+        `-# **PARTIE GAGNÉE** :  <:30:1493259044893360200><:36:1493259054804369408>pour un membre standard\n` +
+        `-# **PARTIE PERDUE** :  <:15:1493259005584343080><:36:1493259016686538932>pour un membre standard`
       )
     )
 
@@ -2728,7 +2728,7 @@ if (interaction.customId === 'apply_organizer') {
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:EMOJI_ROLE:1472840875708252192> TON RÔLE\n` +
+      `### <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
       `-# Créer les PP lorsque des joueurs sont disponibles\n` +
       `-# Communiquer le **code de groupe Valorant**\n` +
       `-# Gérer les inscriptions et lancer l'équilibrage\n` +
@@ -2754,8 +2754,7 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `### <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
-      `-# Actif • sérieux • disponible • à l'aise pour gérer une PP\n` +
-      `-# Ta candidature sera transmise à l'équipe pour validation.`
+      `-# Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.` +
     )
   )
 
