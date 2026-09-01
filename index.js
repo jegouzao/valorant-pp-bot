@@ -937,7 +937,7 @@ function buildLeaderboardContainer({
 
   const maxRR = sorted[0][1].rr || 1;
 const playersPerPage = 10;
-const barLength = 6;
+const barLength = 8;
 const totalPages = Math.max(
   1,
   Math.ceil(sorted.length / playersPerPage)
@@ -1005,7 +1005,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   `${badges ? ` ${badges}` : ''}  ` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962>  ` +
   `**${invites}**<:VIDE:1472667823875559708>  ` +
-  `${bar}`
+  `${bar}\u2003`
 );
 });
 
@@ -1922,7 +1922,7 @@ const badgesLine = [
   const maxRR =
     sorted[0]?.[1]?.rr || 1;
 
-const barLength = 3;
+const barLength = 8;
   const rawBars =
     (stats.rr / maxRR) * barLength;
 
