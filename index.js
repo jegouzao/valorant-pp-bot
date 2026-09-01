@@ -1748,7 +1748,7 @@ function buildOnboardingContainer() {
 
     new ButtonBuilder()
     .setCustomId('toggle_notif_pp')
-    .setLabel('Notifications')
+    .setLabel('Notifications PP')
     .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
