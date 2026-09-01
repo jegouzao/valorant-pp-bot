@@ -3537,11 +3537,10 @@ game.changeMapVotes.push(voterId);
         }
 
         case 'start': {
-          await interaction.deferReply({
-  flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-});
+  await simpleReply(
+    interaction,
+    '⏳ Lancement de la partie...'
+  );
 
           const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
           if (!verifiedRole) {
