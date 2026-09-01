@@ -1786,6 +1786,13 @@ function buildOnboardingContainer() {
 }
 
   async function showPlayerStats(interaction) {
+
+  await interaction.deferReply({
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+
   const member = interaction.member;
   const guild = interaction.guild;
 
@@ -1988,9 +1995,8 @@ const barLength = 15;
   )
 );
 
-  return interaction.reply({
-  components: [statsContainer],
-  flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+  return interaction.editReply({
+  components: [statsContainer]
 });
 }
 
