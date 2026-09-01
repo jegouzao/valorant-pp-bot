@@ -2289,7 +2289,7 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# Partie organisée par **${organisateur}**\n` +
+            `-# Partie organisée par **${organisateur}**. Les membres <@&${ROLE_NOTIF_PP}> ont été avertis\n` +
             `-# \`${remaining}\` slots restant pour le lobby \`${code}\`\n` +
             `-# \`${votes}/${needed}\` votes pour changer la map`
           )
@@ -2955,12 +2955,10 @@ const isAdministrator =
   interaction.member.roles.cache.has(staffRole.id);
 
 if (!isBotOwner && !isAdministrator) {
-  return interaction.reply({
-    content: '❌ Seule l’équipe peut clôturer ce ticket.',
-    flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-  });
+  return simpleReply(
+    interaction,
+    '❌ Seule l’équipe peut clôturer ce ticket.'
+  );
 }
 
   await interaction.deferReply({
