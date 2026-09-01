@@ -1993,10 +1993,9 @@ const barLength = 15;
         `-# ${championshipLine}\n\n${roleNames}`
       : `${roleNames}`
   )
-)
 );
 
-  return interaction.editReply({
+return interaction.editReply({
   components: [statsContainer]
 });
 }
