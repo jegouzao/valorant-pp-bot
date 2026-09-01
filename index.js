@@ -936,8 +936,7 @@ function buildLeaderboardContainer({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-const barLength = 5;
-
+const barLength = 3;
 const playersPerPage = 15;
 const totalPages = Math.max(
   1,
@@ -1923,8 +1922,7 @@ const badgesLine = [
   const maxRR =
     sorted[0]?.[1]?.rr || 1;
 
-  const barLength = 5;
-
+const barLength = 3;
   const rawBars =
     (stats.rr / maxRR) * barLength;
 
