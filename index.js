@@ -1738,7 +1738,7 @@ function buildOnboardingContainer() {
 
     new ButtonBuilder()
     .setCustomId('rank_up')
-    .setLabel('Rank Up')
+    .setLabel('J\'ai Rank Up')
     .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
