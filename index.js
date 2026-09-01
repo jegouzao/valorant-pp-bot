@@ -936,70 +936,79 @@ function buildLeaderboardContainer({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-  const barLength = 10;
+const barLength = 10;
 
-  const playersPerPage = 10;
-const totalPages = Math.max(1, Math.ceil(sorted.length / playersPerPage));
+const playersPerPage = 10;
+const totalPages = Math.max(
+  1,
+  Math.ceil(sorted.length / playersPerPage)
+);
 
-page = Math.max(0, Math.min(page, totalPages - 1));
+page = Math.max(
+  0,
+  Math.min(page, totalPages - 1)
+);
 
 const startIndex = page * playersPerPage;
+
 const pagePlayers = sorted.slice(
   startIndex,
   startIndex + playersPerPage
 );
 
-  const lines = pagePlayers.map(([id, data], idx) => {
+const lines = pagePlayers.map(([id, data], idx) => {
 
   const globalIndex = startIndex + idx;
+  const invites = totalInvitesPerMember[id] || 0;
 
-    const invites = totalInvitesPerMember[id] || 0;
+  // ── BARRE RR ──
+  const rawBars =
+    (data.rr / maxRR) * barLength;
 
-    const wins = data.wins || 0;
-    const games = data.games || 0;
-    const timeouts = data.timeouts || 0;
+  const filledBars = Math.max(
+    0,
+    Math.min(
+      barLength,
+      Math.round(rawBars)
+    )
+  );
 
-    const winrate = games
-      ? Math.round((wins / games) * 100)
-      : 0;
-
-    const rawBars = (data.rr / maxRR) * barLength;
-
-    const filledBars = Math.max(
-      0,
-      Math.min(barLength, Math.round(rawBars))
+  const bar =
+    PARALLELOGRAM_FULL.repeat(filledBars) +
+    PARALLELOGRAM_EMPTY.repeat(
+      barLength - filledBars
     );
 
-    const bar =
-  PARALLELOGRAM_FULL.repeat(filledBars) +
-  PARALLELOGRAM_EMPTY.repeat(barLength - filledBars);
+  // ── RANK ──
+  const member =
+    guildMembersCache?.get(id) || null;
 
-    // ── RANK ──
-    const member = guildMembersCache?.get(id) || null;
-    const rankEmoji = getRankEmojiFromMember(member);
+  const rankEmoji =
+    getRankEmojiFromMember(member);
 
-    // ── BADGES ──
-    let badges = '';
+  // ── BADGES ──
+  let badges = '';
 
-    if (globalIndex === 0) {
-      badges += `${BADGES.TOP1}`;
-    }
+  if (globalIndex === 0) {
+    badges += BADGES.TOP1;
+  }
 
-    if (id === topInviterId && maxInvites > 0) {
-      badges += `${BADGES.TOP_INVITER}`;
-    }
+  if (
+    id === topInviterId &&
+    maxInvites > 0
+  ) {
+    badges += BADGES.TOP_INVITER;
+  }
 
-    return (
-  ` **#${globalIndex + 1}**   <@${id}>  ${rankEmoji ? rankEmoji + '' : ''}${badges}  ` +
-  `  **${data.rr || 0}**<:VIDE:1541125087384829962> ` +
-  `  **${winrate}**<:VIDE:1541167342535319603>**%**   ` +
-  `  **${games}**<:VIDE:1472667851239456935>  ` +
-  `  **${wins}**<:VIDE:1493266372954820741>  ` +
-  `  **${invites}**<:VIDE:1472667823875559708>  ` +
-  `  **${timeouts}**<:VIDE:1493378253446975619>\n` +
-  `-# ${bar}`
+  return (
+  `## #${globalIndex + 1} <@${id}> ` +
+  `${rankEmoji ? rankEmoji : ''}` +
+  `${badges ? ` ${badges}` : ''}  ` +
+  `**${data.rr || 0}**<:VIDE:1541125087384829962>  ` +
+  `**${invites}**<:VIDE:1472667823875559708>  ` +
+  `${bar}`
 );
-  });
+});
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
