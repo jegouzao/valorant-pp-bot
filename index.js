@@ -1396,11 +1396,8 @@ if (
             new SectionBuilder()
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                  `## 🏆 GAGNANT DU LEADERBOARD\n` +
-                  `-# Classement final — **${monthLabel}**\n\n` +
-                  `### ${BADGES.TOP1} <@${winnerId}> ${winnerRank}\n` +
-                  `-# Termine la saison à la **1ʀᴇ place** avec **${winnerData.rr || 0} RR**.\n` +
-                  `-# **${wins}** victoires • **${games}** parties • **${winrate}%** de winrate`
+                  `## ${BADGES.TOP1} VAINQUEUR DU MOIS\n` +
+                  `-# <@${winnerId}> termine la saison à la **1ère place** avec **${winnerData.rr || 0}<:Roles:1541125087384829962>**.`
                 )
               )
 
@@ -1440,10 +1437,8 @@ if (
             new SectionBuilder()
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                  `## 🤝 MEILLEUR INVITEUR DU MOIS\n` +
-                  `-# Classement final — **${monthLabel}**\n\n` +
-                  `### ${BADGES.TOP_INVITER} <@${topInviterId}>\n` +
-                  `-# Termine à la **1ʀᴇ place des invitations** avec **${maxInvites} invitation${maxInvites > 1 ? 's' : ''}**.`
+                  `## ${BADGES.TOP_INVITER} TOP INVITATIONS\n` +
+                  `-# <@${topInviterId}> cumule actuellement **${maxInvites} invitation${maxInvites > 1 ? 's' : ''}**.`
                 )
               )
 
@@ -2024,55 +2019,50 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:36:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
-        `-# ᴀꜰᴋ / ʟᴇᴀᴠᴇ / ꜰᴀᴜx ᴘᴇᴀᴋ ʀᴀɴᴋ ꜱᴀɴᴄᴛɪᴏɴɴᴇꜱ\n` +
-        `-# ᴀ ᴘᴀʀᴛ ᴄᴀ, **NO RULES**\n` +
-        `-# ᴄᴀ ɴᴇ ᴘʟᴀɪʀᴀ ᴘᴀꜱ ᴀ ᴛᴏᴜꜱ, _*ᴍᴀɪꜱ ᴀ ʟᴀ ɢʀᴀɴᴅᴇ ᴍᴀᴊᴏʀɪᴛᴇ*_\n` +
-        `-# ᴘᴀꜱ ᴅᴇ ʟɪᴍɪᴛᴇꜱ ᴀᴜ ɴɪᴠᴇᴀᴜ ᴅᴇ ʟ'ᴇǫᴜɪᴘᴇᴍᴇɴᴛ ᴏᴜ ᴅᴇꜱ ᴅᴇᴄɪʙᴇʟꜱ\n` +
-        `-# ᴏɴ ᴇꜱᴛ ʟᴀ ᴘᴏᴜʀ __ᴄʀɪᴇʀ ᴅᴇ ʀɪʀᴇ__, ᴇᴛ __ʀᴇɴᴛʀᴇʀ ᴅᴇꜱ ᴄʟɪᴘꜱ__`
+        `## <:EMOJI_RULES:ID> RÈGLEMENT — VALORANT PP\n` +
+        `-# ᴀꜰᴋ / ʟᴇᴀᴠᴇ / ꜰᴀᴜx ᴘᴇᴀᴋ ʀᴀɴᴋ ꜱᴀɴᴄᴛɪᴏɴɴÉꜱ\n` +
+        `-# À part ça, **NO RULES**.\n` +
+        `-# Pas de limites d'équipement ou de décibels.\n` +
+        `-# On est là pour **créer du rire et rentrer des clips**.`
       )
     )
 
     .addSeparatorComponents(
       new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
     )
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ʙᴀʀᴇᴍᴇ ᴅᴇꜱ ᴘᴏɪɴᴛꜱ\n` +
-        `<:boost:1488545490189549629> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:36:1497395169224556686><:RR:1497395178045050992> ᴀᴠᴇᴄ ʟᴇ ʙᴏᴏꜱᴛ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n` +
-        `<:tag:1497390943928586300> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:33:1497395187415126127><:RR:1497395194289455114> ᴀᴠᴇᴄ ʟᴇ ᴛᴀɢ ᴅᴇ ꜱᴇʀᴠᴇᴜʀ\n` +
-        `<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ɢᴀɢɴᴇᴇ** : <:30:1493259044893360200><:RR:1493259054804369408> ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ\n` +
-        `<:VPP:1493046369076777110> **ᴘᴀʀᴛɪᴇ ᴘᴇʀᴅᴜᴇ** : <:15:1493259005584343080><:RR:1493259016686538932> ᴘᴏᴜʀ ᴜɴ ᴍᴇᴍʙʀᴇ ꜱᴛᴀɴᴅᴀʀᴅ`
+        `### <:EMOJI_RR:ID> BARÈME DES POINTS\n` +
+        `-# <:36:1497395169224556686> **PARTIE GAGNÉE : +36 RR**　avec le boost de serveur\n` +
+        `-# <:33:1497395187415126127> **PARTIE GAGNÉE : +33 RR**　avec le tag de serveur\n` +
+        `-# <:30:1493259044893360200> **PARTIE GAGNÉE : +30 RR**　pour un membre standard\n` +
+        `-# <:15:1493259005584343080> **PARTIE PERDUE : -15 RR**　pour un membre standard`
       )
     )
 
     .addSeparatorComponents(
       new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
     )
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ᴇǫᴜɪʟɪʙʀᴀɢᴇ\n` +
-        `-# **ʙᴏᴏᴍʙᴏᴛ ᴇꜱᴛ ᴀᴜᴛᴏᴍᴀᴛɪꜱᴇ ᴘᴏᴜʀ ᴇǫᴜɪʟɪʙʀᴇʀ ɪɴᴛᴇʟʟɪɢᴇᴍᴍᴇɴᴛ**\n` +
-        `-# **ɢʀᴀᴄᴇ ᴀᴜ ᴘᴇᴀᴋ ʀᴀɴᴋ ǫᴜᴇ ᴠᴏᴜꜱ ꜰᴏᴜʀɴɪꜱꜱᴇᴢ ᴀ ʟ'ᴀʀʀɪᴠᴇᴇ**\n` +
-        `-# ꜱɪ ᴠᴏᴜꜱ ᴀᴍᴇʟɪᴏʀᴇᴢ ᴠᴏᴛʀᴇ ʀᴀɴɢ, @ᴛᴀɢɢᴇᴢ ǫᴜᴇʟǫᴜ'ᴜɴ`
+        `### <:EMOJI_BALANCE:ID> ÉQUILIBRAGE\n` +
+        `-# Boombot équilibre automatiquement les équipes selon le **Peak Rank** renseigné à l'arrivée.\n` +
+        `-# L'équilibrage est annulable si nécessaire.`
       )
     )
 
     .addSeparatorComponents(
       new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
     )
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ᴄᴀꜱʜᴘʀɪᴢᴇꜱ ᴍᴇɴꜱᴜᴇʟꜱ\n` +
-        `-# <:TL:1465704930160410847><:TL:1465709888729776296> ᴛᴏᴘ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ\n` +
-        `-# <:TL:1465704930160410847><:TI:1465747415670984862> ᴛᴏᴘ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ\n` +
-        `-# <:TL:1493378369364951131> ʟᴇꜱ ᴘʀɪx ᴠᴀʀɪᴇʀᴏɴᴛ : ʙᴜɴᴅʟᴇꜱ, ʀɪᴏᴛᴄᴀʀᴅ, ᴘᴀʏᴘᴀʟ, ɴɪᴛʀᴏ...`
+        `### <:EMOJI_GIFT:ID> CASHPRIZES MENSUELS\n` +
+        `-# ${BADGES.TOP1} **TOP LEADERBOARD**\n` +
+        `-# ${BADGES.TOP_INVITER} **TOP INVITATIONS**\n` +
+        `-# Les récompenses varient : bundles, Riot Card, PayPal, Nitro...`
       )
     );
 }
@@ -2722,54 +2712,66 @@ if (interaction.customId === 'apply_organizer') {
     );
   }
 
-  const organizerInfoContainer = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
+  const organizerApplyContainer = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
 
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## 🎮 DEVENIR ORGANISATEUR DE PARTIES\n` +
-        `-# Les organisateurs permettent de faire vivre les parties personnalisées du serveur.\n\n` +
-
-        `### TON RÔLE\n` +
-        `En devenant **Organisateur de parties**, tu pourras créer et gérer des PP directement avec Boombot.\n\n` +
-
-        `Tu devras notamment :\n` +
-        `- créer les parties lorsque des joueurs sont disponibles ;\n` +
-        `- communiquer le bon code de groupe Valorant ;\n` +
-        `- surveiller les inscriptions et le bon déroulement de la partie ;\n` +
-        `- lancer et équilibrer les équipes lorsque tout le monde est prêt ;\n` +
-        `- gérer ta partie jusqu'à sa fin et intervenir si nécessaire.\n\n` +
-
-        `### COMMENT CRÉER UNE PP ?\n` +
-        `Utilise la commande **/pp**. Boombot te demandera ensuite le **code de groupe Valorant à 6 caractères** puis s'occupera automatiquement de créer la partie, les salons nécessaires et les inscriptions.\n\n` +
-
-        `Une fois les joueurs réunis, les boutons de la partie permettent de gérer son déroulement, notamment l'équilibrage des équipes et l'annulation si nécessaire.\n\n` +
-
-        `### CE QU'ON ATTEND DE TOI\n` +
-        `On recherche avant tout des personnes **actives, sérieuses et disponibles**, capables de prendre l'initiative d'organiser des parties et de les suivre correctement.\n\n` +
-
-        `-# En postulant, ta candidature sera transmise à l'équipe pour validation.`
-      )
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `## <:EMOJI_ORGA:ID> DEVENIR ORGANISATEUR — VALORANT PP\n` +
+      `-# Crée, lance et gère les parties personnalisées du serveur.`
     )
+  )
 
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### <:EMOJI_ROLE:ID> TON RÔLE\n` +
+      `-# Créer les PP lorsque des joueurs sont disponibles\n` +
+      `-# Communiquer le **code de groupe Valorant**\n` +
+      `-# Gérer les inscriptions et lancer l'équilibrage\n` +
+      `-# Suivre la partie jusqu'à sa fin`
     )
+  )
 
-    .addActionRowComponents(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('organizer_apply_confirm')
-          .setLabel('Je postule')
-          .setStyle(ButtonStyle.Success),
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
 
-        new ButtonBuilder()
-          .setCustomId('organizer_apply_cancel')
-          .setLabel('Annuler')
-          .setStyle(ButtonStyle.Secondary)
-      )
-    );
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### <:EMOJI_PP:ID> CRÉER UNE PARTIE\n` +
+      `-# Utilise **/pp**, renseigne le code de groupe et Boombot s'occupe du reste.`
+    )
+  )
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### <:EMOJI_CHECK:ID> PROFIL RECHERCHÉ\n` +
+      `-# Actif • sérieux • disponible • à l'aise pour gérer une PP\n` +
+      `-# Ta candidature sera transmise à l'équipe pour validation.`
+    )
+  )
+
+  .addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('organizer_apply_confirm')
+        .setLabel('Je postule')
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
+        .setCustomId('organizer_apply_cancel')
+        .setLabel('Annuler')
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
 
   return interaction.reply({
     components: [organizerInfoContainer],
