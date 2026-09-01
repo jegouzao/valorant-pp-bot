@@ -1059,7 +1059,7 @@ if (page === 0) {
   const openLeaderboardRow = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('leaderboard_stats')
-    .setLabel('Mes statistiques')
+    .setLabel('Mes statistiques personnelles')
     .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
