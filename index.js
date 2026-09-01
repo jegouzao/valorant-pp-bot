@@ -3830,7 +3830,10 @@ const inGameMsg = await interaction.channel.send({
 
 game.manageMessageId = inGameMsg.id;
 await saveGame(game);
-await interaction.editReply('✅ Partie lancée');
+await simpleEditReply(
+  interaction,
+  '✅ Partie lancée'
+);
 
 
           break;
