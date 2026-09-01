@@ -5225,6 +5225,219 @@ await sendActivityMessage(newMember.guild, {
 }
 }); // fin guildMemberUpdate
 
+client.on('voiceStateUpdate', async (oldState, newState) => {
+  try {
+    const member = newState.member || oldState.member;
+
+    if (!member) return;
+
+    const wasMuted = oldState.serverMute;
+    const isMuted = newState.serverMute;
+
+    const wasDeafened = oldState.serverDeaf;
+    const isDeafened = newState.serverDeaf;
+
+
+    // ─────────────────────────────────────────────
+    // RÉCUPÉRATION DE L'ADMIN
+    // ─────────────────────────────────────────────
+
+    async function getVoiceModerator(changeKey) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      try {
+        const logs = await member.guild.fetchAuditLogs({
+          type: 24,
+          limit: 10
+        });
+
+        const entry = logs.entries.find(entry =>
+          entry.target?.id === member.id &&
+          Date.now() - entry.createdTimestamp < 15000 &&
+          entry.changes?.some(change => change.key === changeKey)
+        );
+
+        return entry?.executor || null;
+
+      } catch (err) {
+        console.error('Erreur audit logs vocal :', err);
+        return null;
+      }
+    }
+
+
+    // ─────────────────────────────────────────────
+    // MEMBRE RENDU MUET
+    // ─────────────────────────────────────────────
+
+    if (!wasMuted && isMuted) {
+
+      const moderator = await getVoiceModerator('mute');
+
+      const moderatorText = moderator
+        ? `<@${moderator.id}>`
+        : 'Administrateur inconnu';
+
+
+      const serverMuteContainer = new ContainerBuilder()
+        .setAccentColor(0xe70019)
+        .addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent(
+                `## <:Roles:1544460218669465833> MEMBRE RENDU MUET\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# Rendu muet sur le serveur par ${moderatorText}`
+              )
+            )
+            .setThumbnailAccessory(
+              new ThumbnailBuilder().setURL(
+                member.displayAvatarURL({
+                  extension: 'png',
+                  size: 256
+                })
+              )
+            )
+        );
+
+
+      await sendActivityMessage(member.guild, {
+        components: [serverMuteContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
+
+
+    // ─────────────────────────────────────────────
+    // MUTE SERVEUR RETIRÉ
+    // ─────────────────────────────────────────────
+
+    if (wasMuted && !isMuted) {
+
+      const moderator = await getVoiceModerator('mute');
+
+      const moderatorText = moderator
+        ? `<@${moderator.id}>`
+        : 'Administrateur inconnu';
+
+
+      const serverUnmuteContainer = new ContainerBuilder()
+        .setAccentColor(0x858585)
+        .addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent(
+                `## <:Roles:1544460226693177435> MEMBRE DÉMUTÉ\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# Le mute serveur a été retiré par ${moderatorText}`
+              )
+            )
+            .setThumbnailAccessory(
+              new ThumbnailBuilder().setURL(
+                member.displayAvatarURL({
+                  extension: 'png',
+                  size: 256
+                })
+              )
+            )
+        );
+
+
+      await sendActivityMessage(member.guild, {
+        components: [serverUnmuteContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
+
+
+    // ─────────────────────────────────────────────
+    // MEMBRE MIS EN SOURDINE
+    // ─────────────────────────────────────────────
+
+    if (!wasDeafened && isDeafened) {
+
+      const moderator = await getVoiceModerator('deaf');
+
+      const moderatorText = moderator
+        ? `<@${moderator.id}>`
+        : 'Administrateur inconnu';
+
+
+      const serverDeafContainer = new ContainerBuilder()
+        .setAccentColor(0xe70019)
+        .addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent(
+                `## <:Roles:1544460207701364856> MEMBRE MIS EN SOURDINE\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# Mis en sourdine sur le serveur par ${moderatorText}`
+              )
+            )
+            .setThumbnailAccessory(
+              new ThumbnailBuilder().setURL(
+                member.displayAvatarURL({
+                  extension: 'png',
+                  size: 256
+                })
+              )
+            )
+        );
+
+
+      await sendActivityMessage(member.guild, {
+        components: [serverDeafContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
+
+
+    // ─────────────────────────────────────────────
+    // SOURDINE SERVEUR RETIRÉE
+    // ─────────────────────────────────────────────
+
+    if (wasDeafened && !isDeafened) {
+
+      const moderator = await getVoiceModerator('deaf');
+
+      const moderatorText = moderator
+        ? `<@${moderator.id}>`
+        : 'Administrateur inconnu';
+
+
+      const serverUndeafContainer = new ContainerBuilder()
+        .setAccentColor(0x858585)
+        .addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent(
+                `## <:Roles:1544460236327354498> SOURDINE RETIRÉE\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# La sourdine serveur a été retirée par ${moderatorText}`
+              )
+            )
+            .setThumbnailAccessory(
+              new ThumbnailBuilder().setURL(
+                member.displayAvatarURL({
+                  extension: 'png',
+                  size: 256
+                })
+              )
+            )
+        );
+
+
+      await sendActivityMessage(member.guild, {
+        components: [serverUndeafContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
+    }
+
+  } catch (err) {
+    console.error('Erreur voiceStateUpdate activité :', err);
+  }
+});
+
 
 client.on('guildBanAdd', async (ban) => {
   try {
