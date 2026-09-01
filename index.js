@@ -3243,8 +3243,7 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('join_game')
     .setLabel('Rejoindre la partie')
-    .setEmoji('1493378313224192233')
-    .setStyle(ButtonStyle.Success),
+    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('change_map')
