@@ -2247,7 +2247,7 @@ const container = new ContainerBuilder()
           )
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(mapImage)
+          new ThumbnailBuilder().setURL(`attachment://${mapImage}`)
         )
     )
 
@@ -2393,7 +2393,7 @@ function buildResultContainer({
           )
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(mapImage)
+          new ThumbnailBuilder().setURL(`attachment://${mapImage}`)
         )
     )
 
@@ -3851,6 +3851,10 @@ gameContainer.addActionRowComponents(buttons);
 
 const inGameMsg = await interaction.channel.send({
   components: [gameContainer],
+  files: [{
+    attachment: `./assets/maps/${game.mapImage}`,
+    name: game.mapImage
+  }],
   flags: MessageFlags.IsComponentsV2
 });
 
@@ -4081,6 +4085,10 @@ const resultContainer = buildResultContainer({
 
 await interaction.channel.send({
   components: [resultContainer],
+  files: [{
+    attachment: `./assets/maps/${game.mapImage}`,
+    name: game.mapImage
+  }],
   flags: MessageFlags.IsComponentsV2
 }).catch(console.error);
           } finally {
