@@ -2757,6 +2757,10 @@ if (interaction.customId === 'apply_organizer') {
       `-# Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.` +
     )
   )
+  
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
 
   .addActionRowComponents(
     new ActionRowBuilder().addComponents(
