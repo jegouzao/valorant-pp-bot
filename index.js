@@ -1787,11 +1787,10 @@ function buildOnboardingContainer() {
 
   async function showPlayerStats(interaction) {
 
-  await interaction.deferReply({
-    flags:
-      MessageFlags.Ephemeral |
-      MessageFlags.IsComponentsV2
-  });
+  await simpleReply(
+    interaction,
+    '⏳ Chargement de tes statistiques...'
+  );
 
   const member = interaction.member;
   const guild = interaction.guild;
