@@ -555,6 +555,9 @@ const RR_VALUES = {
   LOSS: -15,
 };
 
+const PARALLELOGRAM_FULL = '<:plein:1544373192469123163>';
+const PARALLELOGRAM_EMPTY = '<:vide:1544373488725393489>';
+
 const RR_EMOJIS = {
   WIN_30: '<:rr_plus_30:1493259044893360200>',
   RR_GREEN: '<:rr_green:1493259054804369408>',
@@ -968,8 +971,8 @@ const pagePlayers = sorted.slice(
     );
 
     const bar =
-      '▰'.repeat(filledBars) +
-      '▱'.repeat(barLength - filledBars);
+  PARALLELOGRAM_FULL.repeat(filledBars) +
+  PARALLELOGRAM_EMPTY.repeat(barLength - filledBars);
 
     // ── RANK ──
     const member = guildMembersCache?.get(id) || null;
@@ -1925,8 +1928,8 @@ const badgesLine = [
   );
 
   const progressBar =
-    '▰'.repeat(filledBars) +
-    '▱'.repeat(barLength - filledBars);
+  PARALLELOGRAM_FULL.repeat(filledBars) +
+  PARALLELOGRAM_EMPTY.repeat(barLength - filledBars);
 
   const statsContainer = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
