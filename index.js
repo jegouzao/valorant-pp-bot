@@ -467,8 +467,7 @@ const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('join_game')
     .setLabel('Rejoindre la partie')
-        .setEmoji('1493378313224192233')
-    .setStyle(ButtonStyle.Success),
+    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('change_map')
@@ -530,8 +529,14 @@ const autoCreateLocks = new Map();
 const gameLocks = {};
 const BADGES = {
   TOP1: '<:TopLeaderboard:1465709888729776296>',
-  TOP_INVITER: '<:TopInviter:1465747415670984862>'
-  
+  TOP_INVITER: '<:TopInviter:1465747415670984862>',
+
+  OG: '<:OG:1544365215565619360>',
+  ORGANIZER: '<:Roles:1493046347337699499>',
+  WINNER: '<:Vainqueur:1544365369253171282>',
+
+  SERVER_TAG: '<:tag:1497390943928586300>',
+  BOOSTER: '<:Bonus20:1492125876437913641>'
 };
 
 const ACCUEIL_CHANNEL_ID = '1171488314524713000';
@@ -539,6 +544,8 @@ const ACCUEIL_CHANNEL_ID = '1171488314524713000';
 const ROLE_NOTIF_PP = '1468458885357502599';
 const BOT_OWNER_ID = '1471602146964406365';
 const ORGANIZER_ROLE_ID = '1461348856100028439';
+const OG_ROLE_ID = '1544361324556062812';
+const WINNER_ROLE_ID = '1544361311067045928';
 const BOOSTER_ROLE_ID = '1134168535866806314';
 
 const RR_VALUES = {
@@ -792,6 +799,41 @@ async function setConfigValue(key, value) {
   );
 }
 
+async function getSeasonChampions() {
+  return await getConfigValue('seasonChampions', []);
+}
+
+async function saveSeasonChampion({
+  seasonKey,
+  seasonLabel,
+  userId
+}) {
+  const champions = await getSeasonChampions();
+
+  // Une seule entrée par saison.
+  // Si on corrige le gagnant, l'ancienne entrée est remplacée.
+  const filtered = champions.filter(
+    champion => champion.seasonKey !== seasonKey
+  );
+
+  filtered.push({
+    seasonKey,
+    seasonLabel,
+    userId
+  });
+
+  filtered.sort((a, b) =>
+    a.seasonKey.localeCompare(b.seasonKey)
+  );
+
+  await setConfigValue(
+    'seasonChampions',
+    filtered
+  );
+
+  return filtered;
+}
+
 
 async function getAllGames() {
   return await Game.find({}).lean();
@@ -818,6 +860,36 @@ async function deleteGame(gameId) {
 // ============================================================
 
 const EMBED_COLOR = 0x242429;
+
+
+function buildSimpleContainer(content, accentColor = EMBED_COLOR) {
+  return new ContainerBuilder()
+    .setAccentColor(accentColor)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(content)
+    );
+}
+
+function simpleReply(interaction, content, accentColor = EMBED_COLOR) {
+  return interaction.reply({
+    components: [
+      buildSimpleContainer(content, accentColor)
+    ],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+}
+
+function simpleEditReply(interaction, content, accentColor = EMBED_COLOR) {
+  return interaction.editReply({
+    content: null,
+    components: [
+      buildSimpleContainer(content, accentColor)
+    ]
+  });
+}
+
 
 // 🖼️ Remplace ces URLs par tes propres bannières une fois prêtes
 const BANNERS = {
@@ -1016,6 +1088,33 @@ container.addActionRowComponents(openLeaderboardRow);
 
 // ===== Slash Commands =====
 const commands = [
+  {
+  name: 'addchampion',
+  description: 'Ajouter un ancien vainqueur au palmarès',
+  default_member_permissions:
+    PermissionFlagsBits.Administrator.toString(),
+
+  options: [
+    {
+      name: 'joueur',
+      description: 'Vainqueur de la saison',
+      type: 6,
+      required: true
+    },
+    {
+      name: 'saison',
+      description: 'Exemple : Août 2026',
+      type: 3,
+      required: true
+    },
+    {
+      name: 'cle',
+      description: 'Exemple : 2026-08',
+      type: 3,
+      required: true
+    }
+  ]
+},
   { name: 'resetseason', description: 'Reinitialiser toutes les données', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'leaderboard', description: 'Afficher le leaderboard', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
@@ -1250,6 +1349,26 @@ async function announceMonthlyWinners(guild) {
 
       const winnerRank =
         getRankEmojiFromMember(winnerMember);
+
+        const seasonLabel =
+  monthLabel.charAt(0).toUpperCase() +
+  monthLabel.slice(1);
+
+await saveSeasonChampion({
+  seasonKey: monthKey,
+  seasonLabel,
+  userId: winnerId
+});
+
+if (
+  winnerMember &&
+  !winnerMember.roles.cache.has(WINNER_ROLE_ID)
+) {
+  await winnerMember.roles.add(
+    WINNER_ROLE_ID,
+    `Vainqueur — ${seasonLabel}`
+  ).catch(() => {});
+}
 
       const games = winnerData.games || 0;
       const wins = winnerData.wins || 0;
@@ -1661,6 +1780,25 @@ function buildOnboardingContainer() {
 
   const allPoints = await getAllPoints();
   const allInvites = await getAllInvites();
+  const seasonChampions =
+  await getSeasonChampions();
+
+const playerChampionships =
+  seasonChampions
+    .filter(
+      champion =>
+        champion.userId === member.id
+    )
+    .sort((a, b) =>
+      b.seasonKey.localeCompare(a.seasonKey)
+    );
+
+const championshipLine =
+  playerChampionships.length
+    ? playerChampionships
+        .map(champion => champion.seasonLabel)
+        .join(' • ')
+    : null;
 
   const stats = allPoints[member.id] || {
     rr: 0,
@@ -1710,17 +1848,51 @@ function buildOnboardingContainer() {
   }
 
   const badgeTop1 =
-    position === 1
-      ? BADGES.TOP1
-      : '';
+  position === 1
+    ? BADGES.TOP1
+    : '';
 
-  const badgeTopInviter =
-    member.id === topInviterId && maxInvites > 0
-      ? BADGES.TOP_INVITER
-      : '';
+const badgeTopInviter =
+  member.id === topInviterId && maxInvites > 0
+    ? BADGES.TOP_INVITER
+    : '';
 
-  const badgesLine =
-    `${badgeTop1}${badgeTopInviter}`;
+const badgeOG =
+  member.roles.cache.has(OG_ROLE_ID)
+    ? BADGES.OG
+    : '';
+
+const badgeOrganizer =
+  member.roles.cache.has(ORGANIZER_ROLE_ID)
+    ? BADGES.ORGANIZER
+    : '';
+
+const badgeWinner =
+  member.roles.cache.has(WINNER_ROLE_ID)
+    ? BADGES.WINNER
+    : '';
+
+const badgeServerTag =
+  member.roles.cache.has(SERVER_TAG_ROLE_ID)
+    ? BADGES.SERVER_TAG
+    : '';
+
+const badgeBooster =
+  member.roles.cache.has(BOOSTER_ROLE_ID)
+    ? BADGES.BOOSTER
+    : '';
+
+const badgesLine = [
+  badgeTop1,
+  badgeTopInviter,
+  badgeWinner,
+  badgeOG,
+  badgeOrganizer,
+  badgeServerTag,
+  badgeBooster
+]
+  .filter(Boolean)
+  .join(' ');
 
   const winrate = stats.games
     ? ((stats.wins / stats.games) * 100).toFixed(1)
@@ -1796,6 +1968,15 @@ function buildOnboardingContainer() {
         `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
       )
     )
+
+    .addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    championshipLine
+      ? `### ${BADGES.WINNER} PALMARÈS\n` +
+        `-# ${championshipLine}`
+      : ''
+  )
+)
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -2229,11 +2410,11 @@ if (interaction.isButton() && interaction.customId === 'verify_riot') {
   if (interaction.replied || interaction.deferred) return;
 
   if (!memberHasSelectedRank(interaction.member)) {
-    return interaction.reply({
-      content: '❌ Tu dois d’abord sélectionner ton **peak rank** avant de pouvoir te renommer.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Tu dois d’abord sélectionner ton **peak rank** avant de pouvoir te renommer.'
+  );
+}
 
   const modal = new ModalBuilder()
     .setCustomId('riot_modal')
@@ -2291,24 +2472,24 @@ if (
   const selectedRank = interaction.values[0];
 
   if (!currentRank) {
-    return interaction.reply({
-      content: '❌ Aucun rang actuel détecté.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Aucun rang actuel détecté.'
+  );
+}
 
   const currentIndex = RANK_UP_ORDER.indexOf(currentRank);
   const selectedIndex = RANK_UP_ORDER.indexOf(selectedRank);
 
   if (
-    selectedIndex === -1 ||
-    selectedIndex <= currentIndex
-  ) {
-    return interaction.reply({
-      content: '❌ Tu ne peux sélectionner qu’un rang supérieur à ton rang actuel.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  selectedIndex === -1 ||
+  selectedIndex <= currentIndex
+) {
+  return simpleReply(
+    interaction,
+    '❌ Tu ne peux sélectionner qu’un rang supérieur à ton rang actuel.'
+  );
+}
 
   const oldRoleId = RANK_ROLES[currentRank];
 const newRoleId = RANK_ROLES[selectedRank];
@@ -2451,12 +2632,11 @@ if (interaction.customId === 'rank_up') {
   .reverse();
 
   if (!availableRanks.length) {
-    return interaction.reply({
-      content: '👑 Tu es déjà au rang maximum : **Radiant**.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
-
+  return simpleReply(
+    interaction,
+    '👑 Tu es déjà au rang maximum : **Radiant**.'
+  );
+}
   const rankUpMenu = new StringSelectMenuBuilder()
     .setCustomId('rank_up_select')
     .setPlaceholder('Sélectionne ton nouveau rang')
@@ -2503,11 +2683,84 @@ if (interaction.customId === 'rank_up') {
   });
 }
 
+// ── DEVENIR ORGANISATEUR ──
 if (interaction.customId === 'apply_organizer') {
+
   if (interaction.member.roles.cache.has(ORGANIZER_ROLE_ID)) {
-    return interaction.reply({
-      content: '❌ Tu es déjà Organisateur de parties.',
-      flags: MessageFlags.Ephemeral
+    return simpleReply(
+      interaction,
+      '❌ Tu es déjà Organisateur de parties.'
+    );
+  }
+
+  const organizerInfoContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## 🎮 DEVENIR ORGANISATEUR DE PARTIES\n` +
+        `-# Les organisateurs permettent de faire vivre les parties personnalisées du serveur.\n\n` +
+
+        `### TON RÔLE\n` +
+        `En devenant **Organisateur de parties**, tu pourras créer et gérer des PP directement avec Boombot.\n\n` +
+
+        `Tu devras notamment :\n` +
+        `- créer les parties lorsque des joueurs sont disponibles ;\n` +
+        `- communiquer le bon code de groupe Valorant ;\n` +
+        `- surveiller les inscriptions et le bon déroulement de la partie ;\n` +
+        `- lancer et équilibrer les équipes lorsque tout le monde est prêt ;\n` +
+        `- gérer ta partie jusqu'à sa fin et intervenir si nécessaire.\n\n` +
+
+        `### COMMENT CRÉER UNE PP ?\n` +
+        `Utilise la commande **/pp**. Boombot te demandera ensuite le **code de groupe Valorant à 6 caractères** puis s'occupera automatiquement de créer la partie, les salons nécessaires et les inscriptions.\n\n` +
+
+        `Une fois les joueurs réunis, les boutons de la partie permettent de gérer son déroulement, notamment l'équilibrage des équipes et l'annulation si nécessaire.\n\n` +
+
+        `### CE QU'ON ATTEND DE TOI\n` +
+        `On recherche avant tout des personnes **actives, sérieuses et disponibles**, capables de prendre l'initiative d'organiser des parties et de les suivre correctement.\n\n` +
+
+        `-# En postulant, ta candidature sera transmise à l'équipe pour validation.`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('organizer_apply_confirm')
+          .setLabel('Je postule')
+          .setStyle(ButtonStyle.Success),
+
+        new ButtonBuilder()
+          .setCustomId('organizer_apply_cancel')
+          .setLabel('Annuler')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+
+  return interaction.reply({
+    components: [organizerInfoContainer],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+}
+
+
+// ── CONFIRMER LA CANDIDATURE ORGANISATEUR ──
+if (interaction.customId === 'organizer_apply_confirm') {
+
+  if (interaction.member.roles.cache.has(ORGANIZER_ROLE_ID)) {
+    return interaction.update({
+      components: [
+        buildSimpleContainer(
+          '❌ Tu es déjà Organisateur de parties.'
+        )
+      ]
     });
   }
 
@@ -2556,9 +2809,24 @@ if (interaction.customId === 'apply_organizer') {
     flags: MessageFlags.IsComponentsV2
   });
 
-  return interaction.reply({
-    content: '✅ Ta candidature a été envoyée.',
-    flags: MessageFlags.Ephemeral
+  return interaction.update({
+    components: [
+      buildSimpleContainer(
+        '✅ Ta candidature a été envoyée.'
+      )
+    ]
+  });
+}
+
+
+// ── ANNULER LA CANDIDATURE ORGANISATEUR ──
+if (interaction.customId === 'organizer_apply_cancel') {
+  return interaction.update({
+    components: [
+      buildSimpleContainer(
+        '❌ Candidature annulée.'
+      )
+    ]
   });
 }
 
@@ -2567,11 +2835,11 @@ if (
   interaction.customId.startsWith('organizer_refuse_')
 ) {
   if (interaction.user.id !== BOT_OWNER_ID) {
-    return interaction.reply({
-      content: '❌ Seul le propriétaire peut traiter cette candidature.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Seul le propriétaire peut traiter cette candidature.'
+  );
+}
 
   const accepted =
     interaction.customId.startsWith('organizer_accept_');
@@ -2585,11 +2853,11 @@ if (
     .catch(() => null);
 
   if (!member) {
-    return interaction.reply({
-      content: '❌ Membre introuvable.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Membre introuvable.'
+  );
+}
 
   if (accepted) {
     await member.roles.add(
@@ -2709,20 +2977,20 @@ if (!isBotOwner && !isAdministrator) {
 
   await updateleaderboardEmbed();
 
-  return interaction.editReply(
-    `🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`
-  );
-}
+  return simpleEditReply(
+  interaction,
+  `🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`
+);
 
 if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
   const roleId = ROLE_NOTIF_PP;
   const member = interaction.member;
 
   if (!member || !member.roles) {
-    return interaction.reply({
-      content: '❌ Membre introuvable.',
-      flags: MessageFlags.Ephemeral
-    });
+    return simpleReply(
+      interaction,
+      '❌ Membre introuvable.'
+    );
   }
 
   const hasRole = member.roles.cache.has(roleId);
@@ -2731,31 +2999,32 @@ if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
     if (hasRole) {
       await member.roles.remove(roleId);
 
-      return interaction.reply({
-        content: '🔕 Tu ne recevras plus les notifications PP.',
-        flags: MessageFlags.Ephemeral
-      });
+      return simpleReply(
+        interaction,
+        '🔕 Tu ne recevras plus les notifications PP.'
+      );
 
     } else {
       await member.roles.add(roleId);
 
-      return interaction.reply({
-        content: '🔔 Tu recevras désormais les notifications PP.',
-        flags: MessageFlags.Ephemeral
-      });
+      return simpleReply(
+        interaction,
+        '🔔 Tu recevras désormais les notifications PP.'
+      );
     }
 
   } catch (err) {
     console.error(err);
 
-    return interaction.reply({
-      content: '❌ Impossible de modifier ton rôle de notification.',
-      flags: MessageFlags.Ephemeral
-    });
+    return simpleReply(
+      interaction,
+      '❌ Impossible de modifier ton rôle de notification.'
+    );
   }
 }
 
 // ← AJOUTE ÇA
+}
 }
 
 // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
@@ -2773,11 +3042,11 @@ if (interaction.isButton()) {
   ];
 
   if (gameButtons.includes(interaction.customId) && !game) {
-    return interaction.reply({
-      content: "Cette partie n'existe plus.",
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'existe plus."
+  );
+}
 
   const ownerOnlyButtons = [
     'start',
@@ -2788,26 +3057,26 @@ if (interaction.isButton()) {
   ];
 
   if (
-    ownerOnlyButtons.includes(interaction.customId) &&
-    !canManageThisGame
-  ) {
-    return interaction.reply({
-      content: '⛔ Seul le créateur de cette partie peut utiliser ce bouton.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  ownerOnlyButtons.includes(interaction.customId) &&
+  !canManageThisGame
+) {
+  return simpleReply(
+    interaction,
+    '⛔ Seul le créateur de cette partie peut utiliser ce bouton.'
+  );
+}
 
   const verifiedOnly = ['spectate'];
 
   if (
-    verifiedOnly.includes(interaction.customId) &&
-    !isVerified
-  ) {
-    return interaction.reply({
-      content: '⛔ Seuls les membres Vérifiés peuvent observer.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  verifiedOnly.includes(interaction.customId) &&
+  !isVerified
+) {
+  return simpleReply(
+    interaction,
+    '⛔ Seuls les membres Vérifiés peuvent observer.'
+  );
+}
 }
 
     const waitingVC = game ? interaction.guild.channels.cache.get(game.waitingVC) : null;
@@ -2831,11 +3100,11 @@ if (interaction.isButton()) {
     // ── COMMANDES SLASH ──
     if (interaction.isChatInputCommand() && interaction.commandName === 'pp') {
   if (!isMod) {
-    return interaction.reply({
-      content: '⛔ Seuls les Organisateur de parties peuvent créer une partie.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '⛔ Seuls les Organisateurs de parties peuvent créer une partie.'
+  );
+}
 
       const modal = new ModalBuilder().setCustomId('pp_create_modal').setTitle('Créer une partie personnalisée');
       const valorantCodeInput = new TextInputBuilder()
@@ -2859,13 +3128,17 @@ if (interaction.isButton()) {
         const result = await Points.updateMany({}, { $set: { rr: 0, games: 0, wins: 0 } });
         await updateleaderboardEmbed();
 
-        return interaction.editReply(
-          `✅ Nouvelle saison initialisée.\n` +
-          `Joueurs reset : **${result.modifiedCount ?? 0}**`
-        );
+        return simpleEditReply(
+  interaction,
+  `✅ Nouvelle saison initialisée.\n` +
+  `Joueurs reset : **${result.modifiedCount ?? 0}**`
+);
       } catch (err) {
         console.error('Erreur resetseason :', err);
-        return interaction.editReply('❌ Impossible de réinitialiser la saison.');
+        return simpleEditReply(
+  interaction,
+  '❌ Impossible de réinitialiser la saison.'
+);
       }
     }
 
@@ -2884,8 +3157,11 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
   );
 
   if (!verifiedRole) {
-    return interaction.editReply("⚠️ Le rôle Vérifié n'existe pas.");
-  }
+  return simpleEditReply(
+    interaction,
+    "⚠️ Le rôle Vérifié n'existe pas."
+  );
+}
 
   const category = await interaction.guild.channels.create({
         name: 'ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ',
@@ -2994,7 +3270,10 @@ const msg = await interaction.channel.send({
 
       gamesData.games.push(newGame);
       await saveGame(newGame);
-      return interaction.editReply('✅ Partie créée.');
+      return simpleEditReply(
+  interaction,
+  '✅ Partie créée.'
+);
     }
 
 // ── SELECT MENU OBSERVER ──
@@ -3004,18 +3283,18 @@ if (
 ) {
 
   if (!isVerified) {
-    return interaction.reply({
-      content: '⛔ Seuls les Vérifiés peuvent observer.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '⛔ Seuls les Vérifiés peuvent observer.'
+  );
+}
 
-  if (!game) {
-    return interaction.reply({
-      content: "Cette partie n'existe plus.",
-      flags: MessageFlags.Ephemeral
-    });
-  }
+if (!game) {
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'existe plus."
+  );
+}
 
   await interaction.deferUpdate();
 
@@ -3025,11 +3304,11 @@ if (
   const vc = (choice === 'attack' ? att : def) || waitingVC;
 
   if (!vc) {
-    return interaction.editReply({
-      content: '❌ Aucun salon disponible.',
-      components: []
-    });
-  }
+  return simpleEditReply(
+    interaction,
+    '❌ Aucun salon disponible.'
+  );
+}
 
   await moveVerifiedToVC(interaction.member, vc);
 
@@ -3044,14 +3323,14 @@ if (
     game
   );
 
-  return interaction.editReply({
-    content: `Tu observes les ${
-      choice === 'attack'
-        ? 'attaquants'
-        : 'défenseurs'
-    } !`,
-    components: []
-  });
+  return simpleEditReply(
+  interaction,
+  `✅ Tu observes les ${
+    choice === 'attack'
+      ? 'attaquants'
+      : 'défenseurs'
+  } !`
+);
 }
 
 if (interaction.isButton()) {
@@ -3061,58 +3340,58 @@ if (interaction.isButton()) {
 case 'join_game': {
 
   if (!game) {
-    return interaction.reply({
-      content: "❌ Cette partie n'existe plus.",
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'existe plus."
+  );
+}
 
   const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
 
   if (!prepVC) {
-    return interaction.reply({
-      content: '❌ Le salon vocal de préparation est introuvable.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Le salon vocal de préparation est introuvable.'
+  );
+}
 
   if (game.players.includes(interaction.user.id)) {
-    return interaction.reply({
-      content: '✅ Tu participes déjà à cette partie.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '✅ Tu participes déjà à cette partie.'
+  );
+}
 
   if (game.players.length >= 10) {
-    return interaction.reply({
-      content: '❌ La partie est déjà complète.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ La partie est déjà complète.'
+  );
+}
 
   if (!interaction.member.voice?.channel) {
-    return interaction.reply({
-      content: '❌ Connecte-toi d’abord à un salon vocal du serveur.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Connecte-toi d’abord à un salon vocal du serveur.'
+  );
+}
 
   await interaction.member.voice
     .setChannel(prepVC)
     .catch(() => null);
 
-  return interaction.reply({
-    content: '✅ Tu as rejoint la partie.',
-    flags: MessageFlags.Ephemeral
-  });
+  return simpleReply(
+  interaction,
+  '✅ Tu as rejoint la partie.'
+);
 }
 
         case 'change_map': {
           if (!game) {
-  return interaction.reply({
-    content: "Cette partie n'existe plus.",
-    flags: MessageFlags.Ephemeral
-  });
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'existe plus."
+  );
 }
 
           const voterId = interaction.user.id;
@@ -3120,19 +3399,19 @@ case 'join_game': {
           const inPrepVC = prepVC?.members?.has(voterId);
 
           if (!inPrepVC) {
-  return interaction.reply({
-    content: "❌ Tu dois être dans le vocal de préparation pour voter.",
-    flags: MessageFlags.Ephemeral
-  });
+  return simpleReply(
+    interaction,
+    '❌ Tu dois être dans le vocal de préparation pour voter.'
+  );
 }
 
 if (!game.changeMapVotes) game.changeMapVotes = [];
 
 if (game.changeMapVotes.includes(voterId)) {
-  return interaction.reply({
-    content: "✅ Tu as déjà voté pour changer la map.",
-    flags: MessageFlags.Ephemeral
-  });
+  return simpleReply(
+    interaction,
+    '✅ Tu as déjà voté pour changer la map.'
+  );
 }
 
 game.changeMapVotes.push(voterId);
@@ -3152,19 +3431,19 @@ game.changeMapVotes.push(voterId);
 
             await updateRegistrationEmbed(interaction.guild, game);
 
-            return interaction.reply({
-  content: `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`,
-  flags: MessageFlags.Ephemeral
-});
+            return simpleReply(
+  interaction,
+  `🗺️ **Map changée !** Nouvelle map : **${game.mapName}** (votes reset)`
+);
           }
 
           await saveGame(game);
           await updateRegistrationEmbed(interaction.guild, game);
 
-          return interaction.reply({
-  content: `✅ Vote enregistré (${votes}/${needed}).`,
-  flags: MessageFlags.Ephemeral
-});
+          return simpleReply(
+  interaction,
+  `✅ Vote enregistré (${votes}/${needed}).`
+);
         }
 
         case 'cancel_registration': {
@@ -3172,11 +3451,12 @@ game.changeMapVotes.push(voterId);
           const lobbyVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
           if (!lobbyVC) {
-            return interaction.reply({
-  content: "❌ Salon 'salle d'attente' introuvable.",
-  flags: MessageFlags.Ephemeral
-});
-          }
+  return simpleReply(
+    interaction,
+    "❌ Salon 'salle d'attente' introuvable."
+  );
+}
+          
 
           if (game.players?.length) {
             await Promise.all(game.players.map(async (id) => {
@@ -3212,18 +3492,24 @@ game.changeMapVotes.push(voterId);
           await deleteGame(game.id);
 
           try {
-            if (!interaction.replied && !interaction.deferred) {
-              await interaction.reply({
-  content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.",
-  flags: MessageFlags.Ephemeral
-});
-            } else {
-              await interaction.followUp({
-  content: "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente.",
-  flags: MessageFlags.Ephemeral
-});
-            }
-          } catch {}
+  if (!interaction.replied && !interaction.deferred) {
+    await simpleReply(
+      interaction,
+      "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente."
+    );
+  } else {
+    await interaction.followUp({
+      components: [
+        buildSimpleContainer(
+          "❌ Partie annulée : joueurs/spectateurs renvoyés en salle d'attente."
+        )
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+  }
+} catch {}
 
           if (gameLocks[game.id]) delete gameLocks[game.id];
           break;
@@ -3236,19 +3522,24 @@ game.changeMapVotes.push(voterId);
 
           const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
           if (!verifiedRole) {
-            return interaction.editReply({ content: '⚠️ Rôle Vérifié introuvable.' });
-          }
+  return simpleEditReply(
+    interaction,
+    '⚠️ Rôle Vérifié introuvable.'
+  );
+}
 
           if (!TEST_MODE && game.players.length !== 10) {
-  return interaction.editReply({
-    content: `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
-  });
+  return simpleEditReply(
+    interaction,
+    `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
+  );
 }
 
 if (TEST_MODE && game.players.length < 1) {
-  return interaction.editReply({
-    content: '❌ Il faut au moins 1 joueur pour lancer le test.'
-  });
+  return simpleEditReply(
+    interaction,
+    '❌ Il faut au moins 1 joueur pour lancer le test.'
+  );
 }
 
           const registrationMsg = await interaction.channel.messages.fetch(game.messageId || game.id).catch(() => null);
@@ -3374,9 +3665,10 @@ if (TEST_MODE && game.players.length < 1) {
   !TEST_MODE &&
   (balanced.attackers.length !== 5 || balanced.defenders.length !== 5)
 ) {
-  return interaction.editReply({
-    content: '❌ Erreur équilibrage : impossible de créer un vrai 5v5.'
-  });
+  return simpleEditReply(
+    interaction,
+    '❌ Erreur équilibrage : impossible de créer un vrai 5v5.'
+  );
 }
 
           game.attackers = balanced.attackers.map(p => ({ id: p.id, member: p.member }));
@@ -3486,8 +3778,7 @@ const buttons = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
     .setCustomId('spectate')
     .setLabel('Observer la partie')
-    .setEmoji('1493378513791615076')
-    .setStyle(ButtonStyle.Success),
+    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
   .setCustomId('attack_win')
@@ -3526,18 +3817,18 @@ await interaction.editReply('✅ Partie lancée');
   );
 
   if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
-    return interaction.reply({
-      content: '❌ Seuls les membres Vérifiés peuvent observer.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Seuls les membres Vérifiés peuvent observer.'
+  );
+}
 
   if (game.players.includes(interaction.user.id)) {
-    return interaction.reply({
-      content: '❌ Tu es déjà inscrit à la partie.',
-      flags: MessageFlags.Ephemeral
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Tu es déjà inscrit à la partie.'
+  );
+}
 
   const selectMenu = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
@@ -3550,10 +3841,11 @@ await interaction.editReply('✅ Partie lancée');
   );
 
   return interaction.reply({
-    content: '',
-    components: [selectMenu],
-    flags: MessageFlags.Ephemeral
-  });
+  components: [selectMenu],
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
 }
 
         case 'attack_win':
@@ -3745,6 +4037,62 @@ await interaction.channel.send({
         }
       }
     }
+
+if (
+  interaction.isChatInputCommand() &&
+  interaction.commandName === 'addchampion'
+) {
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const targetUser =
+    interaction.options.getUser('joueur');
+
+  const seasonLabel =
+    interaction.options.getString('saison');
+
+  const seasonKey =
+    interaction.options.getString('cle');
+
+  if (!/^\d{4}-\d{2}$/.test(seasonKey)) {
+    return simpleEditReply(
+      interaction,
+      '❌ La clé doit être au format **AAAA-MM**. Exemple : `2026-08`.'
+    );
+  }
+
+  const member = await interaction.guild.members
+    .fetch(targetUser.id)
+    .catch(() => null);
+
+  if (!member) {
+    return simpleEditReply(
+      interaction,
+      '❌ Ce joueur n’est plus présent sur le serveur.'
+    );
+  }
+
+  await saveSeasonChampion({
+    seasonKey,
+    seasonLabel,
+    userId: targetUser.id
+  });
+
+  if (!member.roles.cache.has(WINNER_ROLE_ID)) {
+    await member.roles.add(
+      WINNER_ROLE_ID,
+      `Vainqueur — ${seasonLabel}`
+    ).catch(() => {});
+  }
+
+  return simpleEditReply(
+    interaction,
+    `🏆 **${targetUser.username}** a été ajouté au palmarès — **${seasonLabel}**.`
+  );
+}
+
+
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'manage') {
       const targetUser = interaction.options.getUser('joueur');
@@ -4004,9 +4352,10 @@ return;
 
   await updateleaderboardEmbed();
 
-  return interaction.editReply({
-    content: '✅ leaderboard créé dans ce salon'
-  });
+ return simpleEditReply(
+  interaction,
+  '✅ Leaderboard créé dans ce salon.'
+);
 }
 
 
@@ -4021,21 +4370,22 @@ return;
       const reason = interaction.fields.getTextInputValue('ticket_reason') || '';
 
       const safeReason = reason
-        .toLowerCase()
-        .trim()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9-]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/(^-|-$)/g, '')
-        .slice(0, 30);
+  .toLowerCase()
+  .trim()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9-]/g, '-')
+  .replace(/-+/g, '-')
+  .replace(/(^-|-$)/g, '')
+  .slice(0, 30);
 
       const finalReason = safeReason || 'demande';
 
       const configFile = path.join(__dirname, 'data', 'config.json');
       if (!fs.existsSync(configFile)) {
-  return interaction.editReply({
-    content: '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.'
-  });
+  return simpleEditReply(
+    interaction,
+    '❌ Configuration manquante. Redémarre le bot pour créer la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ.'
+  );
 }
 
       const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
@@ -4048,17 +4398,19 @@ return;
 );
 
 if (existingTicket) {
-  return interaction.editReply({
-    content: `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`
-  });
+  return simpleEditReply(
+    interaction,
+    `❌ Tu as déjà un ticket ouvert : <#${existingTicket.id}>`
+  );
 }
 
 const staffRole = guild.roles.cache.find(r => r.name === 'Administrateur');
 
 if (!staffRole) {
-  return interaction.editReply({
-    content: '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.'
-  });
+  return simpleEditReply(
+    interaction,
+    '❌ Erreur : Le rôle Administrateur n\'existe pas. Redémarre le bot.'
+  );
 }
 
       const ticketChannel = await guild.channels.create({
@@ -4133,9 +4485,10 @@ await ticketChannel.send({
   flags: MessageFlags.IsComponentsV2
 });
 
-return interaction.editReply({
-  content: `✅ Ton ticket a été créé : <#${ticketChannel.id}>`
-});
+return simpleEditReply(
+  interaction,
+  `✅ Ton ticket a été créé : <#${ticketChannel.id}>`
+);
 }
 
     // ── Gestion du modal MANAGE ──
@@ -4148,10 +4501,13 @@ return interaction.editReply({
       const amount = parseInt(interaction.fields.getTextInputValue('rr_amount'));
 
       if (isNaN(amount) || amount <= 0) {
-        return interaction.editReply('❌ Montant invalide. Veuillez entrer un nombre positif.');
-      }
+  return simpleEditReply(
+    interaction,
+    '❌ Montant invalide. Veuillez entrer un nombre positif.'
+  );
+}
 
-      const currentStats = await getPlayerPoints(userId);
+const currentStats = await getPlayerPoints(userId);
 
       if (type === 'add') {
         currentStats.rr += amount;
@@ -4164,12 +4520,16 @@ return interaction.editReply({
       await updateleaderboardEmbed();
 
       const actionText = type === 'add' ? 'ajouté' : 'retiré';
-      return interaction.editReply(`✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`);
-    }
 
-  } catch (err) {
-    console.error(err);
-  }
+return simpleEditReply(
+  interaction,
+  `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`
+);
+}
+
+} catch (err) {
+  console.error(err);
+}
 });
 
 
@@ -4544,6 +4904,42 @@ await leaveChannel.send({
 
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   try {
+
+    const hadOGRole =
+  oldMember.roles.cache.has(OG_ROLE_ID);
+
+const hasOGRole =
+  newMember.roles.cache.has(OG_ROLE_ID);
+
+if (!hadOGRole && hasOGRole) {
+  const ogAddedContainer = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## ${BADGES.OG} NOUVEAU MEMBRE OG\n` +
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# En remerciement d'avoir été là depuis les débuts de **VALORANT PP**.`
+          )
+        )
+
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            newMember.displayAvatarURL({
+              extension: 'png',
+              size: 256
+            })
+          )
+        )
+    );
+
+  await sendActivityMessage(newMember.guild, {
+    components: [ogAddedContainer],
+    flags: MessageFlags.IsComponentsV2
+  });
+}
 
     const hadOrganizerRole =
   oldMember.roles.cache.has(ORGANIZER_ROLE_ID);
