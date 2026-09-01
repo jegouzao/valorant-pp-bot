@@ -1945,55 +1945,71 @@ const barLength = 15;
   PARALLELOGRAM_EMPTY.repeat(barLength - filledBars);
 
   const statsContainer = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
+  .setAccentColor(EMBED_COLOR)
 
-    .addSectionComponents(
-      new SectionBuilder()
+  .addSectionComponents(
+    new SectionBuilder()
 
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
-            `-# Tes statistiques personnelles sur **VALORANT PP**\n` +
-            `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
-            `-# **#${position}** au classement général\n` +
-            `-# ${progressBar}`
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
+          `-# Tes statistiques personnelles sur **VALORANT PP**\n` +
+          `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
+          `-# **#${position}** au classement général`
+        )
+      )
+
+      .setThumbnailAccessory(
+        new ThumbnailBuilder()
+          .setURL(
+            member.displayAvatarURL({
+              size: 256
+            })
           )
-        )
+      )
+  )
 
-        .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(
-              member.displayAvatarURL({
-                size: 256
-              })
-            )
-        )
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `-# ${progressBar}`
     )
-
-
-    .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
-    `${winrate}<:VIDE:1541167342535319603>%  　` +
-    `${stats.games}<:VIDE:1472667851239456935>　` +
-    `${stats.wins}<:VIDE:1493266372954820741>　` +
-    `${invitesData.invites}<:VIDE:1472667823875559708>　` +
-    `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
   )
-)
 
-.addSeparatorComponents(
-  new SeparatorBuilder()
-)
-
-.addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    championshipLine
-      ? `### ${BADGES.WINNER} PALMARÈS\n` +
-        `-# ${championshipLine}\n\n${roleNames}`
-      : `${roleNames}`
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
+      `${winrate}<:VIDE:1541167342535319603>%  　` +
+      `${stats.games}<:VIDE:1472667851239456935>　` +
+      `${stats.wins}<:VIDE:1493266372954820741>　` +
+      `${invitesData.invites}<:VIDE:1472667823875559708>　` +
+      `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
+    )
   )
-);
+
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+
+  .addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      championshipLine
+        ? `### ${BADGES.WINNER} PALMARÈS\n` +
+          `-# ${championshipLine}\n\n${roleNames}`
+        : `${roleNames}`
+    )
+  )
+
+  .addMediaGalleryComponents(
+    new MediaGalleryBuilder().addItems(
+      new MediaGalleryItemBuilder().setURL(
+        'https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a984d68&is=6a96fbe8&hm=cf6521df314dad25e2ac3cb84a981902951f9c900fceed5bfee34dde8d35eb64&'
+      )
+    )
+  );
 
 return interaction.editReply({
   components: [statsContainer]
