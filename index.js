@@ -2175,8 +2175,8 @@ function buildResultContainer({
 
   const winnerText =
     winningSide === 'attack'
-      ? 'ᴀᴛᴛᴀǫᴜᴀɴᴛꜱ'
-      : 'ᴅᴇꜰᴇɴꜱᴇᴜʀꜱ';
+      ? 'ATTAQUANTS'
+      : 'DÉFENSEURS';
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
