@@ -3043,8 +3043,6 @@ if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
   }
 }
 
-// ← AJOUTE ÇA
-}
 }
 
 // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
