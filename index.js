@@ -2019,7 +2019,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:EMOJI_RULES:ID> RÈGLEMENT — VALORANT PP\n` +
+        `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
         `-# ᴀꜰᴋ / ʟᴇᴀᴠᴇ / ꜰᴀᴜx ᴘᴇᴀᴋ ʀᴀɴᴋ ꜱᴀɴᴄᴛɪᴏɴɴÉꜱ\n` +
         `-# À part ça, **NO RULES**.\n` +
         `-# Pas de limites d'équipement ou de décibels.\n` +
@@ -2033,11 +2033,11 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_RR:ID> BARÈME DES POINTS\n` +
-        `-# <:36:1497395169224556686> **PARTIE GAGNÉE : +36 RR**　avec le boost de serveur\n` +
-        `-# <:33:1497395187415126127> **PARTIE GAGNÉE : +33 RR**　avec le tag de serveur\n` +
-        `-# <:30:1493259044893360200> **PARTIE GAGNÉE : +30 RR**　pour un membre standard\n` +
-        `-# <:15:1493259005584343080> **PARTIE PERDUE : -15 RR**　pour un membre standard`
+        `### <:EMOJI_RR:1493378369364951131> BARÈME DES POINTS\n` +
+        `-# **PARTIE GAGNÉE : <:36:1497395169224556686><:36:1497395178045050992>avec le boost de serveur\n` +
+        `-# **PARTIE GAGNÉE : <:33:1497395187415126127><:36:1497395194289455114>avec le tag de serveur\n` +
+        `-# **PARTIE GAGNÉE : <:30:1493259044893360200><:36:1493259054804369408>pour un membre standard\n` +
+        `-# **PARTIE PERDUE : <:15:1493259005584343080><:36:1493259016686538932>pour un membre standard`
       )
     )
 
@@ -2047,7 +2047,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_BALANCE:ID> ÉQUILIBRAGE\n` +
+        `### <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE\n` +
         `-# Boombot équilibre automatiquement les équipes selon le **Peak Rank** renseigné à l'arrivée.\n` +
         `-# L'équilibrage est annulable si nécessaire.`
       )
@@ -2059,7 +2059,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_GIFT:ID> CASHPRIZES MENSUELS\n` +
+        `### <:EMOJI_GIFT:1493378388725989456> CASHPRIZES MENSUELS\n` +
         `-# ${BADGES.TOP1} **TOP LEADERBOARD**\n` +
         `-# ${BADGES.TOP_INVITER} **TOP INVITATIONS**\n` +
         `-# Les récompenses varient : bundles, Riot Card, PayPal, Nitro...`
@@ -2712,7 +2712,7 @@ if (interaction.customId === 'apply_organizer') {
     );
   }
 
-  const organizerApplyContainer = new ContainerBuilder()
+  const organizerInfoContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
 
   .addTextDisplayComponents(
