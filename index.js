@@ -936,8 +936,8 @@ function buildLeaderboardContainer({
   }
 
   const maxRR = sorted[0][1].rr || 1;
-const barLength = 3;
-const playersPerPage = 15;
+const playersPerPage = 10;
+const barLength = 6;
 const totalPages = Math.max(
   1,
   Math.ceil(sorted.length / playersPerPage)
