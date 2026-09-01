@@ -889,10 +889,10 @@ function simpleEditReply(interaction, content, accentColor = EMBED_COLOR) {
     content: null,
     components: [
       buildSimpleContainer(content, accentColor)
-    ]
+    ],
+    flags: MessageFlags.IsComponentsV2
   });
 }
-
 
 // 🖼️ Remplace ces URLs par tes propres bannières une fois prêtes
 const BANNERS = {
@@ -1005,7 +1005,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   `${badges ? ` ${badges}` : ''}  ` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962> ` +
   `**${invites}**<:VIDE:1472667823875559708>  ` +
-  `${bar}\u00A0\u00A0\u00A0\u00A0\u00A0\u2063`
+  `${bar}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u2063`
 );
 });
 
@@ -2625,7 +2625,9 @@ if (interaction.customId === 'rank_up') {
   if (!currentRank) {
     return interaction.reply({
       content: '❌ Aucun rang actuel détecté.',
-      flags: MessageFlags.Ephemeral
+      flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
     });
   }
 
@@ -2927,12 +2929,16 @@ const isAdministrator =
 if (!isBotOwner && !isAdministrator) {
   return interaction.reply({
     content: '❌ Seule l’équipe peut clôturer ce ticket.',
-    flags: MessageFlags.Ephemeral
+    flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
   });
 }
 
   await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
+    flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
   });
 
   const ch = interaction.channel;
@@ -2967,7 +2973,9 @@ if (!isBotOwner && !isAdministrator) {
 
       if (interaction.customId.startsWith('manage_reset_')) {
   await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
+    flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
   });
 
   const userId = interaction.customId.split('_').pop();
@@ -3125,7 +3133,9 @@ if (interaction.isButton()) {
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
       await interaction.deferReply({
-  flags: MessageFlags.Ephemeral
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
 });
 
       try {
@@ -3151,8 +3161,10 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
   if (interaction.replied || interaction.deferred) return;
 
   await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
-  });
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
 
   const valorantCode = interaction.fields.getTextInputValue('valorant_code');
 
@@ -3521,7 +3533,9 @@ game.changeMapVotes.push(voterId);
 
         case 'start': {
           await interaction.deferReply({
-  flags: MessageFlags.Ephemeral
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
 });
 
           const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
@@ -4047,8 +4061,10 @@ if (
   interaction.commandName === 'addchampion'
 ) {
   await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
-  });
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
 
   const targetUser =
     interaction.options.getUser('joueur');
@@ -4253,7 +4269,9 @@ await thread.send({
 
       await interaction.reply({
   content: 'Vérification en cours…',
-  flags: MessageFlags.Ephemeral
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
 });
 
 await interaction.deleteReply().catch(() => {});
@@ -4334,8 +4352,10 @@ return;
     if (interaction.isChatInputCommand() && interaction.commandName === 'leaderboard') {
 
   await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
-  });
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
 
   const container = buildLeaderboardContainer({
     sorted: [],
@@ -4366,7 +4386,9 @@ return;
     // ── Gestion du modal TICKET REASON ──
     if (interaction.isModalSubmit() && interaction.customId === 'ticket_reason_modal') {
       await interaction.deferReply({
-  flags: MessageFlags.Ephemeral
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
 });
 
       const guild = interaction.guild;
@@ -4498,7 +4520,9 @@ return simpleEditReply(
     // ── Gestion du modal MANAGE ──
     if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
       await interaction.deferReply({
-  flags: MessageFlags.Ephemeral
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
 });
 
       const [, , type, userId] = interaction.customId.split('_');
