@@ -2500,6 +2500,7 @@ if (
     '❌ Tu ne peux sélectionner qu’un rang supérieur à ton rang actuel.'
   );
 }
+await interaction.deferUpdate();
 
   const oldRoleId = RANK_ROLES[currentRank];
 const newRoleId = RANK_ROLES[selectedRank];
@@ -2545,7 +2546,7 @@ const rankUpDoneContainer = new ContainerBuilder()
     )
   );
 
-return interaction.update({
+return interaction.editReply({
   components: [rankUpDoneContainer]
 });
 }
