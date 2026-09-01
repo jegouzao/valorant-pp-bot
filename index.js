@@ -1737,21 +1737,21 @@ function buildOnboardingContainer() {
     .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
-    .setCustomId('toggle_notif_pp')
-    .setLabel('Notifications PP')
-    .setStyle(ButtonStyle.Secondary),
-
-  new ButtonBuilder()
     .setCustomId('rank_up')
     .setLabel('Rank Up')
     .setStyle(ButtonStyle.Secondary),
 
-     new ButtonBuilder()
+    new ButtonBuilder()
     .setCustomId('apply_organizer')
-    .setLabel('Devenir organisateur')
+    .setLabel('Rejoindre l\'équipe')
     .setStyle(ButtonStyle.Secondary),
 
-  new ButtonBuilder()
+    new ButtonBuilder()
+    .setCustomId('toggle_notif_pp')
+    .setLabel('Notifications')
+    .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
     .setCustomId('open_ticket')
     .setLabel('Support')
     .setStyle(ButtonStyle.Secondary)
