@@ -2999,6 +2999,7 @@ if (!isBotOwner && !isAdministrator) {
   interaction,
   `🔄 Stats reset pour <@${userId}> (0 RR, 0 games, 0 wins).`
 );
+}
 
 if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
   const roleId = ROLE_NOTIF_PP;
