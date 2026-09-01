@@ -3799,18 +3799,20 @@ const gameContainer = buildInGameContainer({
 const buttons = new ActionRowBuilder().addComponents(
 
   new ButtonBuilder()
+  .setCustomId('attack_win')
+  .setLabel('Attaquants')
+  .setEmoji({ id: '1544390412246974605' })
+  .setStyle(ButtonStyle.Secondary),
+  
+  new ButtonBuilder()
     .setCustomId('spectate')
     .setLabel('Observer la partie')
     .setStyle(ButtonStyle.Secondary),
 
-  new ButtonBuilder()
-  .setCustomId('attack_win')
-  .setLabel('Attaquants')
-  .setStyle(ButtonStyle.Secondary),
-
 new ButtonBuilder()
   .setCustomId('defense_win')
   .setLabel('Défenseurs')
+  .setEmoji({ id: '1544390421113995274' })
   .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
