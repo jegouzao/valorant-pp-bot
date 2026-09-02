@@ -1586,7 +1586,7 @@ console.log(
 // L'annonce ne peut partir qu'une seule fois grâce à monthlyWinnersLastAnnouncement.
 setInterval(() => {
   announceMonthlyWinners(guild);
-}, 250);
+}, 1000);
 
 console.log(
   `${colors.green}✅ Annonce mensuelle des gagnants activée${colors.reset}`
@@ -4311,12 +4311,10 @@ await thread.send({
       await setRiotUser(interaction.user.id, { pseudo });
       await interaction.member.setNickname(pseudo).catch(() => {});
 
-      await interaction.reply({
-  content: 'Vérification en cours…',
-  flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-});
+      await simpleReply(
+  interaction,
+  '⏳ Vérification en cours…'
+);
 
 await interaction.deleteReply().catch(() => {});
 
@@ -5672,20 +5670,36 @@ client.on('shardConnecting', (id) => {
   console.log(`🔌 Shard ${id} connecting...`);
 });
 
-client.on('shardReady', (id) => {
-  console.log(`✅ Shard ${id} ready`);
+client.on('shardReady', (id, unavailableGuilds) => {
+  console.log(
+    `✅ Shard ${id} ready` +
+    `${unavailableGuilds?.size ? ` — ${unavailableGuilds.size} guild(s) indisponible(s)` : ''}`
+  );
 });
 
 client.on('shardDisconnect', (event, id) => {
-  console.error(`❌ Shard ${id} disconnected. Code: ${event.code}`);
+  console.error(
+    `❌ Shard ${id} disconnected`,
+    {
+      code: event?.code,
+      reason: event?.reason || 'Aucune raison',
+      wasClean: event?.wasClean
+    }
+  );
 });
 
 client.on('shardError', (error, id) => {
-  console.error(`❌ Shard ${id} error:`, error);
+  console.error(`❌ Shard ${id} error :`, error);
 });
 
 client.on('shardReconnecting', (id) => {
-  console.log(`🔄 Shard ${id} reconnecting...`);
+  console.warn(`🔄 Shard ${id} reconnecting...`);
+});
+
+client.on('shardResume', (id, replayedEvents) => {
+  console.log(
+    `♻️ Shard ${id} resumed — ${replayedEvents} événement(s) rejoué(s)`
+  );
 });
 
 console.log("Tentative de connexion Discord...");
