@@ -2037,7 +2037,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
+        `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
         ` **PARTIE GAGNÉE** :  <:36:1497395169224556686><:36:1497395178045050992>avec le boost de serveur\n` +
         ` **PARTIE GAGNÉE** :  <:33:1497395187415126127><:36:1497395194289455114>avec le tag de serveur\n` +
         ` **PARTIE GAGNÉE** :  <:30:1493259044893360200><:36:1493259054804369408>pour un membre standard\n` +
@@ -2051,7 +2051,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE\n` +
+        `## <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE\n` +
         ` Boombot équilibre automatiquement les équipes selon le **Peak Rank** renseigné à l'arrivée.\n` +
         ` L'équilibrage est annulable si nécessaire.`
       )
@@ -2063,7 +2063,7 @@ function buildRulesContainer() {
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### <:EMOJI_GIFT:1544365369253171282> CASHPRIZES MENSUELS\n` +
+        `## <:EMOJI_GIFT:1544365369253171282> CASHPRIZES MENSUELS\n` +
         ` ${BADGES.TOP1} **TOP 1 DU CLASSEMENT GÉNÉRAL**\n` +
         ` ${BADGES.TOP_INVITER} **TOP 1 DU CLASSEMENT DES INVITATIONS**\n` +
         `-# Les récompenses varieront selon les saisons : bundles, Riot Cards, PayPal, Nitro...`
@@ -2732,7 +2732,7 @@ if (interaction.customId === 'apply_organizer') {
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
+      `## <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
       `Créer les PP lorsque des joueurs sont disponibles\n` +
       `Communiquer le **code de groupe Valorant**\n` +
       `Gérer les inscriptions et lancer l'équilibrage\n` +
@@ -2746,7 +2746,7 @@ if (interaction.customId === 'apply_organizer') {
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `### <:EMOJI_PP:1466470377327825028> CRÉER UNE PARTIE\n` +
+      `## <:EMOJI_PP:1466470377327825028> CRÉER UNE PARTIE\n` +
       `Utilise **/pp**, renseigne le code de groupe et Boombot s'occupe du reste.`
     )
   )
@@ -2757,7 +2757,7 @@ if (interaction.customId === 'apply_organizer') {
 
   .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `### <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
+    `## <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
     `Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.`
   )
 )
