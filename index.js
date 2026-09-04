@@ -4914,61 +4914,103 @@ if (usedInvite) {
 
 client.on('guildMemberRemove', async member => {
   try {
+    console.log(
+      `👋 Départ détecté : ${member.user.tag} (${member.id})`
+    );
+
+    // Petit délai pour laisser les Audit Logs Discord se mettre à jour
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     let wasBanned = false;
 
     try {
-      const logs = await member.guild.fetchAuditLogs({ type: 22, limit: 10 });
-      const entry = logs.entries.find(entry =>
-        entry.target?.id === member.id && Date.now() - entry.createdTimestamp < 15000
+      const logs = await member.guild.fetchAuditLogs({
+        type: 22,
+        limit: 5
+      });
+
+      const banEntry = logs.entries.find(entry =>
+        entry.target?.id === member.id &&
+        Date.now() - entry.createdTimestamp < 5000
       );
-      if (entry) wasBanned = true;
+
+      wasBanned = Boolean(banEntry);
+
     } catch (err) {
-      console.error('Erreur audit logs guildMemberRemove :', err);
+      console.error(
+        '❌ Erreur vérification ban lors du départ :',
+        err
+      );
     }
 
-    if (wasBanned) return;
-
-    const leaveChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-    if (!leaveChannel) return;
+    // Le guildBanAdd possède déjà son propre message système.
+    if (wasBanned) {
+      console.log(
+        `⛔ Départ ignoré car bannissement détecté : ${member.user.tag}`
+      );
+      return;
+    }
 
     function formatServerDuration(joinedAt) {
       if (!joinedAt) return 'une durée inconnue';
+
       const diffMs = Date.now() - joinedAt.getTime();
-      const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-      if (totalDays < 1) return 'moins d\u2019un jour';
+
+      const totalDays = Math.max(
+        0,
+        Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      );
+
+      if (totalDays < 1) return 'moins d’un jour';
       if (totalDays === 1) return '1 jour';
+
       return `${totalDays} jours`;
     }
 
-    const serverDuration = formatServerDuration(member.joinedAt);
+    const serverDuration =
+      formatServerDuration(member.joinedAt);
 
     const leaveContainer = new ContainerBuilder()
-  .setAccentColor(0xe70019)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n` +
-          `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# aura tenu ${serverDuration} sur le serveur`
-        )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.user.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
-  );
+      .setAccentColor(0xe70019)
+      .addSectionComponents(
+        new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n` +
+              `-# **${member.user.tag}** (<@${member.id}>)\n` +
+              `-# aura tenu ${serverDuration} sur le serveur`
+            )
+          )
+          .setThumbnailAccessory(
+            new ThumbnailBuilder().setURL(
+              member.user.displayAvatarURL({
+                extension: 'png',
+                size: 256
+              })
+            )
+          )
+      );
 
-await leaveChannel.send({
-  components: [leaveContainer],
-  flags: MessageFlags.IsComponentsV2
-});
+    const sent = await sendActivityMessage(member.guild, {
+      components: [leaveContainer],
+      flags: MessageFlags.IsComponentsV2
+    });
+
+    if (sent) {
+      console.log(
+        `✅ Message de départ envoyé : ${member.user.tag}`
+      );
+    } else {
+      console.error(
+        `❌ Impossible d'envoyer le message de départ : ${member.user.tag}`
+      );
+    }
+
   } catch (err) {
-    console.error('Erreur lors de l\'embed de départ :', err);
+    console.error(
+      '❌ Erreur guildMemberRemove :',
+      err
+    );
   }
 });
 
