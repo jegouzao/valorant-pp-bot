@@ -224,7 +224,25 @@ function getRankEmojiFromMember(member) {
   return rankEmojis[emojiKey] || '';
 }
 
-const MIN_ACCOUNT_AGE_DAYS = 30;
+const MIN_ACCOUNT_AGE_DAYS = 10;
+
+function formatAccountAge(createdAt) {
+  const diffMs = Date.now() - createdAt.getTime();
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (minutes < 60) {
+    return `${Math.max(1, minutes)} minute${minutes > 1 ? 's' : ''}`;
+  }
+
+  if (hours < 24) {
+    return `${hours} heure${hours > 1 ? 's' : ''}`;
+  }
+
+  return `${days} jour${days > 1 ? 's' : ''}`;
+}
 
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
 
@@ -487,13 +505,22 @@ const row = new ActionRowBuilder().addComponents(
 
 container.addActionRowComponents(row);
 
-await registrationMsg.edit({
-  components: [container],
-  files: [{
+const hasCurrentMapAttachment = registrationMsg.attachments.some(
+  attachment => attachment.name === game.mapImage
+);
+
+const editPayload = {
+  components: [container]
+};
+
+if (!hasCurrentMapAttachment) {
+  editPayload.files = [{
     attachment: `./assets/maps/${game.mapImage}`,
     name: game.mapImage
-  }]
-});
+  }];
+}
+
+await registrationMsg.edit(editPayload);
 
   } catch (err) {
     if (err.code !== 10008) console.error('Erreur update embed PARTIE CRÉÉE:', err);
@@ -517,7 +544,20 @@ async function sendActivityMessage(guild, payload) {
     await guild.channels.fetch(ACTIVITIES_CHANNEL_ID).catch(() => null);
 
   if (!channel) return null;
-  return channel.send(payload).catch(() => null);
+  return channel.send(payload).catch(err => {
+  console.error('❌ Erreur envoi activité système :', err);
+  return null;
+});
+}
+
+function getModeratorName(guild, moderator) {
+  if (!moderator) {
+    return '**Administrateur inconnu**';
+  }
+
+  const member = guild.members.cache.get(moderator.id);
+
+  return `**${member?.displayName || moderator.globalName || moderator.username}**`;
 }
 
 // ✅ Salons vocaux à ne jamais supprimer automatiquement
@@ -902,7 +942,7 @@ function simpleEditReply(interaction, content, accentColor = EMBED_COLOR) {
 const BANNERS = {
   leaderboard: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493355314307661936/960_x_540_px_25.png',
   regles: 'https://cdn.discordapp.com/attachments/1461761854563942400/1493071194306383962/3.png',
-  onboarding: 'https://cdn.discordapp.com/attachments/1461761854563942400/1541033840007708682/960_x_540_px_1.png?ex=6a8c1f1a&is=6a8acd9a&hm=5b185b5c5d692c57ae194e92e9062e62ccc6f77d2173b450dbe95daaddeb4842&',
+  onboarding: 'attachment://onboarding.png',
 };
 
 
@@ -923,7 +963,7 @@ function buildLeaderboardContainer({
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:VIDE:1493046347337699499> LEADERBOARD\n` +
-          `-# ᴄᴀʟᴄᴜʟ ᴇɴ ᴄᴏᴜʀꜱ...`
+          `-# ᴄᴀʟᴄᴜʟ ᴇɴ ᴄᴏᴜʀꜱ…`
         )
       );
   }
@@ -1028,9 +1068,9 @@ const lines = pagePlayers.map(([id, data], idx) => {
       )
     )
     .setThumbnailAccessory(
-      new ThumbnailBuilder()
-        .setURL('https://cdn.discordapp.com/attachments/1461761854563942400/1543614174788190259/Copie_de_Guide_TRADE_REPUBLIC_12.png?ex=6a95823a&is=6a9430ba&hm=ad6142c6ac5dd3768e3e1973d2461e2850d0ea14e976cc7b66bf874fe14adb16&é')
-    )
+  new ThumbnailBuilder()
+    .setURL('attachment://leaderboard-icon.png')
+)
 )
 
     .addSeparatorComponents(
@@ -1130,7 +1170,7 @@ const commands = [
     }
   ]
 },
-  { name: 'resetseason', description: 'Reinitialiser toutes les données', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
+  { name: 'resetseason', description: 'Réinitialiser toutes les données', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'leaderboard', description: 'Afficher le leaderboard', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'manage', description: 'Gérer les données', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Joueur', type: 6, required: true }] },
@@ -1173,14 +1213,14 @@ async function syncServerTagRole(userId, user = null) {
       );
 
       const tagEnabledContainer = new ContainerBuilder()
-  .setAccentColor(0xc5b174)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ʟᴇ ʙᴏɴᴜꜱ ᴠɪᴇɴᴛ ᴅ'ᴇᴛʀᴇ ᴀᴄᴛɪᴠᴇ ᴘᴏᴜʀ ᴛᴇꜱ ᴘʀᴏᴄʜᴀɪɴᴇꜱ ᴠɪᴄᴛᴏɪʀᴇꜱ`
+`-# Utilise désormais le tag du serveur et bénéficie du **bonus associé**`
         )
       )
       .setThumbnailAccessory(
@@ -1206,14 +1246,14 @@ await sendActivityMessage(guild, {
       );
 
       const tagRemovedContainer = new ContainerBuilder()
-  .setAccentColor(0x858585)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:tag:1543303374974357695> TAG DU SERVEUR RETIRÉ\n` +
           `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# ʟᴇ ʙᴏɴᴜꜱ ᴀꜱꜱᴏᴄɪᴇ ᴀᴜ ᴛᴀɢ ꜱᴇʀᴠᴇᴜʀ ᴀ ᴇᴛᴇ ʀᴇᴛɪʀᴇ`
+`-# N'utilise plus le tag du serveur et a perdu le **bonus associé**`
         )
       )
       .setThumbnailAccessory(
@@ -1266,21 +1306,19 @@ async function announceMonthlyWinners(guild) {
     const day = Number(parisParts.day);
     const hour = Number(parisParts.hour);
     const minute = Number(parisParts.minute);
-    const second = Number(parisParts.second);
 
     // Dernier jour du mois
     const lastDayOfMonth =
       new Date(Date.UTC(year, month, 0)).getUTCDate();
 
-    // On ne fait rien tant qu'on n'est pas exactement à 23:59:59
-    if (
-      day !== lastDayOfMonth ||
-      hour !== 23 ||
-      minute !== 59 ||
-      second !== 59
-    ) {
-      return;
-    }
+    // Fenêtre d'annonce : dernière minute du dernier jour du mois
+if (
+  day !== lastDayOfMonth ||
+  hour !== 23 ||
+  minute !== 59
+) {
+  return;
+}
 
     monthlyWinnersRunning = true;
 
@@ -1295,11 +1333,6 @@ async function announceMonthlyWinners(guild) {
       return;
     }
 
-    // On verrouille immédiatement
-    await setConfigValue(
-      'monthlyWinnersLastAnnouncement',
-      monthKey
-    );
 
     // ==============================
     // LEADERBOARD
@@ -1401,7 +1434,8 @@ if (
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
                   `## ${BADGES.TOP1} VAINQUEUR DU MOIS\n` +
-                  `-# <@${winnerId}> termine la saison à la **1ère place** avec **${winnerData.rr || 0}<:Roles:1541125087384829962>**.`
+`-# **${winnerMember?.user.tag || 'Utilisateur inconnu'}** (<@${winnerId}>)\n` +
+`-# Termine la saison à la **1re place** avec **${winnerData.rr || 0}<:Roles:1541125087384829962>**`
                 )
               )
 
@@ -1419,10 +1453,14 @@ if (
               )
           );
 
-      await sendActivityMessage(guild, {
-        components: [leaderboardWinnerContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+      const leaderboardWinnerMessage = await sendActivityMessage(guild, {
+  components: [leaderboardWinnerContainer],
+  flags: MessageFlags.IsComponentsV2
+});
+
+if (!leaderboardWinnerMessage) {
+  throw new Error('Impossible d’envoyer l’annonce du vainqueur mensuel');
+}
     }
 
     // ==============================
@@ -1442,7 +1480,8 @@ if (
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
                   `## ${BADGES.TOP_INVITER} TOP INVITATIONS\n` +
-                  `-# <@${topInviterId}> cumule actuellement **${maxInvites} invitation${maxInvites > 1 ? 's' : ''}**.`
+`-# **${inviterMember?.user.tag || 'Utilisateur inconnu'}** (<@${topInviterId}>)\n` +
+`-# Termine la saison en tête avec **${maxInvites} invitation${maxInvites > 1 ? 's' : ''}**`
                 )
               )
 
@@ -1460,11 +1499,21 @@ if (
               )
           );
 
-      await sendActivityMessage(guild, {
-        components: [invitationWinnerContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+      const invitationWinnerMessage = await sendActivityMessage(guild, {
+  components: [invitationWinnerContainer],
+  flags: MessageFlags.IsComponentsV2
+});
+
+if (!invitationWinnerMessage) {
+  throw new Error('Impossible d’envoyer l’annonce du top invitations');
+}
     }
+
+
+    await setConfigValue(
+  'monthlyWinnersLastAnnouncement',
+  monthKey
+);
 
     console.log(
       `🏆 Gagnants mensuels annoncés pour ${monthKey}`
@@ -1582,11 +1631,11 @@ console.log(
   `${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.reset}`
 );
 
-// Vérifie l'heure 4 fois par seconde.
-// L'annonce ne peut partir qu'une seule fois grâce à monthlyWinnersLastAnnouncement.
+// Vérifie régulièrement pendant la dernière minute du mois.
+// Le verrou mensuel empêche toute double annonce.
 setInterval(() => {
   announceMonthlyWinners(guild);
-}, 1000);
+}, 15000);
 
 console.log(
   `${colors.green}✅ Annonce mensuelle des gagnants activée${colors.reset}`
@@ -1677,18 +1726,18 @@ async function updateleaderboardEmbed() {
 
     const guild = channel.guild;
 
-    await guild.members.fetch().catch(() => {});
+const sorted = sortLeaderboardPlayers(
+  pointsData,
+  totalInvitesPerMember,
+  guild.members.cache
+);
 
-    const sorted = sortLeaderboardPlayers(
-      pointsData,
-      totalInvitesPerMember,
-      guild.members.cache
-    );
-
-    const currentMembers =
-      guild.members.cache.filter(member => !member.user.bot).size;
-
-    const playerCount = Math.round(currentMembers * 0.85);
+    const playerCount = Object.entries(pointsData)
+  .filter(([id, data]) =>
+    guild.members.cache.has(id) &&
+    (data.games || 0) > 0
+  )
+  .length;
 
     const container = buildLeaderboardContainer({
       sorted,
@@ -1700,9 +1749,15 @@ async function updateleaderboardEmbed() {
 
     if (!msg.flags.has(MessageFlags.IsComponentsV2)) {
       const newMsg = await channel.send({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2
-      });
+  components: [container],
+  files: [
+    {
+      attachment: path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png'),
+      name: 'leaderboard-icon.png'
+    }
+  ],
+  flags: MessageFlags.IsComponentsV2
+});
 
       await setConfigValue('leaderboardData', {
         messageId: newMsg.id,
@@ -1788,7 +1843,7 @@ function buildOnboardingContainer() {
 
   await simpleReply(
     interaction,
-    '⏳ Chargement de tes statistiques...'
+    '⏳ Chargement de tes statistiques…'
   );
 
   const member = interaction.member;
@@ -2003,15 +2058,21 @@ const barLength = 15;
   )
 
   .addMediaGalleryComponents(
-    new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder().setURL(
-        'https://cdn.discordapp.com/attachments/1461761854563942400/1543657318204317858/4210_x_45_px_8000_x_40_px.png?ex=6a984d68&is=6a96fbe8&hm=cf6521df314dad25e2ac3cb84a981902951f9c900fceed5bfee34dde8d35eb64&'
-      )
+  new MediaGalleryBuilder().addItems(
+    new MediaGalleryItemBuilder().setURL(
+      'attachment://stats-divider.png'
     )
-  );
+  )
+);
 
 return interaction.editReply({
-  components: [statsContainer]
+  components: [statsContainer],
+  files: [
+    {
+      attachment: path.join(__dirname, 'assets', 'images', 'stats-divider.png'),
+      name: 'stats-divider.png'
+    }
+  ]
 });
 }
 
@@ -2066,7 +2127,7 @@ function buildRulesContainer() {
         `## <:EMOJI_GIFT:1544365369253171282> CASHPRIZES MENSUELS\n` +
         ` ${BADGES.TOP1} **TOP 1 DU CLASSEMENT GÉNÉRAL**\n` +
         ` ${BADGES.TOP_INVITER} **TOP 1 DU CLASSEMENT DES INVITATIONS**\n` +
-        `-# Les récompenses varieront selon les saisons : bundles, Riot Cards, PayPal, Nitro...`
+        `-# Les récompenses varieront selon les saisons : bundles, Riot Cards, PayPal, Nitro…`
       )
     );
 }
@@ -2293,8 +2354,8 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# Partie organisée par **${organisateur}** ➜ <#${waitingVCId}> <@&${ROLE_NOTIF_PP}>\n` +
-            `-# \`${remaining}\` slots restant pour le lobby \`${code}\`\n` +
+            `-# Partie organisée par **${organisateur}** dans <#${waitingVCId}> <@&${ROLE_NOTIF_PP}>\n` +
+            `-# \`${remaining}\` place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} pour le lobby \`${code}\`\n` +
             `-# \`${votes}/${needed}\` votes pour changer la map`
           )
         )
@@ -2432,7 +2493,7 @@ if (interaction.isButton() && interaction.customId === 'verify_riot') {
   if (!memberHasSelectedRank(interaction.member)) {
   return simpleReply(
     interaction,
-    '❌ Tu dois d’abord sélectionner ton **peak rank** avant de pouvoir te renommer.'
+    '❌ Tu dois d’abord sélectionner ton **peak rank** avant de pouvoir te renommer'
   );
 }
 
@@ -2480,6 +2541,12 @@ if (interaction.isButton() && interaction.customId === 'verify_riot') {
     if (interaction.isChatInputCommand() && interaction.commandName === 'onboarding') {
   return interaction.reply({
     components: [buildOnboardingContainer()],
+    files: [
+      {
+        attachment: path.join(__dirname, 'assets', 'images', 'onboarding.png'),
+        name: 'onboarding.png'
+      }
+    ],
     flags: MessageFlags.IsComponentsV2
   });
 }
@@ -2494,7 +2561,7 @@ if (
   if (!currentRank) {
   return simpleReply(
     interaction,
-    '❌ Aucun rang actuel détecté.'
+    '❌ Aucun rang actuel détecté'
   );
 }
 
@@ -2507,7 +2574,7 @@ if (
 ) {
   return simpleReply(
     interaction,
-    '❌ Tu ne peux sélectionner qu’un rang supérieur à ton rang actuel.'
+    '❌ Tu ne peux sélectionner qu’un rang supérieur à ton rang actuel'
   );
 }
 await interaction.deferUpdate();
@@ -2528,8 +2595,8 @@ const rankUpActivityContainer = new ContainerBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## ${newRankEmoji} RANK UP\n` +
-          `-# **${interaction.member.displayName}** (<@${interaction.user.id}>)\n` +
-          `-# Vient de passer de **${RANK_LABELS[currentRank]}** à **${newRankLabel}**.`
+          `-# **${interaction.user.tag}** (<@${interaction.user.id}>)\n` +
+`-# Est passé de **${RANK_LABELS[currentRank]}** à **${newRankLabel}**`
         )
       )
       .setThumbnailAccessory(
@@ -2603,8 +2670,12 @@ if (
   guild.members.cache
 );
 
-  const currentMembers = guild.members.cache.filter(member => !member.user.bot).size;
-const playerCount = Math.round(currentMembers * 0.85);
+  const playerCount = Object.entries(pointsData)
+  .filter(([id, data]) =>
+    guild.members.cache.has(id) &&
+    (data.games || 0) > 0
+  )
+  .length;
 
   const container = buildLeaderboardContainer({
     sorted,
@@ -2616,16 +2687,22 @@ const playerCount = Math.round(currentMembers * 0.85);
 
   // Premier clic depuis le leaderboard public
   if (interaction.customId === 'leaderboard_open') {
-    return interaction.reply({
-      components: [container],
-      flags:
-        MessageFlags.Ephemeral |
-        MessageFlags.IsComponentsV2,
-      allowedMentions: {
-        parse: []
+  return interaction.reply({
+    components: [container],
+    files: [
+      {
+        attachment: path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png'),
+        name: 'leaderboard-icon.png'
       }
-    });
-  }
+    ],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2,
+    allowedMentions: {
+      parse: []
+    }
+  });
+}
 
   // Navigation dans le classement éphémère
   return interaction.update({
@@ -2640,13 +2717,11 @@ if (interaction.customId === 'rank_up') {
   const currentRank = getMemberRankKey(interaction.member);
 
   if (!currentRank) {
-    return interaction.reply({
-      content: '❌ Aucun rang actuel détecté.',
-      flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-    });
-  }
+  return simpleReply(
+    interaction,
+    '❌ Aucun rang actuel détecté'
+  );
+}
 
   const currentIndex = RANK_UP_ORDER.indexOf(currentRank);
 
@@ -2657,7 +2732,7 @@ if (interaction.customId === 'rank_up') {
   if (!availableRanks.length) {
   return simpleReply(
     interaction,
-    '👑 Tu es déjà au rang maximum : **Radiant**.'
+    '👑 Tu es déjà au rang maximum : **Radiant**'
   );
 }
   const rankUpMenu = new StringSelectMenuBuilder()
@@ -2690,8 +2765,8 @@ if (interaction.customId === 'rank_up') {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## RANK UP\n` +
-        `-# Rang actuel : **${RANK_LABELS[currentRank]}**\n` +
-        `-# Sélectionne ton nouveau peak rank.`
+`-# Rang actuel : **${RANK_LABELS[currentRank]}**\n` +
+`-# Sélectionne ton nouveau peak rank`
       )
     )
     .addActionRowComponents(
@@ -2712,7 +2787,7 @@ if (interaction.customId === 'apply_organizer') {
   if (interaction.member.roles.cache.has(ORGANIZER_ROLE_ID)) {
     return simpleReply(
       interaction,
-      '❌ Tu es déjà Organisateur de parties.'
+      '❌ Tu es déjà Organisateur de parties'
     );
   }
 
@@ -2722,7 +2797,7 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## <:EMOJI_ORGA:1493046347337699499> DEVENIR ORGANISATEUR — VALORANT PP\n` +
-      `-# Crée, lance et gère les parties personnalisées du serveur.`
+      `-# Crée, lance et gère les parties personnalisées du serveur`
     )
   )
 
@@ -2747,7 +2822,7 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## <:EMOJI_PP:1466470377327825028> CRÉER UNE PARTIE\n` +
-      `Utilise **/pp**, renseigne le code de groupe et Boombot s'occupe du reste.`
+      `Utilise **/pp**, renseigne le code de groupe et Boombot s'occupe du reste`
     )
   )
 
@@ -2758,7 +2833,7 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `## <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
-    `Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation.`
+    `Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation`
   )
 )
   
@@ -2796,7 +2871,7 @@ if (interaction.customId === 'organizer_apply_confirm') {
     return interaction.update({
       components: [
         buildSimpleContainer(
-          '❌ Tu es déjà Organisateur de parties.'
+          '❌ Tu es déjà Organisateur de parties'
         )
       ]
     });
@@ -2819,9 +2894,9 @@ if (interaction.customId === 'organizer_apply_confirm') {
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## CANDIDATURE ORGANISATEUR DE PARTIES\n` +
-            `-# **${interaction.member.displayName}** (<@${interaction.user.id}>)\n` +
-            `-# Souhaite devenir **Organisateur de parties**.`
+            `## ${BADGES.ORGANIZER} CANDIDATURE ORGANISATEUR DE PARTIES\n` +
+`-# **${interaction.user.tag}** (<@${interaction.user.id}>)\n` +
+`-# Souhaite devenir **Organisateur de parties**`
           )
         )
 
@@ -2843,14 +2918,14 @@ if (interaction.customId === 'organizer_apply_confirm') {
     );
 
   await sendActivityMessage(interaction.guild, {
-    components: [applicationContainer],
+    components: [applicationContainer],ss
     flags: MessageFlags.IsComponentsV2
   });
 
   return interaction.update({
     components: [
       buildSimpleContainer(
-        '✅ Ta candidature a été envoyée.'
+        '✅ Ta candidature a été envoyée'
       )
     ]
   });
@@ -2862,7 +2937,7 @@ if (interaction.customId === 'organizer_apply_cancel') {
   return interaction.update({
     components: [
       buildSimpleContainer(
-        '❌ Candidature annulée.'
+        '❌ Candidature annulée'
       )
     ]
   });
@@ -2875,7 +2950,7 @@ if (
   if (interaction.user.id !== BOT_OWNER_ID) {
   return simpleReply(
     interaction,
-    '❌ Seul le propriétaire peut traiter cette candidature.'
+    '❌ Seul le propriétaire peut traiter cette candidature'
   );
 }
 
@@ -2893,7 +2968,7 @@ if (
   if (!member) {
   return simpleReply(
     interaction,
-    '❌ Membre introuvable.'
+    '❌ Membre introuvable'
   );
 }
 
@@ -2905,25 +2980,29 @@ if (
   }
 
   const resultContainer = new ContainerBuilder()
-    .setAccentColor(
-      accepted
-        ? 0x57f287
-        : 0xed4245
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        accepted
-          ? `## ✅ CANDIDATURE ACCEPTÉE\n` +
-            `-# <@${userId}> est désormais **Organisateur de parties**.`
-          : `## ❌ CANDIDATURE REFUSÉE\n` +
-            `-# La candidature de <@${userId}> a été refusée.`
+  .setAccentColor(0x242429)
+  .addSectionComponents(
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          accepted
+  ? `## ${BADGES.ORGANIZER} CANDIDATURE ACCEPTÉE\n` +
+    `-# **${member.user.tag}** (<@${member.id}>)\n` +
+    `-# Est désormais **Organisateur de parties**`
+  : `## ${BADGES.ORGANIZER} CANDIDATURE REFUSÉE\n` +
+    `-# **${member.user.tag}** (<@${member.id}>)\n` +
+    `-# Sa candidature au rôle **Organisateur de parties** a été refusée`
+        )
       )
-    );
-
-  return interaction.update({
-    components: [resultContainer]
-  });
+      .setThumbnailAccessory(
+        new ThumbnailBuilder().setURL(
+          member.displayAvatarURL({
+            extension: 'png',
+            size: 256
+          })
+        )
+      )
+  );
 }
 
 if (interaction.customId === 'open_rules') {
@@ -2938,7 +3017,7 @@ if (interaction.customId === 'open_rules') {
         const reasonInput = new TextInputBuilder()
   .setCustomId('ticket_reason')
   .setLabel('Objet du ticket')
-  .setPlaceholder('Signalement, rank-up, question...')
+  .setPlaceholder('Signalement, rank-up, question…')
   .setStyle(TextInputStyle.Short)
   .setRequired(false);
         modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
@@ -2961,7 +3040,7 @@ const isAdministrator =
 if (!isBotOwner && !isAdministrator) {
   return simpleReply(
     interaction,
-    '❌ Seule l’équipe peut clôturer ce ticket.'
+    '❌ Seule l’équipe peut clôturer ce ticket'
   );
 }
 
@@ -3173,14 +3252,14 @@ if (interaction.isButton()) {
 
         return simpleEditReply(
   interaction,
-  `✅ Nouvelle saison initialisée.\n` +
-  `Joueurs reset : **${result.modifiedCount ?? 0}**`
+  `✅ Nouvelle saison initialisée\n` +
+`Joueurs réinitialisés : **${result.modifiedCount ?? 0}**`
 );
       } catch (err) {
         console.error('Erreur resetseason :', err);
         return simpleEditReply(
   interaction,
-  '❌ Impossible de réinitialiser la saison.'
+  '❌ Impossible de réinitialiser la saison'
 );
       }
     }
@@ -3204,7 +3283,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
   if (!verifiedRole) {
   return simpleEditReply(
     interaction,
-    "⚠️ Le rôle Vérifié n'existe pas."
+    "⚠️ Le rôle Vérifié n'existe pas"
   );
 }
 
@@ -3354,7 +3433,7 @@ if (!game) {
   if (!vc) {
   return simpleEditReply(
     interaction,
-    '❌ Aucun salon disponible.'
+    '❌ Aucun salon disponible'
   );
 }
 
@@ -3580,7 +3659,8 @@ game.changeMapVotes.push(voterId);
           if (!TEST_MODE && game.players.length !== 10) {
   return simpleEditReply(
     interaction,
-    `❌ La partie doit obligatoirement être lancée en **5v5**.\nActuellement : **${game.players.length}/10 joueurs**.`
+    `❌ La partie doit obligatoirement être lancée en **5v5**\n` +
+`Actuellement : **${game.players.length}/10 joueurs**`
   );
 }
 
@@ -4122,7 +4202,7 @@ if (
   if (!/^\d{4}-\d{2}$/.test(seasonKey)) {
     return simpleEditReply(
       interaction,
-      '❌ La clé doit être au format **AAAA-MM**. Exemple : `2026-08`.'
+      '❌ La clé doit être au format **AAAA-MM** — exemple : `2026-08`'
     );
   }
 
@@ -4194,7 +4274,7 @@ if (
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`manage_add_${targetUser.id}`).setLabel('+ Ajouter RR').setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId(`manage_remove_${targetUser.id}`).setLabel('- Retirer RR').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`manage_reset_${targetUser.id}`).setLabel('🔄 Reset Complet').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId(`manage_reset_${targetUser.id}`).setLabel('🔄 Réinitialiser').setStyle(ButtonStyle.Secondary)
       );
 
       manageContainer.addActionRowComponents(row);
@@ -4259,8 +4339,9 @@ if (
   .setAccentColor(EMBED_COLOR)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `## Peak rank défini sur **${role?.name || selectedRank}**\n` +
-      `-# Parfait. Il ne te reste plus qu'à renseigner ton **pseudo VALORANT** pour terminer la vérification.`
+      `## PEAK RANK DÉFINI\n` +
+`-# **${role?.name || selectedRank}** sélectionné\n` +
+`-# Il ne te reste plus qu'à renseigner ton **pseudo VALORANT** pour terminer la vérification`
     )
   );
 
@@ -4284,7 +4365,7 @@ await thread.send({
   .setAccentColor(EMBED_COLOR)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `-# Clique sur le bouton ci-dessous puis entre ton pseudo **IN-GAME**, sans le #TAG.`
+      `-# Clique sur le bouton ci-dessous puis renseigne ton **pseudo VALORANT**, sans le #TAG`
     )
   )
   .addActionRowComponents(
@@ -4326,12 +4407,12 @@ if (thread?.isThread?.()) {
 }
 
 const verificationDoneContainer = new ContainerBuilder()
-  .setAccentColor(0xc5b174)
+  .setAccentColor(0x242429)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `## ${interaction.member.displayName}, vérification terminée !\n` +
-      `-# Ton pseudo VALORANT a été défini sur **${pseudo}**.\n` +
-      `-# Tes salons vont être débloqués dans quelques secondes...`
+      `## ✅ VÉRIFICATION TERMINÉE\n` +
+`-# Ton pseudo VALORANT a été défini sur **${pseudo}**\n` +
+`-# Tes salons seront débloqués dans quelques secondes`
     )
   );
 
@@ -4372,8 +4453,8 @@ const accessUnlockedContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `## ✅ Accès débloqué !\n` +
-      `-# Bienvenue sur **VALORANT PP**, amuse-toi bien !`
+      `## ✅ ACCÈS DÉBLOQUÉ\n` +
+`-# Bienvenue sur **VALORANT PP**, amuse-toi bien`
     )
   );
 
@@ -4407,9 +4488,15 @@ return;
   });
 
   const msg = await interaction.channel.send({
-    components: [container],
-    flags: MessageFlags.IsComponentsV2
-  });
+  components: [container],
+  files: [
+    {
+      attachment: path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png'),
+      name: 'leaderboard-icon.png'
+    }
+  ],
+  flags: MessageFlags.IsComponentsV2
+});
 
   await setConfigValue('leaderboardData', {
     messageId: msg.id,
@@ -4699,47 +4786,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   }
 });
 
-client.on('guildMemberAdd', async member => {
-  console.log(`Nouveau membre détecté : ${member.displayName}`);
 
-  const accountAgeDays = Math.floor((Date.now() - member.user.createdAt) / (1000 * 60 * 60 * 24));
-
-  if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
-    const welcomeChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-
-    if (welcomeChannel) {
-      const restrictedContainer = new ContainerBuilder()
-  .setAccentColor(0xe70019)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:Roles:1493073492856406156> COMPTE RESTREINT\n` +
-          `-# ${member}\n` +
-          `-# Ton compte a seulement **${accountAgeDays} jours**`
-        )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
-  );
-
-    await welcomeChannel.send({
-        components: [restrictedContainer],
-        flags: MessageFlags.IsComponentsV2
-      }).catch(() => {});
-    }
-
-    return;
-  }
-
+async function startMemberOnboarding(member) {
   try {
     const accueilChannel = member.guild.channels.cache.get(ACCUEIL_CHANNEL_ID);
+
     if (accueilChannel) {
       const thread = await accueilChannel.threads.create({
         name: `${member.displayName}`,
@@ -4749,93 +4800,94 @@ client.on('guildMemberAdd', async member => {
 
       await thread.members.add(member.id);
 
-await thread.sendTyping();
-await new Promise(resolve => setTimeout(resolve, 800));
+      await thread.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-const verifyWelcomeContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**`
-    )
-  );
+      const verifyWelcomeContainer = new ContainerBuilder()
+        .setAccentColor(EMBED_COLOR)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## ${member.displayName}, bienvenue sur <:Roles:1493046347337699499> **VALORANT PP**`
+          )
+        );
 
-await thread.send({
-  components: [verifyWelcomeContainer],
-  flags: MessageFlags.IsComponentsV2
-});
+      await thread.send({
+        components: [verifyWelcomeContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
 
-await thread.sendTyping();
-await new Promise(resolve => setTimeout(resolve, 700));
+      await thread.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 700));
 
-const verifyInstructionsContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `-# Pour débloquer l'accès au serveur, nous avons besoin de quelques informations.\n` +
-      `-# Commence par sélectionner le **plus haut rank que tu as atteint sur VALORANT**.`
-    )
-  );
+      const verifyInstructionsContainer = new ContainerBuilder()
+        .setAccentColor(EMBED_COLOR)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `-# Pour débloquer l'accès au serveur, nous avons besoin de quelques informations\n` +
+`-# Commence par sélectionner le **plus haut rank que tu as atteint sur VALORANT**`
+          )
+        );
 
-await thread.send({
-  components: [verifyInstructionsContainer],
-  flags: MessageFlags.IsComponentsV2
-});
+      await thread.send({
+        components: [verifyInstructionsContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
 
-await thread.sendTyping();
-await new Promise(resolve => setTimeout(resolve, 700));
+      await thread.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 700));
 
-const rankMenu = new StringSelectMenuBuilder()
-  .setCustomId('rank_select')
-  .setPlaceholder('Sélectionne ton peak rank')
-  .setMinValues(1)
-  .setMaxValues(1)
-  .addOptions([
-    { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } },
-    { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } },
-    { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } },
-    { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } },
-    { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } },
-    { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } },
-    { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } },
-    { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } },
-    { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } },
-    { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } },
-    { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } },
-    { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } },
-    { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } },
-    { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } },
-    { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } },
-    { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } },
-    { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } },
-    { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } },
-    { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } },
-    { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } },
-    { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } },
-    { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } },
-    { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } },
-    { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } },
-    { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } }
-  ]);
+      const rankMenu = new StringSelectMenuBuilder()
+        .setCustomId('rank_select')
+        .setPlaceholder('Sélectionne ton peak rank')
+        .setMinValues(1)
+        .setMaxValues(1)
+        .addOptions([
+          { label: 'Radiant', value: 'Radiant', emoji: { id: '1461399011712958703' } },
+          { label: 'Immortal 3', value: 'Immortal3', emoji: { id: '1461399034165068063' } },
+          { label: 'Immortal 2', value: 'Immortal2', emoji: { id: '1461399056449274171' } },
+          { label: 'Immortal 1', value: 'Immortal1', emoji: { id: '1461399078616170516' } },
+          { label: 'Ascendant 3', value: 'Ascendant3', emoji: { id: '1461399102116856001' } },
+          { label: 'Ascendant 2', value: 'Ascendant2', emoji: { id: '1461399120240574586' } },
+          { label: 'Ascendant 1', value: 'Ascendant1', emoji: { id: '1461399137076379648' } },
+          { label: 'Diamond 3', value: 'Diamond3', emoji: { id: '1461399154805964963' } },
+          { label: 'Diamond 2', value: 'Diamond2', emoji: { id: '1461399171838902292' } },
+          { label: 'Diamond 1', value: 'Diamond1', emoji: { id: '1461399187362152480' } },
+          { label: 'Platinum 3', value: 'Platinum3', emoji: { id: '1461399203065368619' } },
+          { label: 'Platinum 2', value: 'Platinum2', emoji: { id: '1461399220035784928' } },
+          { label: 'Platinum 1', value: 'Platinum1', emoji: { id: '1461399234778501345' } },
+          { label: 'Gold 3', value: 'Gold3', emoji: { id: '1461399252814135338' } },
+          { label: 'Gold 2', value: 'Gold2', emoji: { id: '1461399269151084604' } },
+          { label: 'Gold 1', value: 'Gold1', emoji: { id: '1461399285429043251' } },
+          { label: 'Silver 3', value: 'Silver3', emoji: { id: '1461399305993846785' } },
+          { label: 'Silver 2', value: 'Silver2', emoji: { id: '1461399321642532874' } },
+          { label: 'Silver 1', value: 'Silver1', emoji: { id: '1461399338965270538' } },
+          { label: 'Bronze 3', value: 'Bronze3', emoji: { id: '1461399355465666722' } },
+          { label: 'Bronze 2', value: 'Bronze2', emoji: { id: '1461399372779749457' } },
+          { label: 'Bronze 1', value: 'Bronze1', emoji: { id: '1461399395605024972' } },
+          { label: 'Iron 3', value: 'Iron3', emoji: { id: '1461399413619429472' } },
+          { label: 'Iron 2', value: 'Iron2', emoji: { id: '1461399435924865127' } },
+          { label: 'Iron 1', value: 'Iron1', emoji: { id: '1461399458246955195' } }
+        ]);
 
-const rankMenuContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
-  .addActionRowComponents(
-    new ActionRowBuilder().addComponents(rankMenu)
-  );
+      const rankMenuContainer = new ContainerBuilder()
+        .setAccentColor(EMBED_COLOR)
+        .addActionRowComponents(
+          new ActionRowBuilder().addComponents(rankMenu)
+        );
 
-await thread.send({
-  components: [rankMenuContainer],
-  flags: MessageFlags.IsComponentsV2
-});
-
+      await thread.send({
+        components: [rankMenuContainer],
+        flags: MessageFlags.IsComponentsV2
+      });
     }
+
   } catch (err) {
     console.error('Erreur thread bienvenue :', err);
   }
 
   const guild = member.guild;
   const cachedInvites = invitesCache.get(guild.id) || new Map();
+
   const guildInvites = await guild.invites.fetch();
   const newInvites = new Map();
 
@@ -4850,8 +4902,10 @@ await thread.send({
   });
 
   let usedInvite;
+
   for (const [code, invite] of newInvites.entries()) {
     const oldUses = cachedInvites.get(code)?.uses || 0;
+
     if (invite.uses > oldUses) {
       usedInvite = invite;
       break;
@@ -4860,55 +4914,112 @@ await thread.send({
 
   invitesCache.set(guild.id, newInvites);
 
-  let inviterTag = '.gg/valorant-pp';
-  if (usedInvite?.inviter) {
-    inviterTag = usedInvite.inviter.tag;
-  }
-
-  const memberJoinDate = member.user.createdAt;
-  const accountAge = Math.floor((Date.now() - memberJoinDate) / (1000 * 60 * 60 * 24));
+  const accountAge = formatAccountAge(member.user.createdAt);
 
   const welcomeChannel = guild.channels.cache.get(WELCOME_CHANNEL_ID);
   if (!welcomeChannel) return;
 
   const inviterText = usedInvite?.inviter
-  ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
-  : `-# Invité via **.gg/valorant-pp**`;
+    ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
+    : `-# Invité via **.gg/valorant-pp**`;
 
-const welcomeContainer = new ContainerBuilder()
-  .setAccentColor(0xc5b174)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:Roles:1493046347337699499> NOUVEAU MEMBRE\n` +
-          `-# **${member.user.tag}** (<@${member.id}>)\n` +
-          `-# Actif sur Discord depuis ${accountAge} jours\n` +
-          inviterText
+  const welcomeContainer = new ContainerBuilder()
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:Roles:1493046347337699499> NOUVEAU MEMBRE\n` +
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# Compte Discord créé il y a **${accountAge}**\n` +
+inviterText
+          )
         )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            member.displayAvatarURL({
+              extension: 'png',
+              size: 256
+            })
+          )
         )
-      )
-  );
+    );
 
-await welcomeChannel.send({
-  components: [welcomeContainer],
-  flags: MessageFlags.IsComponentsV2
-});
+  await welcomeChannel.send({
+    components: [welcomeContainer],
+    flags: MessageFlags.IsComponentsV2
+  });
 
-if (usedInvite) {
-  const inviterId = usedInvite.inviter?.id;
+  if (usedInvite) {
+    const inviterId = usedInvite.inviter?.id;
 
-  if (inviterId) {
-    await incrementInvite(inviterId, member.id);
+    if (inviterId) {
+      await incrementInvite(inviterId, member.id);
+    }
   }
 }
+
+client.on('guildMemberAdd', async member => {
+  console.log(`Nouveau membre détecté : ${member.displayName}`);
+
+const accountAgeDays = Math.floor(
+  (Date.now() - member.user.createdAt) / (1000 * 60 * 60 * 24)
+);
+
+const accountAgeText = formatAccountAge(member.user.createdAt);
+
+if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
+  const welcomeChannel =
+    member.guild.channels.cache.get(WELCOME_CHANNEL_ID) ||
+    await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
+
+  if (welcomeChannel) {
+    const restrictedContainer = new ContainerBuilder()
+      .setAccentColor(0x242429)
+
+      .addSectionComponents(
+        new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `## <:Roles:1493073492856406156> COMPTE RESTREINT\n` +
+              `-# **${member.user.tag}** (<@${member.id}>)\n` +
+              `-# Compte créé il y a seulement **${accountAgeText}**`
+            )
+          )
+          .setThumbnailAccessory(
+            new ThumbnailBuilder().setURL(
+              member.displayAvatarURL({
+                extension: 'png',
+                size: 256
+              })
+            )
+          )
+      )
+
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`restricted_allow_${member.id}`)
+            .setLabel('Autoriser')
+            .setStyle(ButtonStyle.Success),
+
+          new ButtonBuilder()
+            .setCustomId(`restricted_ban_${member.id}`)
+            .setLabel('Bannir')
+            .setStyle(ButtonStyle.Danger)
+        )
+      );
+
+    await welcomeChannel.send({
+      components: [restrictedContainer],
+      flags: MessageFlags.IsComponentsV2
+    }).catch(() => {});
+  }
+
+  return;
+}
+
+await startMemberOnboarding(member);
 
 });
 
@@ -4952,33 +5063,62 @@ client.on('guildMemberRemove', async member => {
     }
 
     function formatServerDuration(joinedAt) {
-      if (!joinedAt) return 'une durée inconnue';
+  if (!joinedAt) return 'une durée inconnue';
 
-      const diffMs = Date.now() - joinedAt.getTime();
+  const diffMs = Date.now() - joinedAt.getTime();
 
-      const totalDays = Math.max(
-        0,
-        Math.floor(diffMs / (1000 * 60 * 60 * 24))
-      );
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      if (totalDays < 1) return 'moins d’un jour';
-      if (totalDays === 1) return '1 jour';
+  if (totalMinutes < 60) {
+    return `${Math.max(1, totalMinutes)} minute${totalMinutes > 1 ? 's' : ''}`;
+  }
 
-      return `${totalDays} jours`;
+  if (totalHours < 24) {
+    return `${totalHours} heure${totalHours > 1 ? 's' : ''}`;
+  }
+
+  if (totalDays < 30) {
+    return `${totalDays} jour${totalDays > 1 ? 's' : ''}`;
+  }
+
+  const years = Math.floor(totalDays / 365);
+  const remainingDaysAfterYears = totalDays % 365;
+  const months = Math.floor(remainingDaysAfterYears / 30);
+  const days = remainingDaysAfterYears % 30;
+
+  if (years > 0) {
+    if (months > 0) {
+      return `${years} an${years > 1 ? 's' : ''} et ${months} mois`;
     }
+
+    return `${years} an${years > 1 ? 's' : ''}`;
+  }
+
+  if (months > 0) {
+    if (days > 0) {
+      return `${months} mois et ${days} jour${days > 1 ? 's' : ''}`;
+    }
+
+    return `${months} mois`;
+  }
+
+  return `${totalDays} jours`;
+}
 
     const serverDuration =
       formatServerDuration(member.joinedAt);
 
     const leaveContainer = new ContainerBuilder()
-      .setAccentColor(0xe70019)
+      .setAccentColor(0x242429)
       .addSectionComponents(
         new SectionBuilder()
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
               `## <:Roles:1493073492856406156> DÉPART DU SERVEUR\n` +
-              `-# **${member.user.tag}** (<@${member.id}>)\n` +
-              `-# aura tenu ${serverDuration} sur le serveur`
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# A quitté le serveur après **${serverDuration}**`
             )
           )
           .setThumbnailAccessory(
@@ -5032,8 +5172,8 @@ if (!hadOGRole && hasOGRole) {
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## ${BADGES.OG} NOUVEAU MEMBRE OG\n` +
-            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-            `-# En remerciement d'avoir été là depuis les débuts de **VALORANT PP**.`
+`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+`-# A obtenu le statut **OG** en remerciement de sa présence depuis les débuts de **VALORANT PP**`
           )
         )
 
@@ -5061,15 +5201,15 @@ const hasOrganizerRole =
 
 if (!hadOrganizerRole && hasOrganizerRole) {
   const organizerAddedContainer = new ContainerBuilder()
-    .setAccentColor(0x57f287)
+    .setAccentColor(0x242429)
 
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## NOUVEL ORGANISATEUR DE PARTIES\n` +
-            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-            `-# Le rôle **Organisateur de parties** vient de lui être attribué.`
+            `## ${BADGES.ORGANIZER} NOUVEL ORGANISATEUR DE PARTIES\n` +
+`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+`-# Est devenu **Organisateur de parties**`
           )
         )
 
@@ -5091,15 +5231,15 @@ if (!hadOrganizerRole && hasOrganizerRole) {
 
 if (hadOrganizerRole && !hasOrganizerRole) {
   const organizerRemovedContainer = new ContainerBuilder()
-    .setAccentColor(0x858585)
+    .setAccentColor(0x242429)
 
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## RÔLE ORGANISATEUR RETIRÉ\n` +
-            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-            `-# Le rôle **Organisateur de parties** vient de lui être retiré.`
+            `## ${BADGES.ORGANIZER} RÔLE ORGANISATEUR RETIRÉ\n` +
+`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+`-# N'est plus **Organisateur de parties**`
           )
         )
 
@@ -5125,14 +5265,14 @@ if (hadOrganizerRole && !hasOrganizerRole) {
 
     if (!wasBooster && isBooster) {
       const boostContainer = new ContainerBuilder()
-  .setAccentColor(0xff73fa)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# Le bonus vient d'être activé`
+`-# A boosté le serveur et bénéficie désormais du **bonus associé**`
         )
       )
       .setThumbnailAccessory(
@@ -5153,14 +5293,14 @@ await sendActivityMessage(newMember.guild, {
 
     if (wasBooster && !isBooster) {
   const boostExpiredContainer = new ContainerBuilder()
-  .setAccentColor(0x858585)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:Bonus20:1543305540594045068> BOOST EXPIRÉ\n` +
           `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-          `-# Le boost a expiré, le bonus associé a été retiré`
+`-# Ne booste plus le serveur et a perdu le **bonus associé**`
         )
       )
       .setThumbnailAccessory(
@@ -5185,9 +5325,11 @@ await sendActivityMessage(newMember.guild, {
 const newTimeoutTs =
   newMember.communicationDisabledUntilTimestamp ?? 0;
 
+const now = Date.now();
+
 const timeoutApplied =
-  newTimeoutTs > Date.now() &&
-  newTimeoutTs !== oldTimeoutTs;
+  newTimeoutTs > now &&
+  oldTimeoutTs <= now;
 
 if (timeoutApplied) {
   await incrementPlayerTimeouts(newMember.id)
@@ -5200,7 +5342,7 @@ if (timeoutApplied) {
       console.error('Erreur update leaderboard après timeout :', err)
     );
 
-  let reason = 'Non fournie';
+  let reason = null;
   let moderator = null;
 
   try {
@@ -5227,20 +5369,24 @@ if (timeoutApplied) {
 
   const endUnix = Math.floor(newTimeoutTs / 1000);
 
-  const moderatorText = moderator
-  ? `Appliquée par **${moderator.displayName || moderator.tag}**`
-  : '';
+  const moderatorMember = moderator
+  ? newMember.guild.members.cache.get(moderator.id)
+  : null;
+
+const moderatorText = moderator
+  ? `Appliquée par **${moderatorMember?.displayName || moderator.globalName || moderator.username}**`
+  : 'Appliquée par **Administrateur inconnu**';
 
 const timeoutContainer = new ContainerBuilder()
-  .setAccentColor(0xe70019)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
   `## <:Roles:1493073492856406156> EXCLUSION TEMPORAIRE\n` +
-  `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-  `-# L'exclusion prendra fin <t:${endUnix}:R>\n` +
-  `-# ${moderatorText} pour ${reason}`
+`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+`-# L'exclusion prendra fin <t:${endUnix}:R>\n` +
+`-# ${moderatorText}${reason ? ` pour **${reason}**` : ' sans raison précisée'}`
 )
       )
       .setThumbnailAccessory(
@@ -5314,20 +5460,19 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       const moderator = await getVoiceModerator('mute');
 
-      const moderatorText = moderator
-        ? `<@${moderator.id}>`
-        : 'Administrateur inconnu';
+      const moderatorText = getModeratorName(member.guild, moderator);
 
 
       const serverMuteContainer = new ContainerBuilder()
-        .setAccentColor(0xe70019)
+        .setAccentColor(0x242429)
         .addSectionComponents(
           new SectionBuilder()
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
                 `## <:Roles:1544460218669465833> MEMBRE RENDU MUET\n` +
-                `-# **${member.user.tag}** (<@${member.id}>)\n` +
-                `-# Rendu muet sur le serveur par ${moderatorText}`
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# A été rendu muet sur le serveur\n` +
+`-# Appliqué par ${moderatorText}`
               )
             )
             .setThumbnailAccessory(
@@ -5356,20 +5501,19 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       const moderator = await getVoiceModerator('mute');
 
-      const moderatorText = moderator
-        ? `<@${moderator.id}>`
-        : 'Administrateur inconnu';
+      const moderatorText = getModeratorName(member.guild, moderator);
 
 
       const serverUnmuteContainer = new ContainerBuilder()
-        .setAccentColor(0x858585)
+        .setAccentColor(0x242429)
         .addSectionComponents(
           new SectionBuilder()
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
                 `## <:Roles:1544460226693177435> MEMBRE DÉMUTÉ\n` +
-                `-# **${member.user.tag}** (<@${member.id}>)\n` +
-                `-# Le mute serveur a été retiré par ${moderatorText}`
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# Le mute serveur a été retiré\n` +
+`-# Retiré par ${moderatorText}`
               )
             )
             .setThumbnailAccessory(
@@ -5398,20 +5542,19 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       const moderator = await getVoiceModerator('deaf');
 
-      const moderatorText = moderator
-        ? `<@${moderator.id}>`
-        : 'Administrateur inconnu';
+      const moderatorText = getModeratorName(member.guild, moderator);
 
 
       const serverDeafContainer = new ContainerBuilder()
-        .setAccentColor(0xe70019)
+        .setAccentColor(0x242429)
         .addSectionComponents(
           new SectionBuilder()
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
                 `## <:Roles:1544460207701364856> MEMBRE MIS EN SOURDINE\n` +
-                `-# **${member.user.tag}** (<@${member.id}>)\n` +
-                `-# Mis en sourdine sur le serveur par ${moderatorText}`
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# A été mis en sourdine sur le serveur\n` +
+`-# Appliquée par ${moderatorText}`
               )
             )
             .setThumbnailAccessory(
@@ -5440,20 +5583,19 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       const moderator = await getVoiceModerator('deaf');
 
-      const moderatorText = moderator
-        ? `<@${moderator.id}>`
-        : 'Administrateur inconnu';
+      const moderatorText = getModeratorName(member.guild, moderator);
 
 
       const serverUndeafContainer = new ContainerBuilder()
-        .setAccentColor(0x858585)
+        .setAccentColor(0x242429)
         .addSectionComponents(
           new SectionBuilder()
             .addTextDisplayComponents(
               new TextDisplayBuilder().setContent(
                 `## <:Roles:1544460236327354498> SOURDINE RETIRÉE\n` +
-                `-# **${member.user.tag}** (<@${member.id}>)\n` +
-                `-# La sourdine serveur a été retirée par ${moderatorText}`
+`-# **${member.user.tag}** (<@${member.id}>)\n` +
+`-# La sourdine serveur a été retirée\n` +
+`-# Retirée par ${moderatorText}`
               )
             )
             .setThumbnailAccessory(
@@ -5484,7 +5626,7 @@ client.on('guildBanAdd', async (ban) => {
     const guild = ban.guild;
     const user = ban.user;
 
-    let reason = 'Non fournie';
+    let reason = null;
     let moderator = null;
 
     // Discord peut mettre un petit délai avant d'ajouter le ban aux Audit Logs
@@ -5521,20 +5663,24 @@ client.on('guildBanAdd', async (ban) => {
       console.error('Erreur audit logs ban :', err);
     }
 
-    const moderatorText = moderator
-  ? `Appliquée par **${moderator.globalName || moderator.username}**`
-  : '';
+    const moderatorMember = moderator
+  ? guild.members.cache.get(moderator.id)
+  : null;
+
+const moderatorText = moderator
+  ? `Appliqué par **${moderatorMember?.displayName || moderator.globalName || moderator.username}**`
+  : 'Appliqué par **Administrateur inconnu**';
 
 const banContainer = new ContainerBuilder()
-  .setAccentColor(0xe70019)
+  .setAccentColor(0x242429)
   .addSectionComponents(
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## <:Roles:1493073492856406156> BANNISSEMENT\n` +
-          `-# **${user.tag}** (<@${user.id}>)\n` +
-          `-# L'exclusion est définitive\n` +
-          `-# ${moderatorText} pour ${reason}`
+`-# **${user.tag}** (<@${user.id}>)\n` +
+`-# A été définitivement exclu du serveur\n` +
+`-# ${moderatorText}${reason ? ` pour **${reason}**` : ' sans raison précisée'}`
         )
       )
       .setThumbnailAccessory(
@@ -5571,7 +5717,7 @@ client.on('messageCreate', async (message) => {
     await message.delete().catch(() => {});
 
     const warningContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
+  .setAccentColor(0x242429)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${message.author}, les messages ne sont pas autorisés ici.\n` +
@@ -5628,11 +5774,12 @@ client.on('messageCreate', async (message) => {
           spamMap.delete(userId);
 
           const spamWarningContainer = new ContainerBuilder()
-  .setAccentColor(0xe70019)
+  .setAccentColor(0x242429)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ⛔ SPAM DÉTECTÉ\n` +
-      `-# ${message.author} a été timeout **${penalty.label}** pour spam dans <#${CLIPFARMING_CHANNEL_ID}>.`
+`-# **${message.author.tag}** (<@${message.author.id}>)\n` +
+`-# Exclu temporairement **${penalty.label}** pour spam dans <#${CLIPFARMING_CHANNEL_ID}>`
     )
   );
 
@@ -5659,7 +5806,7 @@ const warning = await message.channel.send({
       await message.delete().catch(() => {});
 
       const gifWarningContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
+  .setAccentColor(0x242429)
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${message.author}, les **GIF** sont interdits dans ce salon.\n` +
