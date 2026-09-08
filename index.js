@@ -2918,9 +2918,9 @@ if (interaction.customId === 'organizer_apply_confirm') {
     );
 
   await sendActivityMessage(interaction.guild, {
-    components: [applicationContainer],ss
-    flags: MessageFlags.IsComponentsV2
-  });
+  components: [applicationContainer],
+  flags: MessageFlags.IsComponentsV2
+});
 
   return interaction.update({
     components: [
