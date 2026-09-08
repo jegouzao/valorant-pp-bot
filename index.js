@@ -1771,8 +1771,19 @@ const sorted = sortLeaderboardPlayers(
     }
 
     await msg.edit({
-      components: [container]
-    });
+  components: [container],
+  files: [
+    {
+      attachment: path.join(
+        __dirname,
+        'assets',
+        'images',
+        'leaderboard-icon.png'
+      ),
+      name: 'leaderboard-icon.png'
+    }
+  ]
+});
 
     console.log('✅ Leaderboard mis à jour');
 
