@@ -2380,9 +2380,9 @@ function buildAnnounceContainer({
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# Partie organisée par **${organisateur}** dans <#${waitingVCId}> <@&${ROLE_NOTIF_PP}>\n` +
-            `-# \`${remaining}\` place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} pour le lobby \`${code}\`\n` +
-            `-# \`${votes}/${needed}\` votes pour changer la map`
+            `-# Partie organisée par **${organisateur}** — <#${waitingVCId}> \`${code}\` <@&${ROLE_NOTIF_PP}>\n` +
+            `-# \`${remaining}\` place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} — Trouve un last ici : <#734895135019761733>\n` +
+            `-# \`${votes}/${needed}\` votes pour changer la map ${mapName}`
           )
         )
         .setThumbnailAccessory(
@@ -2476,7 +2476,7 @@ function buildResultContainer({
             `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
             `-# Partie validée par **${validatedBy}**\n` +
             `-# Victoire des **${winnerText}**\n` +
-            `-# Le calcul prend en compte les avantages Tag et Boost de serveur`
+            `-# Le calcul prend en compte les avantages <:tag:1497390943928586300> et <:boost:1492125876437913641> de serveur`
           )
         )
         .setThumbnailAccessory(
