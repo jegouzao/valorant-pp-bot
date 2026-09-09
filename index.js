@@ -2838,7 +2838,9 @@ if (interaction.customId === 'apply_organizer') {
     `-# Créer des PP lorsque des joueurs sont disponibles\n` +
     `-# Envoyer un message dans <#734895135019761733> pour trouver des joueurs\n` +
     `-# Lancer l'équilibrage intelligent <@1461409614108168425>\n` +
-    `-# Sélectionner l'équipe gagnante à la fin de la partie`
+    `-# Vérifier les réglages de la partie (Map, Win by two, Replay activé) ainsi que les équipes\n` +
+    `-# Lancer la partie\n` +
+    `-# Enfin, sélectionner l'équipe gagnante à la fin de la partie, pour l'attribution des points`
   )
 )
 
