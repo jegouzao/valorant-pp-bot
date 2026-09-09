@@ -2110,10 +2110,10 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-    `-# <:36:1497395169224556686><:36:1497395178045050992>— Victoire avec Boost serveur\n` +
-    `-# <:33:1497395187415126127><:36:1497395194289455114>— Victoire avec Tag serveur\n` +
-    `-# <:30:1493259044893360200><:36:1493259054804369408>— Victoire standard\n` +
-    `-# <:15:1493259005584343080><:36:1493259016686538932>— Défaite`
+    `-# <:36:1497395169224556686><:36:1497395178045050992>—    Victoire avec Boost serveur\n` +
+    `-# <:33:1497395187415126127><:36:1497395194289455114>—    Victoire avec Tag serveur\n` +
+    `-# <:30:1493259044893360200><:36:1493259054804369408>—    Victoire standard\n` +
+    `-# <:15:1493259005584343080><:36:1493259016686538932>—    Défaite`
   )
 )
 
