@@ -1049,7 +1049,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   `${badges ? ` ${badges}` : ''}  ` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962> ` +
   `**${invites}**<:VIDE:1472667823875559708>  ` +
-  `${bar}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u2063`
+  `${bar}\u00A0\u00A0\u00A0\u00A0\u2063`
 );
 });
 
