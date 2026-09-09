@@ -2893,7 +2893,7 @@ return interaction.reply({
     MessageFlags.Ephemeral |
     MessageFlags.IsComponentsV2
 });
-
+}
 
 // ── CONFIRMER LA CANDIDATURE ORGANISATEUR ──
 if (interaction.customId === 'organizer_apply_confirm') {
