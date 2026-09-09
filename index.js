@@ -2259,15 +2259,28 @@ if (mentionMatch) {
   }
 }
 
-  const spacesNeeded = Math.max(
-    2,
-    Math.round(
-      (COLUMN_TARGET - leftWidth - RR_ZONE) /
-      FULL_SPACE_WIDTH
-    )
-  );
+  const remainingWidth =
+  COLUMN_TARGET - leftWidth - RR_ZONE;
 
-  return `${normalizedLeft}${'　'.repeat(spacesNeeded)}${normalizedRight}`;
+const fullSpaces = Math.max(
+  2,
+  Math.floor(remainingWidth / FULL_SPACE_WIDTH)
+);
+
+const remainder =
+  remainingWidth - (fullSpaces * FULL_SPACE_WIDTH);
+
+const thinSpaces = Math.max(
+  0,
+  Math.round(remainder / 0.25)
+);
+
+return (
+  normalizedLeft +
+  '　'.repeat(fullSpaces) +
+  '\u2009'.repeat(thinSpaces) +
+  normalizedRight
+);
 }
 
 
