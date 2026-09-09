@@ -3341,7 +3341,7 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
       }
 
       const waitingVC = await interaction.guild.channels.create({
-        name: `┃préparation ${valorantCode}`,
+        name: `┃préparation`,
         type: 2,
         parent: category.id,
         userLimit: 10,
