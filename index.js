@@ -2097,7 +2097,7 @@ function buildRulesContainer() {
       new TextDisplayBuilder().setContent(
         `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
         `-# **AFK, leave volontaire et smurfing** sont sanctionnés\n` +
-        `-# Pour le reste : **aucune restriction d'armes ou de décibels**\n` +
+        `-# Pour le reste, **aucune restriction d'armes ou de décibels**\n` +
         `-# *Le but est de clipfarm un max*`
       )
     )
@@ -2110,10 +2110,10 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-    `-# <:36:1497395169224556686><:36:1497395178045050992>—    Victoire avec Boost serveur\n` +
-    `-# <:33:1497395187415126127><:36:1497395194289455114>—    Victoire avec Tag serveur\n` +
-    `-# <:30:1493259044893360200><:36:1493259054804369408>—    Victoire standard\n` +
-    `-# <:15:1493259005584343080><:36:1493259016686538932>—    Défaite`
+    `-# <:36:1497395169224556686><:36:1497395178045050992>—    Victoire avec Boost serveur\n` +
+    `-# <:33:1497395187415126127><:36:1497395194289455114>—    Victoire avec Tag serveur\n` +
+    `-# <:30:1493259044893360200><:36:1493259054804369408>—    Victoire standard\n` +
+    `-# <:15:1493259005584343080><:36:1493259016686538932>—    Défaite`
   )
 )
 
@@ -2837,7 +2837,7 @@ if (interaction.customId === 'apply_organizer') {
     `## <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
     `-# Créer des PP lorsque des joueurs sont disponibles\n` +
     `-# Envoyer un message dans <#734895135019761733> pour trouver des joueurs\n` +
-    `-# Lancer l'équilibrage intelligent de <@1461409614108168425>\n` +
+    `-# Lancer l'équilibrage intelligent <@1461409614108168425>\n` +
     `-# Sélectionner l'équipe gagnante à la fin de la partie`
   )
 )
@@ -2850,7 +2850,7 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## <:EMOJI_PP:1466470377327825028> CRÉER UNE PARTIE\n` +
-      `-# Utilise \`/pp\` dans le salon <#1461346832591360173>, renseigne le code de groupe et **<@1461409614108168425> s'occupe du reste**`
+      `-# Dans le salon <#1461346832591360173>, utilise \`/pp\`, renseigne le code de groupe et <@1461409614108168425> s'occupe du reste`
     )
   )
 
@@ -2864,7 +2864,7 @@ if (interaction.customId === 'apply_organizer') {
       `## <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
       `-# Être **actif, fiable et disponible**\n` +
       `-# Être à l'aise pour encadrer une PP\n` +
-      `-# Chaque candidature est examinée par l'équipe`
+      `-# Chaque candidature sera examinée par l'équipe`
     )
   )
 
