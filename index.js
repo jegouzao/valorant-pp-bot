@@ -2098,7 +2098,7 @@ function buildRulesContainer() {
         `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
         `-# **AFK, leave volontaire et smurfing** sont sanctionnés\n` +
         `-# Pour le reste : **aucune restriction d'armes ou de décibels**\n` +
-        `-# Le but est de clipfarm un max**`
+        `-# *Le but est de clipfarm un max*`
       )
     )
 
@@ -2110,10 +2110,10 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-    `-# <:36:1497395169224556686><:36:1497395178045050992> — victoire avec Boost serveur\n` +
-    `-# <:33:1497395187415126127><:36:1497395194289455114> — victoire avec Tag serveur\n` +
-    `-# <:30:1493259044893360200><:36:1493259054804369408> — victoire standard\n` +
-    `-# <:15:1493259005584343080><:36:1493259016686538932> — défaite`
+    `-# <:36:1497395169224556686><:36:1497395178045050992>— Victoire avec Boost serveur\n` +
+    `-# <:33:1497395187415126127><:36:1497395194289455114>— Victoire avec Tag serveur\n` +
+    `-# <:30:1493259044893360200><:36:1493259054804369408>— Victoire standard\n` +
+    `-# <:15:1493259005584343080><:36:1493259016686538932>— Défaite`
   )
 )
 
@@ -2122,7 +2122,7 @@ function buildRulesContainer() {
         .setSpacing(SeparatorSpacingSize.Large)
     )
 
-    addTextDisplayComponents(
+    .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE DES ÉQUIPES\n` +
         `-# Boombot compose automatiquement les équipes selon le **Peak Rank** de chaque joueur\n` +
