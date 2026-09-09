@@ -2096,49 +2096,51 @@ function buildRulesContainer() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
-        ` AFK / Leave / faux peak rank sanctionnés\n` +
-        ` À part ça, **NO RULES**\n` +
-        ` Pas de limites d'équipement ou de décibels\n` +
-        ` On est là pour **créer du rire et rentrer des clips**`
+        `-# **AFK, leave volontaire et smurfing** sont sanctionnés\n` +
+        `-# Pour le reste : **aucune restriction d'armes ou de décibels**\n` +
+        `-# Le but est de clipfarm un max**`
       )
     )
 
     .addSeparatorComponents(
       new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     )
 
     .addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
+    `-# <:36:1497395169224556686><:36:1497395178045050992> — victoire avec Boost serveur\n` +
+    `-# <:33:1497395187415126127><:36:1497395194289455114> — victoire avec Tag serveur\n` +
+    `-# <:30:1493259044893360200><:36:1493259054804369408> — victoire standard\n` +
+    `-# <:15:1493259005584343080><:36:1493259016686538932> — défaite`
+  )
+)
+
+       .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-        ` **PARTIE GAGNÉE** :  <:36:1497395169224556686><:36:1497395178045050992>avec le boost de serveur\n` +
-        ` **PARTIE GAGNÉE** :  <:33:1497395187415126127><:36:1497395194289455114>avec le tag de serveur\n` +
-        ` **PARTIE GAGNÉE** :  <:30:1493259044893360200><:36:1493259054804369408>pour un membre standard\n` +
-        ` **PARTIE PERDUE** :  <:15:1493259005584343080><:36:1493259016686538932>pour un membre standard`
+        `## <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE DES ÉQUIPES\n` +
+        `-# Boombot compose automatiquement les équipes selon le **Peak Rank** de chaque joueur\n` +
+        `-# L'équilibrage peut être annulé par l'organisateur si nécessaire`
       )
     )
 
     .addSeparatorComponents(
       new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     )
 
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE\n` +
-        ` Boombot équilibre automatiquement les équipes selon le **Peak Rank** renseigné à l'arrivée.\n` +
-        ` L'équilibrage est annulable si nécessaire.`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:EMOJI_GIFT:1544365369253171282> CASHPRIZES MENSUELS\n` +
-        ` ${BADGES.TOP1} **TOP 1 DU CLASSEMENT GÉNÉRAL**\n` +
-        ` ${BADGES.TOP_INVITER} **TOP 1 DU CLASSEMENT DES INVITATIONS**\n` +
-        `-# Les récompenses varieront selon les saisons : bundles, Riot Cards, PayPal, Nitro…`
+        `## <:EMOJI_GIFT:1544365369253171282> RÉCOMPENSES MENSUELLES\n` +
+        `-# ${BADGES.TOP1} — Top 1 du **classement général**\n` +
+        `-# ${BADGES.TOP_INVITER} — Top 1 du **classement des invitations**\n` +
+        `-# Les récompenses varieront selon les saisons (bundles, Riot Cards, PayPal, Nitro…)`
       )
     );
 }
@@ -2821,48 +2823,54 @@ if (interaction.customId === 'apply_organizer') {
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## <:EMOJI_ORGA:1493046347337699499> DEVENIR ORGANISATEUR — VALORANT PP\n` +
-      `-# Crée, lance et gère les parties personnalisées du serveur`
+      `-# Crée, lance et encadre les parties personnalisées du serveur`
     )
   )
 
   .addSeparatorComponents(
     new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Large)
   )
 
   .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `## <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
-      `Créer les PP lorsque des joueurs sont disponibles\n` +
-      `Communiquer le **code de groupe Valorant**\n` +
-      `Gérer les inscriptions et lancer l'équilibrage\n` +
-      `Suivre la partie jusqu'à sa fin`
-    )
+  new TextDisplayBuilder().setContent(
+    `## <:EMOJI_ROLE:1493378253446975619> TON RÔLE\n` +
+    `-# Créer des PP lorsque des joueurs sont disponibles\n` +
+    `-# Envoyer un message dans <#734895135019761733> pour trouver des joueurs\n` +
+    `-# Lancer l'équilibrage intelligent de <@1461409614108168425>\n` +
+    `-# Sélectionner l'équipe gagnante à la fin de la partie`
   )
+)
 
   .addSeparatorComponents(
     new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Large)
   )
 
   .addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## <:EMOJI_PP:1466470377327825028> CRÉER UNE PARTIE\n` +
-      `Utilise **/pp**, renseigne le code de groupe et Boombot s'occupe du reste`
+      `-# Utilise \`/pp\` dans le salon <#1461346832591360173>, renseigne le code de groupe et **<@1461409614108168425> s'occupe du reste**`
     )
   )
 
   .addSeparatorComponents(
     new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Large)
   )
 
   .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `## <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
-    `Actif • sérieux • disponible • à l'aise pour gérer une PP, ta candidature sera transmise à l'équipe pour validation`
+    new TextDisplayBuilder().setContent(
+      `## <:EMOJI_CHECK:1493378334326001816> PROFIL RECHERCHÉ\n` +
+      `-# Être **actif, fiable et disponible**\n` +
+      `-# Être à l'aise pour encadrer une PP\n` +
+      `-# Chaque candidature est examinée par l'équipe`
+    )
   )
-)
-  
+
   .addSeparatorComponents(
     new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Large)
   )
 
   .addActionRowComponents(
@@ -2879,13 +2887,12 @@ if (interaction.customId === 'apply_organizer') {
     )
   );
 
-  return interaction.reply({
-    components: [organizerInfoContainer],
-    flags:
-      MessageFlags.Ephemeral |
-      MessageFlags.IsComponentsV2
-  });
-}
+return interaction.reply({
+  components: [organizerInfoContainer],
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
 
 
 // ── CONFIRMER LA CANDIDATURE ORGANISATEUR ──
