@@ -2989,11 +2989,11 @@ if (
   interaction.customId.startsWith('organizer_refuse_')
 ) {
   if (interaction.user.id !== BOT_OWNER_ID) {
-  return simpleReply(
-    interaction,
-    '❌ Seul le propriétaire peut traiter cette candidature'
-  );
-}
+    return simpleReply(
+      interaction,
+      '❌ Seul le propriétaire peut traiter cette candidature'
+    );
+  }
 
   const accepted =
     interaction.customId.startsWith('organizer_accept_');
@@ -3007,11 +3007,11 @@ if (
     .catch(() => null);
 
   if (!member) {
-  return simpleReply(
-    interaction,
-    '❌ Membre introuvable'
-  );
-}
+    return simpleReply(
+      interaction,
+      '❌ Membre introuvable'
+    );
+  }
 
   if (accepted) {
     await member.roles.add(
@@ -3021,29 +3021,33 @@ if (
   }
 
   const resultContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          accepted
-  ? `## ${BADGES.ORGANIZER} CANDIDATURE ACCEPTÉE\n` +
-    `-# **${member.user.tag}** (<@${member.id}>)\n` +
-    `-# Est désormais **Organisateur de parties**`
-  : `## ${BADGES.ORGANIZER} CANDIDATURE REFUSÉE\n` +
-    `-# **${member.user.tag}** (<@${member.id}>)\n` +
-    `-# Sa candidature au rôle **Organisateur de parties** a été refusée`
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            accepted
+              ? `## ${BADGES.ORGANIZER} CANDIDATURE ACCEPTÉE\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# Est désormais **Organisateur de parties**`
+              : `## ${BADGES.ORGANIZER} CANDIDATURE REFUSÉE\n` +
+                `-# **${member.user.tag}** (<@${member.id}>)\n` +
+                `-# Sa candidature au rôle **Organisateur de parties** a été refusée`
+          )
         )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            member.displayAvatarURL({
+              extension: 'png',
+              size: 256
+            })
+          )
         )
-      )
-  );
+    );
+
+  return interaction.update({
+    components: [resultContainer]
+  });
 }
 
 if (interaction.customId === 'open_rules') {
