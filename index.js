@@ -538,6 +538,50 @@ const WELCOME_CHANNEL_ID = '1474066060528451743';
 const ACTIVITIES_CHANNEL_ID = WELCOME_CHANNEL_ID;
 
 
+
+
+async function getPermanentAvatar(user) {
+  try {
+    const avatarUrl = user.displayAvatarURL({
+      extension: 'png',
+      size: 256
+    });
+
+    const response = await fetch(avatarUrl);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const buffer = Buffer.from(
+      await response.arrayBuffer()
+    );
+
+    const fileName = `avatar-${user.id}.png`;
+
+    return {
+      url: `attachment://${fileName}`,
+      file: {
+        attachment: buffer,
+        name: fileName
+      }
+    };
+
+  } catch (err) {
+    console.error(
+      `❌ Impossible de récupérer l'avatar de ${user.tag}:`,
+      err
+    );
+
+    return {
+      url: user.displayAvatarURL({
+        size: 256
+      }),
+      file: null
+    };
+  }
+}
+
 async function sendActivityMessage(guild, payload) {
   const channel =
     guild.channels.cache.get(ACTIVITIES_CHANNEL_ID) ||
@@ -1206,71 +1250,71 @@ async function syncServerTagRole(userId, user = null) {
 
     const hasRole = member.roles.cache.has(SERVER_TAG_ROLE_ID);
 
-    if (hasServerTag && !hasRole) {
-      await member.roles.add(
-        SERVER_TAG_ROLE_ID,
-        'Tag serveur actif'
-      );
-
-      const tagEnabledContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n` +
-          `-# **${member.user.tag}** (<@${member.id}>)\n` +
-`-# Utilise désormais le tag du serveur et bénéficie du **bonus associé**`
-        )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+if (hasServerTag && !hasRole) {
+  await member.roles.add(
+    SERVER_TAG_ROLE_ID,
+    'Tag serveur actif'
   );
 
-await sendActivityMessage(guild, {
-  components: [tagEnabledContainer],
-  flags: MessageFlags.IsComponentsV2
-});
-    }
+  const avatar = await getPermanentAvatar(member.user);
 
-    if (!hasServerTag && hasRole) {
-      await member.roles.remove(
-        SERVER_TAG_ROLE_ID,
-        'Tag serveur retiré'
-      );
+  const tagEnabledContainer = new ContainerBuilder()
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:tag:1497390943928586300> TAG DU SERVEUR ACTIVÉ\n` +
+            `-# **${member.user.tag}** (<@${member.id}>)\n` +
+            `-# Utilise désormais le tag du serveur et bénéficie du **bonus associé**`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            avatar.url
+          )
+        )
+    );
 
-      const tagRemovedContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:tag:1543303374974357695> TAG DU SERVEUR RETIRÉ\n` +
-          `-# **${member.user.tag}** (<@${member.id}>)\n` +
-`-# N'utilise plus le tag du serveur et a perdu le **bonus associé**`
-        )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          member.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+  await sendActivityMessage(guild, {
+    components: [tagEnabledContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
+    flags: MessageFlags.IsComponentsV2
+  });
+}
+
+if (!hasServerTag && hasRole) {
+  await member.roles.remove(
+    SERVER_TAG_ROLE_ID,
+    'Tag serveur retiré'
   );
 
-await sendActivityMessage(guild, {
-  components: [tagRemovedContainer],
-  flags: MessageFlags.IsComponentsV2
-});
-    }
+  const avatar = await getPermanentAvatar(member.user);
+
+  const tagRemovedContainer = new ContainerBuilder()
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:tag:1543303374974357695> TAG DU SERVEUR RETIRÉ\n` +
+            `-# **${member.user.tag}** (<@${member.id}>)\n` +
+            `-# N'utilise plus le tag du serveur et a perdu le **bonus associé**`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            avatar.url
+          )
+        )
+    );
+
+  await sendActivityMessage(guild, {
+    components: [tagRemovedContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
+    flags: MessageFlags.IsComponentsV2
+  });
+}
 
   } catch (err) {
     console.error('Erreur syncServerTagRole :', err);
@@ -1395,6 +1439,10 @@ if (
       const winnerMember =
         guild.members.cache.get(winnerId);
 
+        const winnerAvatar = winnerMember
+  ? await getPermanentAvatar(winnerMember.user)
+  : null;
+  
       const winnerRank =
         getRankEmojiFromMember(winnerMember);
 
@@ -1440,23 +1488,21 @@ if (
               )
 
               .setThumbnailAccessory(
-                new ThumbnailBuilder().setURL(
-                  winnerMember?.displayAvatarURL({
-                    extension: 'png',
-                    size: 256
-                  }) ||
-                  guild.iconURL({
-                    extension: 'png',
-                    size: 256
-                  })
-                )
-              )
+  new ThumbnailBuilder().setURL(
+    winnerAvatar?.url ||
+    guild.iconURL({
+      size: 256
+    })
+  )
+)
           );
 
       const leaderboardWinnerMessage = await sendActivityMessage(guild, {
   components: [leaderboardWinnerContainer],
+  ...(winnerAvatar?.file ? { files: [winnerAvatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
+
 
 if (!leaderboardWinnerMessage) {
   throw new Error('Impossible d’envoyer l’annonce du vainqueur mensuel');
@@ -1470,6 +1516,10 @@ if (!leaderboardWinnerMessage) {
     if (topInviterId && maxInvites > 0) {
       const inviterMember =
         guild.members.cache.get(topInviterId);
+
+        const inviterAvatar = inviterMember
+  ? await getPermanentAvatar(inviterMember.user)
+  : null;
 
       const invitationWinnerContainer =
         new ContainerBuilder()
@@ -1486,21 +1536,18 @@ if (!leaderboardWinnerMessage) {
               )
 
               .setThumbnailAccessory(
-                new ThumbnailBuilder().setURL(
-                  inviterMember?.displayAvatarURL({
-                    extension: 'png',
-                    size: 256
-                  }) ||
-                  guild.iconURL({
-                    extension: 'png',
-                    size: 256
-                  })
-                )
-              )
+  new ThumbnailBuilder().setURL(
+    inviterAvatar?.url ||
+    guild.iconURL({
+      size: 256
+    })
+  )
+)
           );
 
       const invitationWinnerMessage = await sendActivityMessage(guild, {
   components: [invitationWinnerContainer],
+  ...(inviterAvatar?.file ? { files: [inviterAvatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
 
@@ -1578,7 +1625,7 @@ client.once(Events.ClientReady, async () => {
   console.log(`${colors.blue}✅ ${colors.bright}${guild.memberCount}${colors.reset}${colors.blue} membres${colors.reset}`);
 
   client.user.setPresence({
-    activities: [{ name: 'by @jegouzao', type: 1, url: 'https://www.twitch.tv/jegouzao' }],
+    activities: [{ name: 'by @jegouzão', type: 1, url: 'https://www.twitch.tv/jegouzao' }],
     status: 'online'
   });
   console.log(`${colors.magenta}✅ Statut du bot défini${colors.reset}`);
@@ -2614,6 +2661,10 @@ await interaction.member.roles.add(newRoleId).catch(() => {});
 const newRankLabel = RANK_LABELS[selectedRank];
 const newRankEmoji = rankEmojis[newRankLabel] || rankEmojis.Unranked;
 
+const avatar = await getPermanentAvatar(
+  interaction.user
+);
+
 const rankUpActivityContainer = new ContainerBuilder()
   .setAccentColor(EMBED_COLOR)
   .addSectionComponents(
@@ -2626,17 +2677,15 @@ const rankUpActivityContainer = new ContainerBuilder()
         )
       )
       .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          interaction.user.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
   );
 
 await sendActivityMessage(interaction.guild, {
   components: [rankUpActivityContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
 
@@ -2928,6 +2977,10 @@ if (interaction.customId === 'organizer_apply_confirm') {
     .setLabel('Refuser')
     .setStyle(ButtonStyle.Danger);
 
+    const avatar = await getPermanentAvatar(
+  interaction.user
+);
+
   const applicationContainer = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
@@ -2942,13 +2995,10 @@ if (interaction.customId === 'organizer_apply_confirm') {
         )
 
         .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(
-            interaction.user.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
-          )
-        )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
     )
 
     .addActionRowComponents(
@@ -2958,8 +3008,9 @@ if (interaction.customId === 'organizer_apply_confirm') {
       )
     );
 
-  await sendActivityMessage(interaction.guild, {
+await sendActivityMessage(interaction.guild, {
   components: [applicationContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
 
@@ -3035,19 +3086,16 @@ if (
                 `-# Sa candidature au rôle **Organisateur de parties** a été refusée`
           )
         )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(
-            member.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
-          )
-        )
+       .setThumbnailAccessory(
+  new ThumbnailBuilder().setURL(
+    `attachment://avatar-${member.id}.png`
+  )
+)
     );
 
-  return interaction.update({
-    components: [resultContainer]
-  });
+return interaction.update({
+  components: [resultContainer]
+});
 }
 
 if (interaction.customId === 'open_rules') {
@@ -4968,6 +5016,11 @@ async function startMemberOnboarding(member) {
     ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
     : `-# Invité via **.gg/valorant-pp**`;
 
+    const avatar = await getPermanentAvatar(
+  member.user
+);
+
+
   const welcomeContainer = new ContainerBuilder()
     .setAccentColor(0x242429)
     .addSectionComponents(
@@ -4981,19 +5034,17 @@ inviterText
           )
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(
-            member.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
-          )
-        )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
     );
 
-  await welcomeChannel.send({
-    components: [welcomeContainer],
-    flags: MessageFlags.IsComponentsV2
-  });
+await welcomeChannel.send({
+  components: [welcomeContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
 
   if (usedInvite) {
     const inviterId = usedInvite.inviter?.id;
@@ -5019,6 +5070,11 @@ if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
     await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
 
   if (welcomeChannel) {
+
+    const avatar = await getPermanentAvatar(
+  member.user
+);
+
     const restrictedContainer = new ContainerBuilder()
       .setAccentColor(0x242429)
 
@@ -5032,13 +5088,10 @@ if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
             )
           )
           .setThumbnailAccessory(
-            new ThumbnailBuilder().setURL(
-              member.displayAvatarURL({
-                extension: 'png',
-                size: 256
-              })
-            )
-          )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
       )
 
       .addActionRowComponents(
@@ -5056,9 +5109,10 @@ if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
       );
 
     await welcomeChannel.send({
-      components: [restrictedContainer],
-      flags: MessageFlags.IsComponentsV2
-    }).catch(() => {});
+  components: [restrictedContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+}).catch(() => {});
   }
 
   return;
@@ -5155,6 +5209,10 @@ client.on('guildMemberRemove', async member => {
     const serverDuration =
       formatServerDuration(member.joinedAt);
 
+      const avatar = await getPermanentAvatar(
+  member.user
+);
+
     const leaveContainer = new ContainerBuilder()
       .setAccentColor(0x242429)
       .addSectionComponents(
@@ -5167,19 +5225,17 @@ client.on('guildMemberRemove', async member => {
             )
           )
           .setThumbnailAccessory(
-            new ThumbnailBuilder().setURL(
-              member.user.displayAvatarURL({
-                extension: 'png',
-                size: 256
-              })
-            )
-          )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
       );
 
-    const sent = await sendActivityMessage(member.guild, {
-      components: [leaveContainer],
-      flags: MessageFlags.IsComponentsV2
-    });
+const sent = await sendActivityMessage(member.guild, {
+  components: [leaveContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
 
     if (sent) {
       console.log(
@@ -5209,6 +5265,11 @@ const hasOGRole =
   newMember.roles.cache.has(OG_ROLE_ID);
 
 if (!hadOGRole && hasOGRole) {
+
+  const avatar = await getPermanentAvatar(
+    newMember.user
+  );
+
   const ogAddedContainer = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
 
@@ -5217,23 +5278,21 @@ if (!hadOGRole && hasOGRole) {
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## ${BADGES.OG} NOUVEAU MEMBRE OG\n` +
-`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-`-# A obtenu le statut **OG** en remerciement de sa présence depuis les débuts de **VALORANT PP**`
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# A obtenu le statut **OG** en remerciement de sa présence depuis les débuts de **VALORANT PP**`
           )
         )
 
         .setThumbnailAccessory(
           new ThumbnailBuilder().setURL(
-            newMember.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
+            avatar.url
           )
         )
     );
 
   await sendActivityMessage(newMember.guild, {
     components: [ogAddedContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
     flags: MessageFlags.IsComponentsV2
   });
 }
@@ -5245,6 +5304,11 @@ const hasOrganizerRole =
   newMember.roles.cache.has(ORGANIZER_ROLE_ID);
 
 if (!hadOrganizerRole && hasOrganizerRole) {
+
+  const avatar = await getPermanentAvatar(
+    newMember.user
+  );
+
   const organizerAddedContainer = new ContainerBuilder()
     .setAccentColor(0x242429)
 
@@ -5253,28 +5317,31 @@ if (!hadOrganizerRole && hasOrganizerRole) {
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## ${BADGES.ORGANIZER} NOUVEL ORGANISATEUR DE PARTIES\n` +
-`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-`-# Est devenu **Organisateur de parties**`
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# Est devenu **Organisateur de parties**`
           )
         )
 
         .setThumbnailAccessory(
           new ThumbnailBuilder().setURL(
-            newMember.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
+            avatar.url
           )
         )
     );
 
   await sendActivityMessage(newMember.guild, {
     components: [organizerAddedContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
     flags: MessageFlags.IsComponentsV2
   });
 }
 
 if (hadOrganizerRole && !hasOrganizerRole) {
+
+  const avatar = await getPermanentAvatar(
+    newMember.user
+  );
+
   const organizerRemovedContainer = new ContainerBuilder()
     .setAccentColor(0x242429)
 
@@ -5283,23 +5350,21 @@ if (hadOrganizerRole && !hasOrganizerRole) {
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## ${BADGES.ORGANIZER} RÔLE ORGANISATEUR RETIRÉ\n` +
-`-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-`-# N'est plus **Organisateur de parties**`
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# N'est plus **Organisateur de parties**`
           )
         )
 
         .setThumbnailAccessory(
           new ThumbnailBuilder().setURL(
-            newMember.displayAvatarURL({
-              extension: 'png',
-              size: 256
-            })
+            avatar.url
           )
         )
     );
 
   await sendActivityMessage(newMember.guild, {
     components: [organizerRemovedContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
     flags: MessageFlags.IsComponentsV2
   });
 }
@@ -5308,60 +5373,66 @@ if (hadOrganizerRole && !hasOrganizerRole) {
     const wasBooster = oldMember.roles.cache.has(BOOSTER_ROLE_ID);
     const isBooster = newMember.roles.cache.has(BOOSTER_ROLE_ID);
 
-    if (!wasBooster && isBooster) {
-      const boostContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n` +
-          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-`-# A boosté le serveur et bénéficie désormais du **bonus associé**`
-        )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          newMember.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+if (!wasBooster && isBooster) {
+
+  const avatar = await getPermanentAvatar(
+    newMember.user
   );
 
-await sendActivityMessage(newMember.guild, {
-  components: [boostContainer],
-  flags: MessageFlags.IsComponentsV2
-});
-    }
+  const boostContainer = new ContainerBuilder()
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:Bonus20:1492125876437913641> NOUVEAU BOOST\n` +
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# A boosté le serveur et bénéficie désormais du **bonus associé**`
+          )
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            avatar.url
+          )
+        )
+    );
 
-    if (wasBooster && !isBooster) {
+  await sendActivityMessage(newMember.guild, {
+    components: [boostContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
+    flags: MessageFlags.IsComponentsV2
+  });
+}
+
+if (wasBooster && !isBooster) {
+
+  const avatar = await getPermanentAvatar(
+    newMember.user
+  );
+
   const boostExpiredContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## <:Bonus20:1543305540594045068> BOOST EXPIRÉ\n` +
-          `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
-`-# Ne booste plus le serveur et a perdu le **bonus associé**`
+    .setAccentColor(0x242429)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## <:Bonus20:1543305540594045068> BOOST EXPIRÉ\n` +
+            `-# **${newMember.user.tag}** (<@${newMember.id}>)\n` +
+            `-# Ne booste plus le serveur et a perdu le **bonus associé**`
+          )
         )
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          newMember.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(
+            avatar.url
+          )
         )
-      )
-  );
+    );
 
-await sendActivityMessage(newMember.guild, {
-  components: [boostExpiredContainer],
-  flags: MessageFlags.IsComponentsV2
-});
+  await sendActivityMessage(newMember.guild, {
+    components: [boostExpiredContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
+    flags: MessageFlags.IsComponentsV2
+  });
 }
 
     const oldTimeoutTs =
@@ -5422,6 +5493,11 @@ const moderatorText = moderator
   ? `Appliquée par **${moderatorMember?.displayName || moderator.globalName || moderator.username}**`
   : 'Appliquée par **Administrateur inconnu**';
 
+
+  const avatar = await getPermanentAvatar(
+  newMember.user
+);
+
 const timeoutContainer = new ContainerBuilder()
   .setAccentColor(0x242429)
   .addSectionComponents(
@@ -5435,17 +5511,15 @@ const timeoutContainer = new ContainerBuilder()
 )
       )
       .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          newMember.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
   );
 
 await sendActivityMessage(newMember.guild, {
   components: [timeoutContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
 
@@ -5507,6 +5581,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       const moderatorText = getModeratorName(member.guild, moderator);
 
+      const avatar = await getPermanentAvatar(
+  member.user
+);
+
 
       const serverMuteContainer = new ContainerBuilder()
         .setAccentColor(0x242429)
@@ -5521,20 +5599,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
               )
             )
             .setThumbnailAccessory(
-              new ThumbnailBuilder().setURL(
-                member.displayAvatarURL({
-                  extension: 'png',
-                  size: 256
-                })
-              )
-            )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
         );
 
 
       await sendActivityMessage(member.guild, {
-        components: [serverMuteContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+  components: [serverMuteContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
     }
 
 
@@ -5547,6 +5623,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const moderator = await getVoiceModerator('mute');
 
       const moderatorText = getModeratorName(member.guild, moderator);
+
+      const avatar = await getPermanentAvatar(
+  member.user
+);
 
 
       const serverUnmuteContainer = new ContainerBuilder()
@@ -5562,20 +5642,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
               )
             )
             .setThumbnailAccessory(
-              new ThumbnailBuilder().setURL(
-                member.displayAvatarURL({
-                  extension: 'png',
-                  size: 256
-                })
-              )
-            )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
         );
 
 
       await sendActivityMessage(member.guild, {
-        components: [serverUnmuteContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+  components: [serverUnmuteContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
     }
 
 
@@ -5588,6 +5666,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const moderator = await getVoiceModerator('deaf');
 
       const moderatorText = getModeratorName(member.guild, moderator);
+
+      const avatar = await getPermanentAvatar(
+  member.user
+);
 
 
       const serverDeafContainer = new ContainerBuilder()
@@ -5603,20 +5685,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
               )
             )
             .setThumbnailAccessory(
-              new ThumbnailBuilder().setURL(
-                member.displayAvatarURL({
-                  extension: 'png',
-                  size: 256
-                })
-              )
-            )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
         );
 
 
       await sendActivityMessage(member.guild, {
-        components: [serverDeafContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+  components: [serverDeafContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
     }
 
 
@@ -5629,6 +5709,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const moderator = await getVoiceModerator('deaf');
 
       const moderatorText = getModeratorName(member.guild, moderator);
+
+      const avatar = await getPermanentAvatar(
+  member.user
+);
 
 
       const serverUndeafContainer = new ContainerBuilder()
@@ -5644,20 +5728,18 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
               )
             )
             .setThumbnailAccessory(
-              new ThumbnailBuilder().setURL(
-                member.displayAvatarURL({
-                  extension: 'png',
-                  size: 256
-                })
-              )
-            )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
         );
 
 
       await sendActivityMessage(member.guild, {
-        components: [serverUndeafContainer],
-        flags: MessageFlags.IsComponentsV2
-      });
+  components: [serverUndeafContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
+  flags: MessageFlags.IsComponentsV2
+});
     }
 
   } catch (err) {
@@ -5716,6 +5798,12 @@ const moderatorText = moderator
   ? `Appliqué par **${moderatorMember?.displayName || moderator.globalName || moderator.username}**`
   : 'Appliqué par **Administrateur inconnu**';
 
+
+  const avatar = await getPermanentAvatar(
+  user
+);
+
+
 const banContainer = new ContainerBuilder()
   .setAccentColor(0x242429)
   .addSectionComponents(
@@ -5729,17 +5817,15 @@ const banContainer = new ContainerBuilder()
         )
       )
       .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(
-          user.displayAvatarURL({
-            extension: 'png',
-            size: 256
-          })
-        )
-      )
+  new ThumbnailBuilder().setURL(
+    avatar.url
+  )
+)
   );
 
 await sendActivityMessage(guild, {
   components: [banContainer],
+  ...(avatar.file ? { files: [avatar.file] } : {}),
   flags: MessageFlags.IsComponentsV2
 });
 
