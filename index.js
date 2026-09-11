@@ -2666,6 +2666,12 @@ if (
   interaction.customId.startsWith('leaderboard_page_')
 ) {
 
+  await interaction.deferReply({
+  flags:
+    MessageFlags.Ephemeral |
+    MessageFlags.IsComponentsV2
+});
+
   // "Classement complet" ouvre directement #11 à #20
   const page = interaction.customId === 'leaderboard_open'
     ? 1
@@ -2713,17 +2719,19 @@ if (
 
   // Premier clic depuis le leaderboard public
   if (interaction.customId === 'leaderboard_open') {
-  return interaction.reply({
+  return interaction.editReply({
     components: [container],
     files: [
       {
-        attachment: path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png'),
+        attachment: path.join(
+          __dirname,
+          'assets',
+          'images',
+          'leaderboard-icon.png'
+        ),
         name: 'leaderboard-icon.png'
       }
     ],
-    flags:
-      MessageFlags.Ephemeral |
-      MessageFlags.IsComponentsV2,
     allowedMentions: {
       parse: []
     }
@@ -2731,12 +2739,12 @@ if (
 }
 
   // Navigation dans le classement éphémère
-  return interaction.update({
-    components: [container],
-    allowedMentions: {
-      parse: []
-    }
-  });
+return interaction.editReply({
+  components: [container],
+  allowedMentions: {
+    parse: []
+  }
+});
 }
 
 if (interaction.customId === 'rank_up') {
