@@ -2260,76 +2260,71 @@ function getDiscordVisualWidth(text, guild) {
 
 
 function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 21.5;
+  const COLUMN_TARGET = 24.5;
   const FULL_SPACE_WIDTH = 1.35;
+  const THIN_SPACE_WIDTH = 0.25;
 
   const normalizedLeft = left || '';
-const normalizedRight = right || '';
+  const normalizedRight = right || '';
 
+  if (!normalizedLeft) {
+    const fullSpaces = Math.floor(
+      COLUMN_TARGET / FULL_SPACE_WIDTH
+    );
 
-if (!normalizedLeft) {
-  const blankSpaces = Math.round(
-  COLUMN_TARGET / FULL_SPACE_WIDTH
-) + 1;
+    const remainder =
+      COLUMN_TARGET -
+      (fullSpaces * FULL_SPACE_WIDTH);
 
-  return `${'　'.repeat(blankSpaces)}\u2009${normalizedRight}`;
-}
+    const thinSpaces = Math.max(
+      0,
+      Math.round(
+        remainder / THIN_SPACE_WIDTH
+      )
+    );
 
-  const mentionMatch = normalizedLeft.match(/<@!?\d+>/);
-
-  let widthReference = normalizedLeft;
-
-  if (mentionMatch) {
-    const mentionEnd =
-      normalizedLeft.indexOf(mentionMatch[0]) +
-      mentionMatch[0].length;
-
-    widthReference = normalizedLeft.slice(0, mentionEnd);
+    return (
+      '　'.repeat(fullSpaces) +
+      '\u2009'.repeat(thinSpaces) +
+      normalizedRight
+    );
   }
 
   const leftWidth = getDiscordVisualWidth(
-    widthReference,
+    normalizedLeft,
     guild
   );
 
-  let RR_ZONE = 0;
-
-if (mentionMatch) {
-  const mentionEnd =
-    normalizedLeft.indexOf(mentionMatch[0]) +
-    mentionMatch[0].length;
-
-  const suffix = normalizedLeft
-    .slice(mentionEnd)
-    .trim();
-
-  if (suffix) {
-    RR_ZONE = 4.8;
-  }
-}
-
   const remainingWidth =
-  COLUMN_TARGET - leftWidth - RR_ZONE;
+    COLUMN_TARGET - leftWidth;
 
-const fullSpaces = Math.max(
-  2,
-  Math.floor(remainingWidth / FULL_SPACE_WIDTH)
-);
+  const fullSpaces = Math.max(
+    2,
+    Math.floor(
+      remainingWidth / FULL_SPACE_WIDTH
+    )
+  );
 
-const remainder =
-  remainingWidth - (fullSpaces * FULL_SPACE_WIDTH);
+  const remainder =
+    Math.max(
+      0,
+      remainingWidth -
+      (fullSpaces * FULL_SPACE_WIDTH)
+    );
 
-const thinSpaces = Math.max(
-  0,
-  Math.round(remainder / 0.25)
-);
+  const thinSpaces = Math.max(
+    0,
+    Math.round(
+      remainder / THIN_SPACE_WIDTH
+    )
+  );
 
-return (
-  normalizedLeft +
-  '　'.repeat(fullSpaces) +
-  '\u2009'.repeat(thinSpaces) +
-  normalizedRight
-);
+  return (
+    normalizedLeft +
+    '　'.repeat(fullSpaces) +
+    '\u2009'.repeat(thinSpaces) +
+    normalizedRight
+  );
 }
 
 
