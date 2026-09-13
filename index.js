@@ -2709,18 +2709,31 @@ if (
   interaction.customId === 'leaderboard_open' ||
   interaction.customId.startsWith('leaderboard_page_')
 ) {
+  const isOpen =
+    interaction.customId === 'leaderboard_open';
 
-  await interaction.deferReply({
-  flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-});
+  if (isOpen) {
+    await interaction.reply({
+      components: [
+        buildSimpleContainer(
+          '⏳ Chargement du classement...'
+        )
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+  } else {
+    await interaction.deferUpdate();
+  }
 
-  // "Classement complet" ouvre directement #11 à #20
-  const page = interaction.customId === 'leaderboard_open'
+  const page = isOpen
     ? 1
     : parseInt(
-        interaction.customId.replace('leaderboard_page_', ''),
+        interaction.customId.replace(
+          'leaderboard_page_',
+          ''
+        ),
         10
       );
 
@@ -2728,7 +2741,6 @@ if (
 
   const guild = interaction.guild;
 
-  // ── INVITATIONS ──
   const invitesData = await getAllInvites();
   const totalInvitesPerMember = {};
 
@@ -2737,21 +2749,20 @@ if (
       invitesData[inviterId].invites || 0;
   }
 
-  // ── POINTS ──
   const pointsData = await getAllPoints();
 
   const sorted = sortLeaderboardPlayers(
-  pointsData,
-  totalInvitesPerMember,
-  guild.members.cache
-);
+    pointsData,
+    totalInvitesPerMember,
+    guild.members.cache
+  );
 
   const playerCount = Object.entries(pointsData)
-  .filter(([id, data]) =>
-    guild.members.cache.has(id) &&
-    (data.games || 0) > 0
-  )
-  .length;
+    .filter(([id, data]) =>
+      guild.members.cache.has(id) &&
+      (data.games || 0) > 0
+    )
+    .length;
 
   const container = buildLeaderboardContainer({
     sorted,
@@ -2761,21 +2772,21 @@ if (
     page
   });
 
-  // Premier clic depuis le leaderboard public
-  if (interaction.customId === 'leaderboard_open') {
   return interaction.editReply({
     components: [container],
-    files: [
-      {
-        attachment: path.join(
-          __dirname,
-          'assets',
-          'images',
-          'leaderboard-icon.png'
-        ),
-        name: 'leaderboard-icon.png'
-      }
-    ],
+    files: isOpen
+      ? [
+          {
+            attachment: path.join(
+              __dirname,
+              'assets',
+              'images',
+              'leaderboard-icon.png'
+            ),
+            name: 'leaderboard-icon.png'
+          }
+        ]
+      : [],
     allowedMentions: {
       parse: []
     }
