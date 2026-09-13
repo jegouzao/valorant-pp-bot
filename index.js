@@ -2793,14 +2793,7 @@ if (
   });
 }
 
-  // Navigation dans le classement éphémère
-return interaction.editReply({
-  components: [container],
-  allowedMentions: {
-    parse: []
-    }
-  });
-}
+
 
 if (interaction.customId === 'rank_up') {
   const currentRank = getMemberRankKey(interaction.member);
