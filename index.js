@@ -2798,8 +2798,8 @@ return interaction.editReply({
   components: [container],
   allowedMentions: {
     parse: []
-  }
-});
+    }
+  });
 }
 
 if (interaction.customId === 'rank_up') {
@@ -3243,7 +3243,6 @@ if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
     );
   }
 }
-
 }
 
 // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
