@@ -640,6 +640,20 @@ const mediaTitle =
       )
       .setStyle(
         ButtonStyle.Secondary
+      ),
+
+    new ButtonBuilder()
+      .setCustomId(
+        'leaderboard_clips'
+      )
+      .setLabel(
+        'Classement'
+      )
+      .setEmoji(
+        '1548985872786137138'
+      )
+      .setStyle(
+        ButtonStyle.Secondary
       )
 
   )
