@@ -2279,12 +2279,13 @@ function buildOnboardingContainer() {
     .addActionRowComponents(row);
 }
 
-  async function showPlayerStats(interaction) {
+async function showPlayerStats(interaction) {
 
-  await simpleReply(
-    interaction,
-    '⏳ Chargement de tes statistiques…'
-  );
+  await interaction.deferReply({
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
 
   const member = interaction.member;
   const guild = interaction.guild;
