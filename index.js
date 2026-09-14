@@ -1365,10 +1365,6 @@ function buildInvitationsLeaderboardContainer({
     }
   ).length;
 
-  const participantCount =
-  sortedInvites.filter(
-    ([, data]) => (data.invites || 0) > 0
-  ).length;
 
 const lines = sortedInvites.map(
   ([id, data], index) => {
@@ -1420,7 +1416,7 @@ if (!lines.length) {
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      '-# Aucun clip ou photo enregistré ce mois-ci'
+      '-# Aucune invitation enregistrée ce mois-ci'
     )
   );
 
@@ -1464,17 +1460,10 @@ async function buildClipsLeaderboardContainer(guild) {
       monthKey
     }).lean();
 
-    const participantCount =
-  new Set(
-    clips.map(
-      clip => clip.authorId
-    )
-  ).size;
-
-    const participantCount =
-  new Set(
-    clips.map(clip => clip.authorId)
-  ).size;
+const participantCount =
+  sortedInvites.filter(
+    ([, data]) => (data.invites || 0) > 0
+  ).length;
 
   const sortedClips =
     clips
