@@ -1289,7 +1289,7 @@ if (page === 0) {
 
     new ButtonBuilder()
       .setCustomId('leaderboard_clips')
-      .setLabel('Clip du mois')
+      .setLabel('Clips du mois')
       .setStyle(ButtonStyle.Secondary)
 
   );
@@ -1352,39 +1352,38 @@ function buildInvitationsLeaderboardContainer({
   toSmallCaps(monthLabel);
 
   const participantCount =
+  Object.entries(invitesData).filter(
+    ([id, data]) => {
+      const member =
+        guildMembersCache.get(id);
+
+      return (
+        member &&
+        !member.user.bot &&
+        (data.invites || 0) > 0
+      );
+    }
+  ).length;
+
+  const participantCount =
   sortedInvites.filter(
     ([, data]) => (data.invites || 0) > 0
   ).length;
 
-const lines = sortedClips.map(
-  (clip, index) => {
+const lines = sortedInvites.map(
+  ([id, data], index) => {
 
     const position =
       index === 0
-        ? '<:ClipDuMois:1548985872786137138>'
+        ? '<:TopInviter:1465747415670984862>'
         : `#${index + 1}`;
 
-    const likes =
-      clip.likes?.length || 0;
-
-    const clipUrl =
-      `https://discord.com/channels/` +
-      `${clip.guildId}/` +
-      `${clip.channelId}/` +
-      `${clip.messageId}`;
-
-    const isPhoto =
-      clip.mediaType?.startsWith('image/');
-
-    const mediaLabel =
-      isPhoto
-        ? 'Voir la photo'
-        : 'Voir le clip';
+    const invites =
+      data.invites || 0;
 
     return (
-      `### ${position} <@${clip.authorId}>  ` +
-      `❤️ **${likes} like${likes > 1 ? 's' : ''}**  ` +
-      `[${mediaLabel} ↗](${clipUrl})`
+      `### ${position} <@${id}>  ` +
+      `**${invites} invitation${invites > 1 ? 's' : ''}**`
     );
   }
 );
@@ -1400,28 +1399,28 @@ const headerSection =
       )
     )
     .setThumbnailAccessory(
-      new ThumbnailBuilder({
-        media: {
-          url: 'attachment://leaderboard-icon.png'
-        }
-      })
+      new ThumbnailBuilder()
+        .setURL(
+          'attachment://leaderboard-icon.png'
+        )
     );
 
 const container =
   new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addSectionComponents(headerSection)
-
     .addSeparatorComponents(
       new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
+        .setSpacing(
+          SeparatorSpacingSize.Large
+        )
     );
 
 if (!lines.length) {
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      '-# Aucun classement disponible pour ce mois-ci'
+      '-# Aucun clip ou photo enregistré ce mois-ci'
     )
   );
 
@@ -1467,6 +1466,13 @@ async function buildClipsLeaderboardContainer(guild) {
 
     const participantCount =
   new Set(
+    clips.map(
+      clip => clip.authorId
+    )
+  ).size;
+
+    const participantCount =
+  new Set(
     clips.map(clip => clip.authorId)
   ).size;
 
@@ -1479,37 +1485,38 @@ async function buildClipsLeaderboardContainer(guild) {
       )
       .slice(0, 10);
 
-  const lines = sortedClips.length
-    ? sortedClips.map(
-        (clip, index) => {
+  const lines = sortedClips.map(
+  (clip, index) => {
 
-          const position =
-  index === 0
-    ? '<:ClipDuMois:1548985872786137138>'
-    : `#${index + 1}`;
+    const position =
+      index === 0
+        ? '<:ClipDuMois:1548985872786137138>'
+        : `#${index + 1}`;
 
-          const likes =
-            clip.likes?.length || 0;
+    const likes =
+      clip.likes?.length || 0;
 
-          const clipUrl =
-            `https://discord.com/channels/` +
-            `${clip.guildId}/` +
-            `${clip.channelId}/` +
-            `${clip.messageId}`;
+    const clipUrl =
+      `https://discord.com/channels/` +
+      `${clip.guildId}/` +
+      `${clip.channelId}/` +
+      `${clip.messageId}`;
 
-            const isPhoto =
-  clip.mediaType?.startsWith('image/');
+    const isPhoto =
+      clip.mediaType?.startsWith('image/');
 
-const mediaLabel =
-  isPhoto
-    ? 'Voir la photo'
-    : 'Voir le clip';
+    const mediaLabel =
+      isPhoto
+        ? 'Voir la photo'
+        : 'Voir le clip';
 
-          return `${position} <@${clip.authorId}> — ❤️ **${likes} like${likes > 1 ? 's' : ''}** — [${mediaLabel} ↗](${clipUrl})`;
-        }
-      ).join('\n')
-    : '-# Aucun clip enregistré ce mois-ci';
-
+    return (
+      `### ${position} <@${clip.authorId}>  ` +
+      `❤️ **${likes} like${likes > 1 ? 's' : ''}**  ` +
+      `[${mediaLabel} ↗](${clipUrl})`
+    );
+  }
+);
 const headerSection =
   new SectionBuilder()
     .addTextDisplayComponents(
@@ -1521,11 +1528,10 @@ const headerSection =
       )
     )
     .setThumbnailAccessory(
-      new ThumbnailBuilder({
-        media: {
-          url: 'attachment://leaderboard-icon.png'
-        }
-      })
+      new ThumbnailBuilder()
+        .setURL(
+          'attachment://leaderboard-icon.png'
+        )
     );
 const container =
   new ContainerBuilder()
