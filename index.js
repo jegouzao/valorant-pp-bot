@@ -1460,10 +1460,7 @@ async function buildClipsLeaderboardContainer(guild) {
       monthKey
     }).lean();
 
-const participantCount =
-  sortedInvites.filter(
-    ([, data]) => (data.invites || 0) > 0
-  ).length;
+
 
   const sortedClips =
     clips
