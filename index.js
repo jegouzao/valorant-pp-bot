@@ -1217,22 +1217,22 @@ if (page === 0) {
 
     new ButtonBuilder()
       .setCustomId('leaderboard_stats')
-      .setLabel('Afficher mes statistiques')
+      .setLabel('Mon tracker')
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
       .setCustomId('leaderboard_open')
-      .setLabel('Voir le classement complet')
+      .setLabel('Classement complet')
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
       .setCustomId('leaderboard_invites')
-      .setLabel('Voir le classement des invitations')
+      .setLabel('Invitations')
       .setStyle(ButtonStyle.Secondary),
 
     new ButtonBuilder()
       .setCustomId('leaderboard_clips')
-      .setLabel('Voir les meilleurs clips du mois')
+      .setLabel('Clip du mois')
       .setStyle(ButtonStyle.Secondary)
 
   );
@@ -1240,25 +1240,6 @@ if (page === 0) {
   container.addActionRowComponents(openLeaderboardRow);
 
 } else {
-
-  const navigationRow = new ActionRowBuilder().addComponents(
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_open')
-      .setLabel('Voir le classement complet')
-      .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_invites')
-      .setLabel('Voir le classement des invitations')
-      .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_clips')
-      .setLabel('Voir les meilleurs clips du mois')
-      .setStyle(ButtonStyle.Secondary)
-
-  );
 
   const paginationRow = new ActionRowBuilder().addComponents(
 
@@ -1276,10 +1257,7 @@ if (page === 0) {
 
   );
 
-  container.addActionRowComponents(
-    navigationRow,
-    paginationRow
-  );
+  container.addActionRowComponents(paginationRow);
 }
 
   return container;
@@ -1386,18 +1364,18 @@ function buildInvitationsLeaderboardContainer({
 
       new ButtonBuilder()
         .setCustomId('leaderboard_open')
-        .setLabel('Voir le classement complet')
+        .setLabel('Classement complet')
         .setStyle(ButtonStyle.Secondary),
 
       new ButtonBuilder()
         .setCustomId('leaderboard_invites')
-        .setLabel('Voir le classement des invitations')
+        .setLabel('Invitations')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true),
 
       new ButtonBuilder()
         .setCustomId('leaderboard_clips')
-        .setLabel('Voir les meilleurs clips du mois')
+        .setLabel('Clip du mois')
         .setStyle(ButtonStyle.Secondary)
 
     );
@@ -1513,39 +1491,25 @@ async function buildClipsLeaderboardContainer(
       )
   );
 
-  const navigationRow =
-    new ActionRowBuilder()
-      .addComponents(
+const navigationRow =
+  new ActionRowBuilder().addComponents(
 
-        new ButtonBuilder()
-          .setCustomId(
-            'leaderboard_open'
-          )
-          .setLabel('🏆 Classement')
-          .setStyle(
-            ButtonStyle.Secondary
-          ),
+    new ButtonBuilder()
+      .setCustomId('leaderboard_open')
+      .setLabel('Classement complet')
+      .setStyle(ButtonStyle.Secondary),
 
-        new ButtonBuilder()
-          .setCustomId(
-            'leaderboard_invites'
-          )
-          .setLabel('📩 Invitations')
-          .setStyle(
-            ButtonStyle.Secondary
-          ),
+    new ButtonBuilder()
+      .setCustomId('leaderboard_invites')
+      .setLabel('Invitations')
+      .setStyle(ButtonStyle.Secondary),
 
-        new ButtonBuilder()
-          .setCustomId(
-            'leaderboard_clips'
-          )
-          .setLabel('🎬 Clips')
-          .setStyle(
-            ButtonStyle.Secondary
-          )
-          .setDisabled(true)
+    new ButtonBuilder()
+      .setCustomId('leaderboard_clips')
+      .setLabel('Clip du mois')
+      .setStyle(ButtonStyle.Secondary)
 
-      );
+  );
 
   container.addActionRowComponents(
     navigationRow
@@ -3287,10 +3251,12 @@ if (
     page
   });
 
-  return interaction.editReply({
-    components: [container],
-    files: isOpen
-      ? [
+return interaction.editReply({
+  components: [container],
+
+  ...(isOpen
+    ? {
+        files: [
           {
             attachment: path.join(
               __dirname,
@@ -3301,11 +3267,13 @@ if (
             name: 'leaderboard-icon.png'
           }
         ]
-      : [],
-    allowedMentions: {
-      parse: []
-    }
-  });
+      }
+    : {}),
+
+  allowedMentions: {
+    parse: []
+  }
+});
 }
 
 
