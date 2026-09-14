@@ -627,7 +627,7 @@ const mediaTitle =
         )
       )
 
-      .addActionRowComponents(
+.addActionRowComponents(
   new ActionRowBuilder().addComponents(
 
     new ButtonBuilder()
@@ -635,14 +635,15 @@ const mediaTitle =
         `clip_like_${clip._id}`
       )
       .setEmoji('1493650946583040000')
-      .setLabel(`${likes} like(s)`)
+      .setLabel(
+        `${likes} like${likes > 1 ? 's' : ''}`
+      )
       .setStyle(
         ButtonStyle.Secondary
       )
 
   )
 );
-
   return container;
 }
 
