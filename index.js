@@ -1216,7 +1216,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
     : `#${globalIndex + 1}`;
 
   return (
-  `### #${positionDisplay} <@${id}> ` +
+  `### ${positionDisplay} <@${id}> ` +
   `${rankEmoji ? rankEmoji : ''}` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962> ` +
   `**${invites}**<:VIDE:1472667823875559708>  ` +
