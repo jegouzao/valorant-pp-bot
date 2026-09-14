@@ -75,6 +75,7 @@ const {
 
 
   Events,
+Partials,
 } = require('discord.js');
 
 const rankEmojis = {
@@ -833,6 +834,11 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent
   ],
+
+  partials: [
+    Partials.Message,
+    Partials.Channel
+  ]
 });
 
 
@@ -6501,9 +6507,7 @@ const warning = await message.channel.send({
 
 client.on('messageDelete', async (message) => {
   try {
-    if (!message.guild) return;
-
-    if (message.channel.id !== CLIPFARMING_CHANNEL_ID) {
+    if (message.channelId !== CLIPFARMING_CHANNEL_ID) {
       return;
     }
 
@@ -6515,22 +6519,40 @@ client.on('messageDelete', async (message) => {
       return;
     }
 
-    for (const clip of clips) {
-      if (clip.botMessageId) {
-        const botMessage =
-          await message.channel.messages
-            .fetch(clip.botMessageId)
-            .catch(() => null);
+    console.log(
+      `🗑️ Suppression de ${clips.length} média(s) du clipfarming : ${message.id}`
+    );
 
-        if (botMessage?.deletable) {
-          await botMessage.delete().catch(() => {});
-        }
+    for (const clip of clips) {
+      if (!clip.botMessageId) continue;
+
+      const channel =
+        client.channels.cache.get(clip.channelId) ||
+        await client.channels
+          .fetch(clip.channelId)
+          .catch(() => null);
+
+      if (!channel?.isTextBased()) continue;
+
+      const botMessage =
+        await channel.messages
+          .fetch(clip.botMessageId)
+          .catch(() => null);
+
+      if (botMessage?.deletable) {
+        await botMessage
+          .delete()
+          .catch(() => {});
       }
     }
 
     await Clip.deleteMany({
       messageId: message.id
     });
+
+    console.log(
+      `✅ Média supprimé du classement Clips du mois`
+    );
 
   } catch (err) {
     console.error(
