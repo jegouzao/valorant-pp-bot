@@ -635,7 +635,7 @@ const mediaTitle =
         `clip_like_${clip._id}`
       )
       .setEmoji('1493650946583040000')
-      .setLabel(`${likes}`)
+      .setLabel(`${likes} like(s)`)
       .setStyle(
         ButtonStyle.Secondary
       )
@@ -1878,6 +1878,30 @@ if (
     const leaderboardWinner = sorted[0] || null;
 
     // ==============================
+// CLIP DU MOIS
+// ==============================
+
+const monthlyClips =
+  await Clip.find({
+    guildId: guild.id,
+    monthKey
+  }).lean();
+
+const clipWinner =
+  monthlyClips
+    .filter(
+      clip =>
+        guild.members.cache.has(
+          clip.authorId
+        )
+    )
+    .sort(
+      (a, b) =>
+        (b.likes?.length || 0) -
+        (a.likes?.length || 0)
+    )[0] || null;
+
+    // ==============================
     // INVITATIONS
     // ==============================
 
@@ -2031,6 +2055,122 @@ if (!leaderboardWinnerMessage) {
 if (!invitationWinnerMessage) {
   throw new Error('Impossible d’envoyer l’annonce du top invitations');
 }
+
+// ==============================
+// MESSAGE CLIP DU MOIS
+// ==============================
+
+if (clipWinner) {
+
+  const clipMember =
+    guild.members.cache.get(
+      clipWinner.authorId
+    );
+
+  const clipAvatar =
+    clipMember
+      ? await getPermanentAvatar(
+          clipMember.user
+        )
+      : null;
+
+  const likes =
+    clipWinner.likes?.length || 0;
+
+  const isImage =
+    clipWinner.mediaType?.startsWith(
+      'image/'
+    );
+
+  const mediaType =
+    isImage
+      ? 'IMAGE'
+      : 'CLIP';
+
+  const mediaUrl =
+    `https://discord.com/channels/` +
+    `${clipWinner.guildId}/` +
+    `${clipWinner.channelId}/` +
+    `${clipWinner.messageId}`;
+
+  const clipWinnerContainer =
+    new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+
+      .addSectionComponents(
+        new SectionBuilder()
+
+          .addTextDisplayComponents(
+            new TextDisplayBuilder()
+              .setContent(
+                `## <:ClipDuMois:1548985872786137138> ${mediaType} DU MOIS\n` +
+                `-# **${clipMember?.user.tag || 'Utilisateur inconnu'}** (<@${clipWinner.authorId}>)\n` +
+                `-# Termine le mois avec **${likes} like${likes > 1 ? 's' : ''}**`
+              )
+          )
+
+          .setThumbnailAccessory(
+            new ThumbnailBuilder()
+              .setURL(
+                clipAvatar?.url ||
+                guild.iconURL({
+                  size: 256
+                })
+              )
+          )
+      )
+
+      .addActionRowComponents(
+        new ActionRowBuilder()
+          .addComponents(
+            new ButtonBuilder()
+              .setLabel(
+                isImage
+                  ? 'Voir la photo'
+                  : 'Voir le clip'
+              )
+              .setStyle(
+                ButtonStyle.Link
+              )
+              .setURL(
+                mediaUrl
+              )
+          )
+      );
+
+  const clipWinnerMessage =
+    await sendActivityMessage(
+      guild,
+      {
+        components: [
+          clipWinnerContainer
+        ],
+
+        ...(clipAvatar?.file
+          ? {
+              files: [
+                clipAvatar.file
+              ]
+            }
+          : {}),
+
+        flags:
+          MessageFlags.IsComponentsV2
+      }
+    );
+
+  if (!clipWinnerMessage) {
+    throw new Error(
+      'Impossible d’envoyer l’annonce du clip du mois'
+    );
+  }
+}
+
+await setConfigValue(
+  'monthlyWinnersLastAnnouncement',
+  monthKey
+);
+
     }
 
 
