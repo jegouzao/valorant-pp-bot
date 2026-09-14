@@ -1606,6 +1606,79 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
   .then(() => console.log('✅ Slash commands enregistrées'))
   .catch(console.error);
 
+  async function cleanupOrphanClips(guild) {
+  try {
+    const monthKey = getParisMonthKey();
+
+    const clips = await Clip.find({
+      guildId: guild.id,
+      monthKey
+    });
+
+    if (!clips.length) {
+      console.log('🧹 Aucun clip à vérifier');
+      return;
+    }
+
+    let deletedCount = 0;
+
+    for (const clip of clips) {
+      const channel =
+        guild.channels.cache.get(clip.channelId) ||
+        await guild.channels
+          .fetch(clip.channelId)
+          .catch(() => null);
+
+      if (!channel?.isTextBased()) {
+        await Clip.deleteOne({
+          _id: clip._id
+        });
+
+        deletedCount++;
+        continue;
+      }
+
+      const sourceMessage =
+        await channel.messages
+          .fetch(clip.messageId)
+          .catch(() => null);
+
+      if (sourceMessage) {
+        continue;
+      }
+
+      if (clip.botMessageId) {
+        const botMessage =
+          await channel.messages
+            .fetch(clip.botMessageId)
+            .catch(() => null);
+
+        if (botMessage?.deletable) {
+          await botMessage
+            .delete()
+            .catch(() => {});
+        }
+      }
+
+      await Clip.deleteOne({
+        _id: clip._id
+      });
+
+      deletedCount++;
+    }
+
+    console.log(
+      `🧹 Nettoyage clips terminé : ${deletedCount} entrée(s) supprimée(s)`
+    );
+
+  } catch (err) {
+    console.error(
+      '❌ Erreur cleanupOrphanClips :',
+      err
+    );
+  }
+}
+
 async function syncServerTagRole(userId, user = null) {
   try {
     const guild = client.guilds.cache.get(SERVER_TAG_GUILD_ID);
@@ -1981,6 +2054,9 @@ client.once(Events.ClientReady, async () => {
 
   await guild.members.fetch();
   console.log('✅ Tous les membres du serveur ont été chargés en cache');
+
+  await cleanupOrphanClips(guild);
+  
   for (const member of guild.members.cache.values()) {
     await syncServerTagRole(member.id, member.user);
   }
