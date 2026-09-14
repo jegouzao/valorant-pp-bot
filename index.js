@@ -647,10 +647,7 @@ const mediaTitle =
         'leaderboard_clips'
       )
       .setLabel(
-        'Classement'
-      )
-      .setEmoji(
-        '1548985872786137138'
+        'Voir le classement'
       )
       .setStyle(
         ButtonStyle.Secondary
