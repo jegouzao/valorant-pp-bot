@@ -555,6 +555,26 @@ function getParisMonthKey(date = new Date()) {
   return `${parts.year}-${parts.month}`;
 }
 
+function toSmallCaps(text) {
+  const map = {
+    A: 'ᴀ', B: 'ʙ', C: 'ᴄ', D: 'ᴅ',
+    E: 'ᴇ', F: 'ꜰ', G: 'ɢ', H: 'ʜ',
+    I: 'ɪ', J: 'ᴊ', K: 'ᴋ', L: 'ʟ',
+    M: 'ᴍ', N: 'ɴ', O: 'ᴏ', P: 'ᴘ',
+    Q: 'ǫ', R: 'ʀ', S: 'ꜱ', T: 'ᴛ',
+    U: 'ᴜ', V: 'ᴠ', W: 'ᴡ', X: 'x',
+    Y: 'ʏ', Z: 'ᴢ',
+    É: 'ᴇ', È: 'ᴇ', Ê: 'ᴇ',
+    À: 'ᴀ', Ù: 'ᴜ', Ç: 'ᴄ'
+  };
+
+  return text
+    .toUpperCase()
+    .split('')
+    .map(char => map[char] || char)
+    .join('');
+}
+
 function getParisMonthLabel(date = new Date()) {
   return new Intl.DateTimeFormat('fr-FR', {
     timeZone: 'Europe/Paris',
@@ -685,6 +705,53 @@ const EXEMPT_VC_IDS = [
 const invitesCache = new Map();
 const autoCreateLocks = new Map();
 const gameLocks = {};
+const spectatorOriginalNicknames = new Map();
+
+async function markAsSpectator(member) {
+  const key = `${member.guild.id}:${member.id}`;
+
+  if (!spectatorOriginalNicknames.has(key)) {
+    spectatorOriginalNicknames.set(
+      key,
+      member.nickname
+    );
+  }
+
+  const currentName =
+    member.displayName.replace(/^👁️\s*/, '');
+
+  await member
+    .setNickname(`👁️ ${currentName}`)
+    .catch(() => {});
+}
+
+async function restoreSpectatorNickname(member) {
+  const key = `${member.guild.id}:${member.id}`;
+
+  if (spectatorOriginalNicknames.has(key)) {
+    const originalNickname =
+      spectatorOriginalNicknames.get(key);
+
+    spectatorOriginalNicknames.delete(key);
+
+    await member
+      .setNickname(originalNickname)
+      .catch(() => {});
+
+    return;
+  }
+
+  // Sécurité si le bot a redémarré entre-temps
+  if (member.nickname?.startsWith('👁️ ')) {
+    const restored =
+      member.nickname.replace(/^👁️\s*/, '');
+
+    await member
+      .setNickname(restored || null)
+      .catch(() => {});
+  }
+}
+
 const BADGES = {
   TOP1: '<:TopLeaderboard:1465709888729776296>',
   TOP_INVITER: '<:TopInviter:1465747415670984862>',
@@ -1143,22 +1210,13 @@ const lines = pagePlayers.map(([id, data], idx) => {
   const rankEmoji =
     getRankEmojiFromMember(member);
 
-  // ── BADGES ──
-  let badges = '';
-
-  if (globalIndex === 0) {
-    badges += BADGES.TOP1;
-  }
-
-  if (
-    id === topInviterId &&
-    maxInvites > 0
-  ) {
-    badges += BADGES.TOP_INVITER;
-  }
+    const positionDisplay =
+  globalIndex === 0
+    ? '<:TopLeaderboard:1465709888729776296>'
+    : `#${globalIndex + 1}`;
 
   return (
-  `### #${globalIndex + 1} <@${id}> ` +
+  `### #${positionDisplay} <@${id}> ` +
   `${rankEmoji ? rankEmoji : ''}` +
   `${badges ? ` ${badges}` : ''}  ` +
   `**${data.rr || 0}**<:VIDE:1541125087384829962> ` +
@@ -1291,18 +1349,17 @@ function buildInvitationsLeaderboardContainer({
       .format(new Date())
       .toUpperCase();
 
+      const smallMonthLabel =
+  toSmallCaps(monthLabel);
+
   const lines = sortedInvites.length
     ? sortedInvites.map(
         ([id, data], index) => {
 
           const position =
-            index === 0
-              ? '🥇'
-              : index === 1
-                ? '🥈'
-                : index === 2
-                  ? '🥉'
-                  : `**#${index + 1}**`;
+  index === 0
+    ? '<:TopInviter:1465747415670984862>'
+    : `#${index + 1}`;
 
           const invites =
             data.invites || 0;
@@ -1313,20 +1370,20 @@ function buildInvitationsLeaderboardContainer({
     : '-# Aucune invitation enregistrée';
 
   const headerSection =
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## 📩 INVITATIONS — ${monthLabel}\n` +
-          `-# Classement mensuel des invitations`
-        )
+  new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:VIDE:1493046347337699499> CLASSEMENT DES INVITATIONS ${smallMonthLabel}\n` +
+        `-# ᴄʟᴀꜱꜱᴇᴍᴇɴᴛ ᴍᴇɴꜱᴜᴇʟ ᴅᴇꜱ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ`
       )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder({
-          media: {
-            url: 'attachment://leaderboard-icon.png'
-          }
-        })
-      );
+    )
+    .setThumbnailAccessory(
+      new ThumbnailBuilder({
+        media: {
+          url: 'attachment://leaderboard-icon.png'
+        }
+      })
+    );
 
   const container =
     new ContainerBuilder()
@@ -1352,6 +1409,9 @@ async function buildClipsLeaderboardContainer(guild) {
   const monthLabel =
     getParisMonthLabel();
 
+    const smallMonthLabel =
+  toSmallCaps(monthLabel);
+
   const clips =
     await Clip.find({
       guildId: guild.id,
@@ -1372,13 +1432,9 @@ async function buildClipsLeaderboardContainer(guild) {
         (clip, index) => {
 
           const position =
-            index === 0
-              ? '🥇'
-              : index === 1
-                ? '🥈'
-                : index === 2
-                  ? '🥉'
-                  : `**#${index + 1}**`;
+  index === 0
+    ? '<:ClipDuMois:1548985872786137138>'
+    : `#${index + 1}`;
 
           const likes =
             clip.likes?.length || 0;
@@ -1389,26 +1445,34 @@ async function buildClipsLeaderboardContainer(guild) {
             `${clip.channelId}/` +
             `${clip.messageId}`;
 
-          return `${position} <@${clip.authorId}> — ❤️ **${likes} like${likes > 1 ? 's' : ''}** — [Voir le clip ↗](${clipUrl})`;
+            const isPhoto =
+  clip.mediaType?.startsWith('image/');
+
+const mediaLabel =
+  isPhoto
+    ? 'Voir la photo'
+    : 'Voir le clip';
+
+          return `${position} <@${clip.authorId}> — ❤️ **${likes} like${likes > 1 ? 's' : ''}** — [${mediaLabel} ↗](${clipUrl})`;
         }
       ).join('\n')
     : '-# Aucun clip enregistré ce mois-ci';
 
-  const headerSection =
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## 🎬 CLIP DU MOIS — ${monthLabel}\n` +
-          `-# Classement des clips les plus appréciés`
-        )
+const headerSection =
+  new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## <:VIDE:1493046347337699499> MEILLEURS CLIPS DU MOIS ${smallMonthLabel}\n` +
+        `-# ᴄʟᴀꜱꜱᴇᴍᴇɴᴛ ᴅᴇꜱ ᴄʟɪᴘꜱ ᴇᴛ ᴘʜᴏᴛᴏꜱ ʟᴇꜱ ᴘʟᴜꜱ ᴀᴘᴘʀᴇᴄɪᴇꜱ`
       )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder({
-          media: {
-            url: 'attachment://leaderboard-icon.png'
-          }
-        })
-      );
+    )
+    .setThumbnailAccessory(
+      new ThumbnailBuilder({
+        media: {
+          url: 'attachment://leaderboard-icon.png'
+        }
+      })
+    );
 
   const container =
     new ContainerBuilder()
@@ -3949,18 +4013,22 @@ if (
     );
   }
 
-  await moveVerifiedToVC(
-    interaction.member,
-    vc
-  );
+await markAsSpectator(
+  interaction.member
+);
 
-  if (!game.spectators) {
-    game.spectators = {};
-  }
+await moveVerifiedToVC(
+  interaction.member,
+  vc
+);
 
-  game.spectators[
-    interaction.user.id
-  ] = choice;
+if (!game.spectators) {
+  game.spectators = {};
+}
+
+game.spectators[
+  interaction.user.id
+] = choice;
 
   saveGameDebounced(game);
 
@@ -4527,24 +4595,51 @@ await simpleEditReply(
             const attChannel = interaction.guild.channels.cache.get(game.attVC);
             const defChannel = interaction.guild.channels.cache.get(game.defVC);
 
-            const attackers = game.attackers.map(p => p.id);
-            const defenders = game.defenders.map(p => p.id);
-            const allPlayers = [...attackers, ...defenders];
+            const attackers =
+  game.attackers.map(p => p.id);
 
-            const liveAttackers = attChannel ? [...attChannel.members.keys()] : [];
-            const liveDefenders = defChannel ? [...defChannel.members.keys()] : [];
-            const spectatorIds = game.spectators ? Object.keys(game.spectators) : [];
+const defenders =
+  game.defenders.map(p => p.id);
 
-            const everyoneInGameVCs = [...new Set([...liveAttackers, ...liveDefenders, ...allPlayers, ...spectatorIds])];
+const allPlayers = [
+  ...attackers,
+  ...defenders
+];
 
-            const moveMembersToVC = async (ids, vc) => {
-              await Promise.all(ids.map(async (id) => {
-                const member = interaction.guild.members.cache.get(id) || null;
-                if (member?.voice?.channel) await member.voice.setChannel(vc).catch(() => {});
-              }));
-            };
+const membersToMove = new Map();
 
-            await moveMembersToVC(everyoneInGameVCs, waitingVC);
+if (attChannel) {
+  for (
+    const [id, member]
+    of attChannel.members
+  ) {
+    membersToMove.set(
+      id,
+      member
+    );
+  }
+}
+
+if (defChannel) {
+  for (
+    const [id, member]
+    of defChannel.members
+  ) {
+    membersToMove.set(
+      id,
+      member
+    );
+  }
+}
+
+await Promise.all(
+  [...membersToMove.values()].map(
+    member =>
+      member.voice
+        .setChannel(waitingVC)
+        .catch(() => {})
+  )
+);
 
             if (game.manageMessageId) {
               const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
@@ -5213,6 +5308,34 @@ return simpleEditReply(
 client.on('voiceStateUpdate', async (oldState, newState) => {
   const guild = newState.guild || oldState.guild;
   if (!guild) return;
+
+
+  const spectatorGame =
+  gamesData.games.find(game =>
+    game.spectators?.[oldState.member.id] &&
+    (
+      oldState.channelId === game.attVC ||
+      oldState.channelId === game.defVC
+    )
+  );
+
+if (
+  spectatorGame &&
+  oldState.channelId !== newState.channelId
+) {
+
+  await restoreSpectatorNickname(
+    oldState.member
+  );
+
+  delete spectatorGame.spectators[
+    oldState.member.id
+  ];
+
+  saveGameDebounced(
+    spectatorGame
+  );
+}
 
   const affectedGame = gamesData.games.find(game =>
     game.waitingVC === newState.channelId || game.waitingVC === oldState.channelId
@@ -6295,6 +6418,47 @@ const warning = await message.channel.send({
 
   } catch (err) {
     console.error('Erreur modération salon rejoindre :', err);
+  }
+});
+
+client.on('messageDelete', async (message) => {
+  try {
+    if (!message.guild) return;
+
+    if (message.channel.id !== CLIPFARMING_CHANNEL_ID) {
+      return;
+    }
+
+    const clips = await Clip.find({
+      messageId: message.id
+    });
+
+    if (!clips.length) {
+      return;
+    }
+
+    for (const clip of clips) {
+      if (clip.botMessageId) {
+        const botMessage =
+          await message.channel.messages
+            .fetch(clip.botMessageId)
+            .catch(() => null);
+
+        if (botMessage?.deletable) {
+          await botMessage.delete().catch(() => {});
+        }
+      }
+    }
+
+    await Clip.deleteMany({
+      messageId: message.id
+    });
+
+  } catch (err) {
+    console.error(
+      'Erreur suppression clip #clipfarming :',
+      err
+    );
   }
 });
 
