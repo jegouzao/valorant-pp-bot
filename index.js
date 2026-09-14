@@ -1351,29 +1351,52 @@ function buildInvitationsLeaderboardContainer({
       const smallMonthLabel =
   toSmallCaps(monthLabel);
 
-  const lines = sortedInvites.length
-    ? sortedInvites.map(
-        ([id, data], index) => {
+  const participantCount =
+  sortedInvites.filter(
+    ([, data]) => (data.invites || 0) > 0
+  ).length;
 
-          const position =
-  index === 0
-    ? '<:TopInviter:1465747415670984862>'
-    : `#${index + 1}`;
+const lines = sortedClips.map(
+  (clip, index) => {
 
-          const invites =
-            data.invites || 0;
+    const position =
+      index === 0
+        ? '<:ClipDuMois:1548985872786137138>'
+        : `#${index + 1}`;
 
-          return `${position} <@${id}> — **${invites} invitation${invites > 1 ? 's' : ''}**`;
-        }
-      ).join('\n')
-    : '-# Aucune invitation enregistrée';
+    const likes =
+      clip.likes?.length || 0;
 
-  const headerSection =
+    const clipUrl =
+      `https://discord.com/channels/` +
+      `${clip.guildId}/` +
+      `${clip.channelId}/` +
+      `${clip.messageId}`;
+
+    const isPhoto =
+      clip.mediaType?.startsWith('image/');
+
+    const mediaLabel =
+      isPhoto
+        ? 'Voir la photo'
+        : 'Voir le clip';
+
+    return (
+      `### ${position} <@${clip.authorId}>  ` +
+      `❤️ **${likes} like${likes > 1 ? 's' : ''}**  ` +
+      `[${mediaLabel} ↗](${clipUrl})`
+    );
+  }
+);
+
+const headerSection =
   new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> CLASSEMENT DES INVITATIONS ${smallMonthLabel}\n` +
-        `-# ᴄʟᴀꜱꜱᴇᴍᴇɴᴛ ᴍᴇɴꜱᴜᴇʟ ᴅᴇꜱ ɪɴᴠɪᴛᴀᴛɪᴏɴꜱ`
+        `## <:VIDE:1493046347337699499> TOP INVITATIONS ${smallMonthLabel}\n` +
+        `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${participantCount}\`\n` +
+        `-# ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ : <:VIDE:1469100224289968242> ᴀ ᴅᴇꜰɪɴɪʀ`
       )
     )
     .setThumbnailAccessory(
@@ -1384,21 +1407,46 @@ function buildInvitationsLeaderboardContainer({
       })
     );
 
-  const container =
-    new ContainerBuilder()
-      .setAccentColor(EMBED_COLOR)
-      .addSectionComponents(headerSection)
+const container =
+  new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addSectionComponents(headerSection)
 
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-          .setSpacing(SeparatorSpacingSize.Large)
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    );
+
+if (!lines.length) {
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      '-# Aucun classement disponible pour ce mois-ci'
+    )
+  );
+
+} else {
+
+  for (let i = 0; i < lines.length; i++) {
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        lines[i]
       )
+    );
 
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(lines)
+    if (i < lines.length - 1) {
+      container.addSeparatorComponents(
+        new SeparatorBuilder()
+          .setSpacing(
+            SeparatorSpacingSize.Large
+          )
       );
+    }
+  }
+}
 
-  return container;
+return container;
 }
 async function buildClipsLeaderboardContainer(guild) {
 
@@ -1416,6 +1464,11 @@ async function buildClipsLeaderboardContainer(guild) {
       guildId: guild.id,
       monthKey
     }).lean();
+
+    const participantCount =
+  new Set(
+    clips.map(clip => clip.authorId)
+  ).size;
 
   const sortedClips =
     clips
@@ -1461,8 +1514,10 @@ const headerSection =
   new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> MEILLEURS CLIPS DU MOIS ${smallMonthLabel}\n` +
-        `-# ᴄʟᴀꜱꜱᴇᴍᴇɴᴛ ᴅᴇꜱ ᴄʟɪᴘꜱ ᴇᴛ ᴘʜᴏᴛᴏꜱ ʟᴇꜱ ᴘʟᴜꜱ ᴀᴘᴘʀᴇᴄɪᴇꜱ`
+        `## <:VIDE:1493046347337699499> CLIPS DU MOIS ${smallMonthLabel}\n` +
+        `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
+        `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${participantCount}\`\n` +
+        `-# ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ : <:VIDE:1469100224289968242> ᴀ ᴅᴇꜰɪɴɪʀ`
       )
     )
     .setThumbnailAccessory(
@@ -1472,22 +1527,46 @@ const headerSection =
         }
       })
     );
+const container =
+  new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addSectionComponents(headerSection)
 
-  const container =
-    new ContainerBuilder()
-      .setAccentColor(EMBED_COLOR)
-      .addSectionComponents(headerSection)
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    );
 
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-          .setSpacing(SeparatorSpacingSize.Large)
+if (!lines.length) {
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      '-# Aucun clip ou photo enregistré ce mois-ci'
+    )
+  );
+
+} else {
+
+  for (let i = 0; i < lines.length; i++) {
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        lines[i]
       )
+    );
 
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(lines)
+    if (i < lines.length - 1) {
+      container.addSeparatorComponents(
+        new SeparatorBuilder()
+          .setSpacing(
+            SeparatorSpacingSize.Large
+          )
       );
+    }
+  }
+}
 
-  return container;
+return container;
 }
 
 // ===== Slash Commands =====
