@@ -365,6 +365,7 @@ function isGifUrl(url = '') {
 
 
 function messageContainsBlockedGif(message) {
+
   const urls = extractUrls(message.content);
   const attachments = [...message.attachments.values()];
 
@@ -385,6 +386,20 @@ function messageContainsBlockedGif(message) {
   return gifInText || gifInAttachments;
 }
 
+function containsRealText(content = '') {
+  const cleaned = content
+    // Emojis Discord custom
+    .replace(/<a?:\w+:\d+>/g, '')
+
+    // Emojis Unicode
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\uFE0F\u200D]/g, '')
+
+    // Espaces
+    .trim();
+
+  return cleaned.length > 0;
+}
 
 
 
@@ -6704,34 +6719,105 @@ const warning = await message.channel.send({
       return;
     }
 
-    const hasBlockedGif = messageContainsBlockedGif(message);
+    const hasBlockedGif =
+  messageContainsBlockedGif(message);
 
-    if (hasBlockedGif) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await message.delete().catch(() => {});
+const hasSticker =
+  message.stickers.size > 0;
 
-      const gifWarningContainer = new ContainerBuilder()
-  .setAccentColor(0x242429)
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `## ${message.author}, les **GIF** sont interdits dans ce salon.\n` +
-      `-# Tu peux envoyer du **texte**, des **images**, des **vidéos** ou des **liens**, mais pas de GIFs.`
-    )
+const hasAttachment =
+  message.attachments.size > 0;
+
+const hasRealText =
+  containsRealText(message.content);
+
+const isEmojiOnly =
+  message.content.trim().length > 0 &&
+  !hasRealText &&
+  !hasAttachment;
+
+
+// GIFS + AUTOCOLLANTS
+if (hasBlockedGif || hasSticker) {
+
+  await new Promise(
+    resolve => setTimeout(resolve, 1500)
   );
 
-const warning = await message.channel.send({
-  components: [gifWarningContainer],
-  flags: MessageFlags.IsComponentsV2
-}).catch(() => null);
+  await message.delete().catch(() => {});
 
-      if (warning) {
-        setTimeout(() => { warning.delete().catch(() => {}); }, 5000);
-      }
+  const blockedWarningContainer =
+    new ContainerBuilder()
+      .setAccentColor(0x242429)
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## ${message.author}, contenu interdit dans ce salon.\n` +
+          `-# Les **GIFs** et **autocollants** ne sont pas autorisés.`
+        )
+      );
 
-      return;
-    }
+  const warning =
+    await message.channel.send({
+      components: [
+        blockedWarningContainer
+      ],
+      flags:
+        MessageFlags.IsComponentsV2
+    }).catch(() => null);
 
-   const medias = [
+  if (warning) {
+    setTimeout(
+      () =>
+        warning.delete().catch(() => {}),
+      5000
+    );
+  }
+
+  return;
+}
+
+
+// EMOJI SEUL
+if (isEmojiOnly) {
+
+  await new Promise(
+    resolve => setTimeout(resolve, 1500)
+  );
+
+  await message.delete().catch(() => {});
+
+  const emojiWarningContainer =
+    new ContainerBuilder()
+      .setAccentColor(0x242429)
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## ${message.author}, ajoute du **texte** à ton message.\n` +
+          `-# Les messages contenant uniquement des **emojis** ne sont pas autorisés.`
+        )
+      );
+
+  const warning =
+    await message.channel.send({
+      components: [
+        emojiWarningContainer
+      ],
+      flags:
+        MessageFlags.IsComponentsV2
+    }).catch(() => null);
+
+  if (warning) {
+    setTimeout(
+      () =>
+        warning.delete().catch(() => {}),
+      5000
+    );
+  }
+
+  return;
+}
+
+
+const medias = [
   ...message.attachments.values()
 ].filter(attachment => {
 
