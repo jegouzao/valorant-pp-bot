@@ -1504,8 +1504,10 @@ async function buildClipsLeaderboardContainer(guild) {
         : 'Voir le clip';
 
     return (
-      `### ${position} <@${clip.authorId}>  `
-    );
+  `### ${position} <@${clip.authorId}>  ` +
+  `<:VIDE:1493650946583040000> **${likes} like${likes > 1 ? 's' : ''}**  ` +
+  `[${mediaLabel} ↗](${clipUrl})`
+);
   }
 );
 const headerSection =
@@ -2056,7 +2058,7 @@ client.once(Events.ClientReady, async () => {
   console.log('✅ Tous les membres du serveur ont été chargés en cache');
 
   await cleanupOrphanClips(guild);
-  
+
   for (const member of guild.members.cache.values()) {
     await syncServerTagRole(member.id, member.user);
   }
