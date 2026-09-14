@@ -1460,6 +1460,12 @@ async function buildClipsLeaderboardContainer(guild) {
       monthKey
     }).lean();
 
+    const participantCount =
+  new Set(
+    clips.map(
+      clip => clip.authorId
+    )
+  ).size;
 
 
   const sortedClips =
