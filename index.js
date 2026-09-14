@@ -14,7 +14,7 @@ const RiotUser = require('./models/RiotUser');
 const Moderation = require('./models/Moderation');
 const Config = require('./models/Config');
 const Game = require('./models/Game');
-
+const Clip = require('./models/Clip');
 const maps = require('./config/maps');
 
 const mongoose = require('mongoose');
@@ -528,7 +528,6 @@ await registrationMsg.edit(editPayload);
 }
 
 
-
 const COMMUNITY_CATEGORY_ID = '1462477754208616750';
 const ROLE_VERIFIE = '1461354176931041312';
 const AUTO_CREATE_VC_ID = '1479547523201896490'; // ← mets ici l'id du vocal "créer"
@@ -537,7 +536,78 @@ const WELCOME_CHANNEL_ID = '1474066060528451743';
 
 const ACTIVITIES_CHANNEL_ID = WELCOME_CHANNEL_ID;
 
+function getParisMonthKey(date = new Date()) {
+  const parts =
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit'
+    })
+      .formatToParts(date)
+      .reduce((acc, part) => {
+        if (part.type !== 'literal') {
+          acc[part.type] = part.value;
+        }
 
+        return acc;
+      }, {});
+
+  return `${parts.year}-${parts.month}`;
+}
+
+function getParisMonthLabel(date = new Date()) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    month: 'long'
+  })
+    .format(date)
+    .toUpperCase();
+}
+
+function buildClipLikeContainer(clip) {
+  const likes = clip.likes?.length || 0;
+
+  const clipUrl =
+    `https://discord.com/channels/` +
+    `${clip.guildId}/` +
+    `${clip.channelId}/` +
+    `${clip.messageId}`;
+
+  const container =
+    new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## 🎬 CLIP DE <@${clip.authorId}>\n` +
+          `-# ❤️ **${likes} like${likes > 1 ? 's' : ''}**`
+        )
+      )
+
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+
+          new ButtonBuilder()
+            .setCustomId(
+              `clip_like_${clip._id}`
+            )
+            .setLabel(
+              `❤️ ${likes}`
+            )
+            .setStyle(
+              ButtonStyle.Secondary
+            ),
+
+          new ButtonBuilder()
+            .setLabel('Voir le clip ↗')
+            .setStyle(ButtonStyle.Link)
+            .setURL(clipUrl)
+
+        )
+      );
+
+  return container;
+}
 
 
 async function getPermanentAvatar(user) {
@@ -1143,24 +1213,53 @@ container.addSeparatorComponents(
 
 if (page === 0) {
 
-  // Page publique : un seul bouton
   const openLeaderboardRow = new ActionRowBuilder().addComponents(
-  new ButtonBuilder()
-    .setCustomId('leaderboard_stats')
-    .setLabel('Mes statistiques personnelles')
-    .setStyle(ButtonStyle.Secondary),
 
-  new ButtonBuilder()
-    .setCustomId('leaderboard_open')
-    .setLabel('Voir le classement complet')
-    .setStyle(ButtonStyle.Secondary)
-);
+    new ButtonBuilder()
+      .setCustomId('leaderboard_stats')
+      .setLabel('Afficher mes statistiques')
+      .setStyle(ButtonStyle.Secondary),
 
-container.addActionRowComponents(openLeaderboardRow);
+    new ButtonBuilder()
+      .setCustomId('leaderboard_open')
+      .setLabel('Voir le classement complet')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('leaderboard_invites')
+      .setLabel('Voir le classement des invitations')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('leaderboard_clips')
+      .setLabel('Voir les meilleurs clips du mois')
+      .setStyle(ButtonStyle.Secondary)
+
+  );
+
+  container.addActionRowComponents(openLeaderboardRow);
 
 } else {
 
-  // Pages privées : navigation
+  const navigationRow = new ActionRowBuilder().addComponents(
+
+    new ButtonBuilder()
+      .setCustomId('leaderboard_open')
+      .setLabel('Voir le classement complet')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('leaderboard_invites')
+      .setLabel('Voir le classement des invitations')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('leaderboard_clips')
+      .setLabel('Voir les meilleurs clips du mois')
+      .setStyle(ButtonStyle.Secondary)
+
+  );
+
   const paginationRow = new ActionRowBuilder().addComponents(
 
     new ButtonBuilder()
@@ -1177,13 +1276,283 @@ container.addActionRowComponents(openLeaderboardRow);
 
   );
 
-  container.addActionRowComponents(paginationRow);
+  container.addActionRowComponents(
+    navigationRow,
+    paginationRow
+  );
 }
 
   return container;
 }
 
+function buildInvitationsLeaderboardContainer({
+  invitesData,
+  guildMembersCache
+}) {
 
+  const sortedInvites = Object.entries(invitesData)
+    .filter(([id]) => {
+      const member = guildMembersCache.get(id);
+
+      return (
+        member &&
+        !member.user.bot
+      );
+    })
+    .sort(
+      ([, a], [, b]) =>
+        (b.invites || 0) - (a.invites || 0)
+    )
+    .slice(0, 10);
+
+  const monthLabel =
+    new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      month: 'long'
+    })
+      .format(new Date())
+      .toUpperCase();
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## 📩 INVITATIONS — ${monthLabel}\n` +
+        `-# Classement des membres ayant invité le plus de joueurs`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(
+          SeparatorSpacingSize.Large
+        )
+    );
+
+  if (!sortedInvites.length) {
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# Aucune invitation enregistrée`
+      )
+    );
+
+  } else {
+
+    sortedInvites.forEach(
+      ([id, data], index) => {
+
+        const position =
+          index === 0
+            ? '🥇'
+            : index === 1
+              ? '🥈'
+              : index === 2
+                ? '🥉'
+                : `#${index + 1}`;
+
+        const invites =
+          data.invites || 0;
+
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `### ${position} <@${id}>\n` +
+            `-# 📩 **${invites} invitation${invites > 1 ? 's' : ''}**`
+          )
+        );
+
+        if (index < sortedInvites.length - 1) {
+          container.addSeparatorComponents(
+            new SeparatorBuilder()
+              .setSpacing(
+                SeparatorSpacingSize.Large
+              )
+          );
+        }
+      }
+    );
+  }
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setSpacing(
+        SeparatorSpacingSize.Large
+      )
+  );
+
+  const navigationRow =
+    new ActionRowBuilder().addComponents(
+
+      new ButtonBuilder()
+        .setCustomId('leaderboard_open')
+        .setLabel('Voir le classement complet')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId('leaderboard_invites')
+        .setLabel('Voir le classement des invitations')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+
+      new ButtonBuilder()
+        .setCustomId('leaderboard_clips')
+        .setLabel('Voir les meilleurs clips du mois')
+        .setStyle(ButtonStyle.Secondary)
+
+    );
+
+  container.addActionRowComponents(
+    navigationRow
+  );
+
+  return container;
+}
+
+async function buildClipsLeaderboardContainer(
+  guild
+) {
+
+  const monthKey =
+    getParisMonthKey();
+
+  const monthLabel =
+    getParisMonthLabel();
+
+  const clips =
+    await Clip.find({
+      guildId: guild.id,
+      monthKey
+    }).lean();
+
+  const sortedClips =
+    clips
+      .sort(
+        (a, b) =>
+          (b.likes?.length || 0) -
+          (a.likes?.length || 0)
+      )
+      .slice(0, 10);
+
+  const container =
+    new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## 🎬 CLIPS — ${monthLabel}\n` +
+          `-# Les clips les plus appréciés du mois`
+        )
+      )
+
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setSpacing(
+            SeparatorSpacingSize.Large
+          )
+      );
+
+  if (!sortedClips.length) {
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# Aucun clip enregistré ce mois-ci`
+      )
+    );
+
+  } else {
+
+    sortedClips.forEach(
+      (clip, index) => {
+
+        const position =
+          index === 0
+            ? '🥇'
+            : index === 1
+              ? '🥈'
+              : index === 2
+                ? '🥉'
+                : `#${index + 1}`;
+
+        const likes =
+          clip.likes?.length || 0;
+
+        const clipUrl =
+          `https://discord.com/channels/` +
+          `${clip.guildId}/` +
+          `${clip.channelId}/` +
+          `${clip.messageId}`;
+
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `### ${position} <@${clip.authorId}>\n` +
+            `-# ❤️ **${likes} like${likes > 1 ? 's' : ''}**\n` +
+            `-# [Voir le clip ↗](${clipUrl})`
+          )
+        );
+
+        if (
+          index <
+          sortedClips.length - 1
+        ) {
+          container.addSeparatorComponents(
+            new SeparatorBuilder()
+              .setSpacing(
+                SeparatorSpacingSize.Large
+              )
+          );
+        }
+      }
+    );
+  }
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setSpacing(
+        SeparatorSpacingSize.Large
+      )
+  );
+
+  const navigationRow =
+    new ActionRowBuilder()
+      .addComponents(
+
+        new ButtonBuilder()
+          .setCustomId(
+            'leaderboard_open'
+          )
+          .setLabel('🏆 Classement')
+          .setStyle(
+            ButtonStyle.Secondary
+          ),
+
+        new ButtonBuilder()
+          .setCustomId(
+            'leaderboard_invites'
+          )
+          .setLabel('📩 Invitations')
+          .setStyle(
+            ButtonStyle.Secondary
+          ),
+
+        new ButtonBuilder()
+          .setCustomId(
+            'leaderboard_clips'
+          )
+          .setLabel('🎬 Clips')
+          .setStyle(
+            ButtonStyle.Secondary
+          )
+          .setDisabled(true)
+
+      );
+
+  container.addActionRowComponents(
+    navigationRow
+  );
+
+  return container;
+}
 
 // ===== Slash Commands =====
 const commands = [
@@ -2701,8 +3070,154 @@ return interaction.editReply({
     // ✅ Boutons hors "game" (doivent répondre vite)
     if (interaction.isButton()) {
 
+
+      if (
+  interaction.customId ===
+  'leaderboard_clips'
+) {
+
+  const isEphemeral =
+    interaction.message?.flags?.has(
+      MessageFlags.Ephemeral
+    );
+
+  if (isEphemeral) {
+
+    await interaction.deferUpdate();
+
+  } else {
+
+    await interaction.reply({
+      components: [
+        buildSimpleContainer(
+          '⏳ Chargement du Top Clips...'
+        )
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+
+  }
+
+  const container =
+    await buildClipsLeaderboardContainer(
+      interaction.guild
+    );
+
+  return interaction.editReply({
+    components: [container]
+  });
+}
+
+      if (
+  interaction.customId.startsWith(
+    'clip_like_'
+  )
+) {
+
+  await interaction.deferUpdate();
+
+  const clipId =
+    interaction.customId.replace(
+      'clip_like_',
+      ''
+    );
+
+  const clip =
+    await Clip.findById(clipId);
+
+  if (!clip) {
+    return;
+  }
+
+  if (
+    interaction.user.id === clip.authorId
+  ) {
+
+    return interaction.followUp({
+      components: [
+        buildSimpleContainer(
+          '❌ Tu ne peux pas liker ton propre clip'
+        )
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+  }
+
+  const alreadyLiked =
+    clip.likes.includes(
+      interaction.user.id
+    );
+
+  if (alreadyLiked) {
+
+    clip.likes =
+      clip.likes.filter(
+        id =>
+          id !== interaction.user.id
+      );
+
+  } else {
+
+    clip.likes.push(
+      interaction.user.id
+    );
+
+  }
+
+  await clip.save();
+
+  return interaction.editReply({
+    components: [
+      buildClipLikeContainer(clip)
+    ]
+  });
+}
+
       if (interaction.customId === 'leaderboard_stats') {
   return showPlayerStats(interaction);
+}
+
+if (
+  interaction.customId ===
+  'leaderboard_invites'
+) {
+
+  if (!interaction.replied) {
+
+    await interaction.reply({
+      components: [
+        buildSimpleContainer(
+          '⏳ Chargement du classement des invitations...'
+        )
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+
+  } else {
+
+    await interaction.deferUpdate();
+
+  }
+
+  const invitesData =
+    await getAllInvites();
+
+  const container =
+    buildInvitationsLeaderboardContainer({
+      invitesData,
+      guildMembersCache:
+        interaction.guild.members.cache
+    });
+
+  return interaction.editReply({
+    components: [container]
+  });
 }
 
 if (
@@ -5955,7 +6470,73 @@ const warning = await message.channel.send({
       return;
     }
 
-    
+   const medias = [
+  ...message.attachments.values()
+].filter(attachment => {
+
+  const type =
+    attachment.contentType || '';
+
+  return (
+    type.startsWith('video/') ||
+    type.startsWith('image/')
+  );
+});
+
+if (!medias.length) {
+  return;
+}
+
+const monthKey =
+  getParisMonthKey(
+    message.createdAt
+  );
+
+for (
+  let index = 0;
+  index < medias.length;
+  index++
+) {
+
+  const media = medias[index];
+
+  const existingClip =
+    await Clip.findOne({
+      messageId: message.id,
+      mediaIndex: index
+    });
+
+  if (existingClip) {
+    continue;
+  }
+
+  const clip =
+    await Clip.create({
+      guildId: message.guild.id,
+      channelId: message.channel.id,
+      messageId: message.id,
+      authorId: message.author.id,
+      mediaIndex: index,
+      mediaUrl: media.url,
+      mediaType:
+        media.contentType || 'unknown',
+      monthKey
+    });
+
+  const clipMessage =
+    await message.channel.send({
+      components: [
+        buildClipLikeContainer(clip)
+      ],
+      flags:
+        MessageFlags.IsComponentsV2
+    });
+
+  clip.botMessageId =
+    clipMessage.id;
+
+  await clip.save();
+} 
 
   } catch (err) {
     console.error('Erreur modération #clipfarming :', err);
