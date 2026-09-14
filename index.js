@@ -1291,105 +1291,60 @@ function buildInvitationsLeaderboardContainer({
       .format(new Date())
       .toUpperCase();
 
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
+  const lines = sortedInvites.length
+    ? sortedInvites.map(
+        ([id, data], index) => {
 
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## 📩 INVITATIONS — ${monthLabel}\n` +
-        `-# Classement des membres ayant invité le plus de joueurs`
-      )
-    )
+          const position =
+            index === 0
+              ? '🥇'
+              : index === 1
+                ? '🥈'
+                : index === 2
+                  ? '🥉'
+                  : `**#${index + 1}**`;
 
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(
-          SeparatorSpacingSize.Large
-        )
-    );
+          const invites =
+            data.invites || 0;
 
-  if (!sortedInvites.length) {
-
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `-# Aucune invitation enregistrée`
-      )
-    );
-
-  } else {
-
-    sortedInvites.forEach(
-      ([id, data], index) => {
-
-        const position =
-          index === 0
-            ? '🥇'
-            : index === 1
-              ? '🥈'
-              : index === 2
-                ? '🥉'
-                : `#${index + 1}`;
-
-        const invites =
-          data.invites || 0;
-
-        container.addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `### ${position} <@${id}>\n` +
-            `-# 📩 **${invites} invitation${invites > 1 ? 's' : ''}**`
-          )
-        );
-
-        if (index < sortedInvites.length - 1) {
-          container.addSeparatorComponents(
-            new SeparatorBuilder()
-              .setSpacing(
-                SeparatorSpacingSize.Large
-              )
-          );
+          return `${position} <@${id}> — **${invites} invitation${invites > 1 ? 's' : ''}**`;
         }
-      }
-    );
-  }
+      ).join('\n')
+    : '-# Aucune invitation enregistrée';
 
-  container.addSeparatorComponents(
-    new SeparatorBuilder()
-      .setSpacing(
-        SeparatorSpacingSize.Large
+  const headerSection =
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## 📩 INVITATIONS — ${monthLabel}\n` +
+          `-# Classement mensuel des invitations`
+        )
       )
-  );
+      .setThumbnailAccessory(
+        new ThumbnailBuilder({
+          media: {
+            url: 'attachment://leaderboard-icon.png'
+          }
+        })
+      );
 
-  const navigationRow =
-    new ActionRowBuilder().addComponents(
+  const container =
+    new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+      .addSectionComponents(headerSection)
 
-      new ButtonBuilder()
-        .setCustomId('leaderboard_open')
-        .setLabel('Classement complet')
-        .setStyle(ButtonStyle.Secondary),
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setSpacing(SeparatorSpacingSize.Large)
+      )
 
-      new ButtonBuilder()
-        .setCustomId('leaderboard_invites')
-        .setLabel('Invitations')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-
-      new ButtonBuilder()
-        .setCustomId('leaderboard_clips')
-        .setLabel('Clip du mois')
-        .setStyle(ButtonStyle.Secondary)
-
-    );
-
-  container.addActionRowComponents(
-    navigationRow
-  );
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(lines)
+      );
 
   return container;
 }
-
-async function buildClipsLeaderboardContainer(
-  guild
-) {
+async function buildClipsLeaderboardContainer(guild) {
 
   const monthKey =
     getParisMonthKey();
@@ -1412,108 +1367,62 @@ async function buildClipsLeaderboardContainer(
       )
       .slice(0, 10);
 
+  const lines = sortedClips.length
+    ? sortedClips.map(
+        (clip, index) => {
+
+          const position =
+            index === 0
+              ? '🥇'
+              : index === 1
+                ? '🥈'
+                : index === 2
+                  ? '🥉'
+                  : `**#${index + 1}**`;
+
+          const likes =
+            clip.likes?.length || 0;
+
+          const clipUrl =
+            `https://discord.com/channels/` +
+            `${clip.guildId}/` +
+            `${clip.channelId}/` +
+            `${clip.messageId}`;
+
+          return `${position} <@${clip.authorId}> — ❤️ **${likes} like${likes > 1 ? 's' : ''}** — [Voir le clip ↗](${clipUrl})`;
+        }
+      ).join('\n')
+    : '-# Aucun clip enregistré ce mois-ci';
+
+  const headerSection =
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## 🎬 CLIP DU MOIS — ${monthLabel}\n` +
+          `-# Classement des clips les plus appréciés`
+        )
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder({
+          media: {
+            url: 'attachment://leaderboard-icon.png'
+          }
+        })
+      );
+
   const container =
     new ContainerBuilder()
       .setAccentColor(EMBED_COLOR)
-
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## 🎬 CLIPS — ${monthLabel}\n` +
-          `-# Les clips les plus appréciés du mois`
-        )
-      )
+      .addSectionComponents(headerSection)
 
       .addSeparatorComponents(
         new SeparatorBuilder()
-          .setSpacing(
-            SeparatorSpacingSize.Large
-          )
+          .setSpacing(SeparatorSpacingSize.Large)
+      )
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(lines)
       );
-
-  if (!sortedClips.length) {
-
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `-# Aucun clip enregistré ce mois-ci`
-      )
-    );
-
-  } else {
-
-    sortedClips.forEach(
-      (clip, index) => {
-
-        const position =
-          index === 0
-            ? '🥇'
-            : index === 1
-              ? '🥈'
-              : index === 2
-                ? '🥉'
-                : `#${index + 1}`;
-
-        const likes =
-          clip.likes?.length || 0;
-
-        const clipUrl =
-          `https://discord.com/channels/` +
-          `${clip.guildId}/` +
-          `${clip.channelId}/` +
-          `${clip.messageId}`;
-
-        container.addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `### ${position} <@${clip.authorId}>\n` +
-            `-# ❤️ **${likes} like${likes > 1 ? 's' : ''}**\n` +
-            `-# [Voir le clip ↗](${clipUrl})`
-          )
-        );
-
-        if (
-          index <
-          sortedClips.length - 1
-        ) {
-          container.addSeparatorComponents(
-            new SeparatorBuilder()
-              .setSpacing(
-                SeparatorSpacingSize.Large
-              )
-          );
-        }
-      }
-    );
-  }
-
-  container.addSeparatorComponents(
-    new SeparatorBuilder()
-      .setSpacing(
-        SeparatorSpacingSize.Large
-      )
-  );
-
-const navigationRow =
-  new ActionRowBuilder().addComponents(
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_open')
-      .setLabel('Classement complet')
-      .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_invites')
-      .setLabel('Invitations')
-      .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-      .setCustomId('leaderboard_clips')
-      .setLabel('Clip du mois')
-      .setStyle(ButtonStyle.Secondary)
-
-  );
-
-  container.addActionRowComponents(
-    navigationRow
-  );
 
   return container;
 }
@@ -3069,9 +2978,20 @@ return interaction.editReply({
       interaction.guild
     );
 
-  return interaction.editReply({
-    components: [container]
-  });
+return interaction.editReply({
+  components: [container],
+  files: [
+    {
+      attachment: path.join(
+        __dirname,
+        'assets',
+        'images',
+        'leaderboard-icon.png'
+      ),
+      name: 'leaderboard-icon.png'
+    }
+  ]
+});
 }
 
       if (
@@ -3179,9 +3099,20 @@ if (
         interaction.guild.members.cache
     });
 
-  return interaction.editReply({
-    components: [container]
-  });
+return interaction.editReply({
+  components: [container],
+  files: [
+    {
+      attachment: path.join(
+        __dirname,
+        'assets',
+        'images',
+        'leaderboard-icon.png'
+      ),
+      name: 'leaderboard-icon.png'
+    }
+  ]
+});
 }
 
 if (
