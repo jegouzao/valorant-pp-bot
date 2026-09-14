@@ -612,16 +612,11 @@ function buildClipLikeContainer(clip) {
               `clip_like_${clip._id}`
             )
             .setLabel(
-              `❤️ ${likes}`
+              `<:OG:1493650946583040000> ${likes}`
             )
             .setStyle(
               ButtonStyle.Secondary
-            ),
-
-          new ButtonBuilder()
-            .setLabel('Voir le clip ↗')
-            .setStyle(ButtonStyle.Link)
-            .setURL(clipUrl)
+            )
 
         )
       );
@@ -1503,9 +1498,7 @@ async function buildClipsLeaderboardContainer(guild) {
         : 'Voir le clip';
 
     return (
-      `### ${position} <@${clip.authorId}>  ` +
-      `❤️ **${likes} like${likes > 1 ? 's' : ''}**  ` +
-      `[${mediaLabel} ↗](${clipUrl})`
+      `### ${position} <@${clip.authorId}>  `
     );
   }
 );
