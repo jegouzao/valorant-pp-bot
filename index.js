@@ -599,7 +599,7 @@ function buildClipLikeContainer(clip) {
 
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## 🎬 CLIP DE <@${clip.authorId}>\n` +
+          `## <:OG:1493378552941252788> CLIP DE <@${clip.authorId}>\n` +
           `-# ❤️ **${likes} like${likes > 1 ? 's' : ''}**`
         )
       )
