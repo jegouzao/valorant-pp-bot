@@ -2508,12 +2508,20 @@ const barLength = 15;
 
 return interaction.editReply({
   components: [statsContainer],
+
   files: [
     {
-      attachment: path.join(__dirname, 'assets', 'images', 'stats-divider.png'),
+      attachment: path.join(
+        __dirname,
+        'assets',
+        'images',
+        'stats-divider.png'
+      ),
       name: 'stats-divider.png'
     }
-  ]
+  ],
+
+  flags: MessageFlags.IsComponentsV2
 });
 }
 
