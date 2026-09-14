@@ -3914,39 +3914,53 @@ if (
   interaction.customId.startsWith('spectate_select_')
 ) {
 
-  if (!isVerified) {
-  return simpleReply(
-    interaction,
-    '⛔ Seuls les Vérifiés peuvent observer.'
-  );
-}
-
-if (!game) {
-  return simpleReply(
-    interaction,
-    "❌ Cette partie n'existe plus."
-  );
-}
-
   await interaction.deferUpdate();
 
+  if (!isVerified) {
+    return simpleEditReply(
+      interaction,
+      '⛔ Seuls les Vérifiés peuvent observer.'
+    );
+  }
+
+  if (!game) {
+    return simpleEditReply(
+      interaction,
+      "❌ Cette partie n'existe plus."
+    );
+  }
+
   const choice = interaction.values[0];
-  const att = interaction.guild.channels.cache.get(game.attVC);
-  const def = interaction.guild.channels.cache.get(game.defVC);
-  const vc = (choice === 'attack' ? att : def) || waitingVC;
+
+  const att =
+    interaction.guild.channels.cache.get(game.attVC);
+
+  const def =
+    interaction.guild.channels.cache.get(game.defVC);
+
+  const vc =
+    (choice === 'attack' ? att : def) ||
+    waitingVC;
 
   if (!vc) {
-  return simpleEditReply(
-    interaction,
-    '❌ Aucun salon disponible'
+    return simpleEditReply(
+      interaction,
+      '❌ Aucun salon disponible'
+    );
+  }
+
+  await moveVerifiedToVC(
+    interaction.member,
+    vc
   );
-}
 
-  await moveVerifiedToVC(interaction.member, vc);
+  if (!game.spectators) {
+    game.spectators = {};
+  }
 
-  if (!game.spectators) game.spectators = {};
-
-  game.spectators[interaction.user.id] = choice;
+  game.spectators[
+    interaction.user.id
+  ] = choice;
 
   saveGameDebounced(game);
 
@@ -3956,13 +3970,13 @@ if (!game) {
   );
 
   return simpleEditReply(
-  interaction,
-  `✅ Tu observes les ${
-    choice === 'attack'
-      ? 'attaquants'
-      : 'défenseurs'
-  } !`
-);
+    interaction,
+    `✅ Tu observes les ${
+      choice === 'attack'
+        ? 'attaquants'
+        : 'défenseurs'
+    } !`
+  );
 }
 
 if (interaction.isButton()) {
