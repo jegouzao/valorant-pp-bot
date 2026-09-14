@@ -594,33 +594,39 @@ function buildClipLikeContainer(clip) {
     `${clip.channelId}/` +
     `${clip.messageId}`;
 
+    const isImage =
+  clip.mediaType?.startsWith('image/');
+
+const mediaTitle =
+  isImage
+    ? 'MÉDIA'
+    : 'CLIP';
+
   const container =
     new ContainerBuilder()
       .setAccentColor(EMBED_COLOR)
 
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `## <:OG:1493378552941252788> CLIP DE <@${clip.authorId}>\n` +
-          `-# ❤️ **${likes} like${likes > 1 ? 's' : ''}**`
+          `## <:OG:1493378552941252788> ${mediaTitle} DE <@${clip.authorId}>\n`
         )
       )
 
       .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
+  new ActionRowBuilder().addComponents(
 
-          new ButtonBuilder()
-            .setCustomId(
-              `clip_like_${clip._id}`
-            )
-            .setLabel(
-              `<:OG:1493650946583040000> ${likes}`
-            )
-            .setStyle(
-              ButtonStyle.Secondary
-            )
+    new ButtonBuilder()
+      .setCustomId(
+        `clip_like_${clip._id}`
+      )
+      .setEmoji('1493650946583040000')
+      .setLabel(`${likes}`)
+      .setStyle(
+        ButtonStyle.Secondary
+      )
 
-        )
-      );
+  )
+);
 
   return container;
 }
