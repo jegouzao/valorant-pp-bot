@@ -747,10 +747,10 @@ async function markAsSpectator(member) {
   }
 
   const currentName =
-    member.displayName.replace(/^👁️\s*/, '');
+    member.displayName.replace(/^👁\s*/, '');
 
   await member
-    .setNickname(`👁️ ${currentName}`)
+    .setNickname(`👁 ${currentName}`)
     .catch(() => {});
 }
 
@@ -771,9 +771,9 @@ async function restoreSpectatorNickname(member) {
   }
 
   // Sécurité si le bot a redémarré entre-temps
-  if (member.nickname?.startsWith('👁️ ')) {
+  if (member.nickname?.startsWith('👁')) {
     const restored =
-      member.nickname.replace(/^👁️\s*/, '');
+      member.nickname.replace(/^👁\s*/, '');
 
     await member
       .setNickname(restored || null)
