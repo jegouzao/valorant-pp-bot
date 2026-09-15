@@ -3393,7 +3393,7 @@ return interaction.editReply({
 });
 }
 
-      if (
+if (
   interaction.customId.startsWith(
     'clip_like_'
   )
@@ -3408,16 +3408,16 @@ return interaction.editReply({
     );
 
   const clip =
-    await Clip.findById(clipId);
+    await Clip.findById(clipId).lean();
 
   if (!clip) {
     return;
   }
 
+  // Impossible de liker son propre média
   if (
     interaction.user.id === clip.authorId
   ) {
-
     return interaction.followUp({
       components: [
         buildSimpleContainer(
@@ -3431,31 +3431,37 @@ return interaction.editReply({
   }
 
   const alreadyLiked =
-    clip.likes.includes(
+    clip.likes?.includes(
       interaction.user.id
     );
 
-  if (alreadyLiked) {
-
-    clip.likes =
-      clip.likes.filter(
-        id =>
-          id !== interaction.user.id
-      );
-
-  } else {
-
-    clip.likes.push(
-      interaction.user.id
+  // Modification atomique directement dans MongoDB
+  const updatedClip =
+    await Clip.findByIdAndUpdate(
+      clipId,
+      alreadyLiked
+        ? {
+            $pull: {
+              likes: interaction.user.id
+            }
+          }
+        : {
+            $addToSet: {
+              likes: interaction.user.id
+            }
+          },
+      {
+        new: true
+      }
     );
 
+  if (!updatedClip) {
+    return;
   }
-
-  await clip.save();
 
   return interaction.editReply({
     components: [
-      buildClipLikeContainer(clip)
+      buildClipLikeContainer(updatedClip)
     ]
   });
 }
