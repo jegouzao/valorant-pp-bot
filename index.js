@@ -1265,7 +1265,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> LEADERBOARD ꜱᴇᴘᴛᴇᴍʙʀᴇ\n` +
+        `## <:VIDE:1493046347337699499> LEADERBOARD ᴏᴄᴛᴏʙʀᴇ\n` +
         `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
         `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n` +
         `-# ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ : <:VIDE:1469100224289968242> ᴀ ᴅᴇꜰɪɴɪʀ`
