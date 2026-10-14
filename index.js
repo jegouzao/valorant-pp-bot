@@ -29,7 +29,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Health server running on port ${PORT}`);
 });
-const TEST_MODE = false;
+const TEST_MODE = true;
 const { 
   Client,
   GatewayIntentBits,
@@ -365,6 +365,7 @@ function containsRealText(content = '') {
 
 
 const registrationUpdateTimeouts = new Map();
+const registrationUpdateQueues = new Map();
 
 function scheduleRegistrationUpdate(guild, game) {
   if (!game?.id) return;
@@ -374,7 +375,17 @@ function scheduleRegistrationUpdate(guild, game) {
 
   const timeout = setTimeout(async () => {
     try {
-      await updateRegistrationEmbed(guild, game);
+      // Sérialiser les modifications du même message pour éviter les mises à jour concurrentes.
+      const previous = registrationUpdateQueues.get(game.id) || Promise.resolve();
+      const current = previous.catch(() => {}).then(() => updateRegistrationEmbed(guild, game));
+      registrationUpdateQueues.set(game.id, current);
+      try {
+        await current;
+      } finally {
+        if (registrationUpdateQueues.get(game.id) === current) {
+          registrationUpdateQueues.delete(game.id);
+        }
+      }
     } catch (err) {
       console.error('Erreur debounce update registration:', err);
     } finally {
@@ -384,7 +395,7 @@ function scheduleRegistrationUpdate(guild, game) {
         registrationUpdateTimeouts.delete(game.id);
       }
     }
-  }, 800);
+  }, 200);
 
   registrationUpdateTimeouts.set(game.id, timeout);
 }
@@ -396,30 +407,27 @@ function scheduleRegistrationUpdate(guild, game) {
 async function buildPlayerList(guild, playerIds) {
   if (!playerIds.length) return '-# ᴀᴜᴄᴜɴ';
 
-  const list = [];
-
-  for (const id of playerIds) {
-    let member = guild.members.cache.get(id);
-    if (!member) {
-      member = await guild.members.fetch(id).catch(() => null);
-    }
+  // Récupération simultanée des membres absents du cache (10 joueurs maximum).
+  const list = await Promise.all(playerIds.map(async id => {
+    const member = guild.members.cache.get(id) ||
+      await guild.members.fetch(id).catch(() => null);
 
     let rankEmoji = rankEmojis.Unranked;
     let rankValue = 1000;
 
     if (member) {
       const rankRole = member.roles.cache
-  .filter(role => RANK_ORDER[role.name] !== undefined)
-  .sort((a, b) => RANK_ORDER[a.name] - RANK_ORDER[b.name])
-  .first();
+        .filter(role => RANK_ORDER[role.name] !== undefined)
+        .sort((a, b) => RANK_ORDER[a.name] - RANK_ORDER[b.name])
+        .first();
       if (rankRole) {
         rankEmoji = rankEmojis[rankRole.name] || rankEmojis.Unranked;
         rankValue = RANK_ORDER[rankRole.name];
       }
     }
 
-    list.push({ id, mention: `<@${id}>`, emoji: rankEmoji, rankValue });
-  }
+    return { id, mention: `<@${id}>`, emoji: rankEmoji, rankValue };
+  }));
 
   list.sort((a, b) => a.rankValue - b.rankValue);
   return list.map(p => `- ${p.emoji} ${p.mention}`).join('\n');
