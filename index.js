@@ -29,7 +29,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Health server running on port ${PORT}`);
 });
-const TEST_MODE = true;
+const TEST_MODE = false;
 const { 
   Client,
   GatewayIntentBits,
@@ -472,11 +472,6 @@ async function updateRegistrationEmbed(guild, game) {
 });
 
 const row = new ActionRowBuilder().addComponents(
-
-  new ButtonBuilder()
-    .setCustomId('join_game')
-    .setLabel('Rejoindre la partie')
-    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('change_map')
@@ -5027,11 +5022,6 @@ const map = maps[Math.floor(Math.random() * maps.length)];
 });
 
 const row = new ActionRowBuilder().addComponents(
-
-  new ButtonBuilder()
-    .setCustomId('join_game')
-    .setLabel('Rejoindre la partie')
-    .setStyle(ButtonStyle.Secondary),
 
   new ButtonBuilder()
     .setCustomId('change_map')
