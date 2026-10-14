@@ -3728,7 +3728,7 @@ function buildResultContainer({
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> ʀᴇꜱᴜʟᴛᴀᴛ : ${toSmallCaps(winnerText)}\n` +
+            `## <:VIDE:1493046347337699499> RÉSULTATS ${toSmallCaps(winnerText)}\n` +
             `-# Partie validée par **${validatedBy}**\n` +
             `-# Victoire des **${winnerText}**\n` +
             `-# Le calcul prend en compte les avantages <:tag:1497390943928586300> et <:boost:1492125876437913641> de serveur`
@@ -3748,6 +3748,10 @@ function buildResultContainer({
       new TextDisplayBuilder().setContent(
         teamLines.join('\n')
       )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     );
 
   container.addActionRowComponents(
@@ -4893,12 +4897,35 @@ await updateleaderboardEmbed();
       }
     }
 
+    // ── RELANCE : demander un NOUVEAU code, sans réutiliser l'ancien ──
+if (interaction.isButton() && interaction.customId === 'pp_relaunch') {
+  const authorized = interaction.user.id === BOT_OWNER_ID ||
+    interaction.member?.roles?.cache?.has(ORGANIZER_ROLE_ID);
+  if (!authorized) return simpleReply(interaction, '⛔ Seuls les organisateurs peuvent relancer une partie.');
+  return interaction.showModal(
+    new ModalBuilder()
+      .setCustomId('pp_relaunch_modal')
+      .setTitle('Relancer une partie')
+      .addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('valorant_code')
+            .setLabel('Nouveau code de groupe Valorant')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(6)
+            .setMaxLength(6)
+        )
+      )
+  );
+}
+
     // ── MODAL SUBMIT ──
 if (
-  (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') ||
-  (interaction.isButton() && interaction.customId === 'pp_relaunch')
+  interaction.isModalSubmit() &&
+  (interaction.customId === 'pp_create_modal' || interaction.customId === 'pp_relaunch_modal')
 ) {
-  const isRelaunch = interaction.isButton();
+  const isRelaunch = interaction.customId === 'pp_relaunch_modal';
   if (isRelaunch) {
     const authorized = interaction.user.id === BOT_OWNER_ID ||
       interaction.member?.roles?.cache?.has(ORGANIZER_ROLE_ID);
@@ -4908,17 +4935,12 @@ if (
   if (interaction.replied || interaction.deferred) return;
 
   await interaction.deferReply({
-  flags:
-    MessageFlags.Ephemeral |
-    MessageFlags.IsComponentsV2
-});
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+  });
 
-  // Une relance reprend automatiquement le code Valorant de la partie terminée.
-  const valorantCode = isRelaunch
-    ? await getConfigValue(`ppRelaunch_${interaction.message.id}`, null)
-    : interaction.fields.getTextInputValue('valorant_code');
-  if (!valorantCode || !/^[\s\S]{6}$/.test(valorantCode)) {
-    return simpleEditReply(interaction, '❌ Code de la partie précédente introuvable. Utilise /pp pour créer une nouvelle partie.');
+  const valorantCode = interaction.fields.getTextInputValue('valorant_code').trim();
+  if (valorantCode.length !== 6) {
+    return simpleEditReply(interaction, '❌ Le code de groupe doit contenir 6 caractères.');
   }
 
 const verifiedRole = interaction.guild.roles.cache.get(
@@ -6215,9 +6237,6 @@ const finishedMessage = await interaction.channel.send({
   }],
   flags: MessageFlags.IsComponentsV2
 });
-// Conservation du code de la partie terminée, sans exposer de saisie à la relance.
-await setConfigValue(`ppRelaunch_${finishedMessage.id}`, game.valorantCode);
-
 gamesData.games = gamesData.games.filter(
   g => g.id !== game.id
 );
