@@ -29,7 +29,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Health server running on port ${PORT}`);
 });
-const TEST_MODE = true;
+const TEST_MODE = process.env.TEST_MODE === 'true'; // TEST_MODE=true dans les variables d'environnement pour tester seul
 const { 
   Client,
   GatewayIntentBits,
@@ -5063,6 +5063,7 @@ const newGame = {
 
 // Enregistrer immédiatement avant toute opération lente ou événement vocal.
 await saveGame(newGame);
+await setConfigValue(`ppTest_${newGame.id}`, TEST_MODE);
 gamePersisted = true;
 gamesData.games.push(newGame);
 
@@ -5928,19 +5929,24 @@ await simpleEditReply(
             const waitingVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
             if (!waitingVC) {
-              console.log("❌ Lobby principal introuvable.");
-              return;
+              console.warn("⚠️ Lobby principal introuvable : nettoyage sans déplacement.");
             }
 
+
+            // Le statut test reste associé à cette partie même après un redémarrage.
+            // Une ancienne partie créée en mode test est également reconnue tant
+            // que TEST_MODE=true (utile pour annuler la partie bloquée).
+            const isTestGame = TEST_MODE ||
+              (await getConfigValue(`ppTest_${game.id}`, false)) === true;
 
             const attChannel = interaction.guild.channels.cache.get(game.attVC);
             const defChannel = interaction.guild.channels.cache.get(game.defVC);
 
             if (
-  !Array.isArray(game.attackers) ||
-  !Array.isArray(game.defenders) ||
-  game.attackers.length !== 5 ||
-  game.defenders.length !== 5
+  interaction.customId !== 'cancel_game' &&
+  (!Array.isArray(game.attackers) ||
+   !Array.isArray(game.defenders) ||
+   (!isTestGame && (game.attackers.length !== 5 || game.defenders.length !== 5)))
 ) {
   console.error(
     `❌ Résultat refusé : équipes invalides pour ${game.id}`
@@ -5949,17 +5955,21 @@ await simpleEditReply(
 }
 
 const attackers =
-  game.attackers.map(p => p.id);
+  (game.attackers || []).map(p => p.id);
 
 const defenders =
-  game.defenders.map(p => p.id);
+  (game.defenders || []).map(p => p.id);
 
 const allPlayers = [
   ...attackers,
   ...defenders
 ];
 
-if (new Set(allPlayers).size !== 10) {
+if (
+  interaction.customId !== 'cancel_game' &&
+  (new Set(allPlayers).size !== allPlayers.length ||
+   (!isTestGame && allPlayers.length !== 10))
+) {
   console.error(
     `❌ Résultat refusé : joueurs dupliqués pour ${game.id}`
   );
@@ -6000,7 +6010,7 @@ for (const member of membersToMove.values()) {
       member.voice.channelId === game.attVC ||
       member.voice.channelId === game.defVC
     ) {
-      await member.voice.setChannel(waitingVC);
+      if (waitingVC) await member.voice.setChannel(waitingVC);
     }
   } catch (err) {
     console.error(
@@ -6012,7 +6022,7 @@ for (const member of membersToMove.values()) {
 
 // Deuxième passage : récupère les membres encore présents,
 // y compris les spectateurs non répertoriés.
-for (const channelId of [game.attVC, game.defVC]) {
+for (const channelId of [game.attVC, game.defVC, game.waitingVC]) {
   const channel =
     interaction.guild.channels.cache.get(channelId);
 
@@ -6020,7 +6030,7 @@ for (const channelId of [game.attVC, game.defVC]) {
 
   for (const member of channel.members.values()) {
     try {
-      await member.voice.setChannel(waitingVC);
+      if (waitingVC) await member.voice.setChannel(waitingVC);
     } catch (err) {
       console.error(
         `❌ Membre resté dans ${channelId} : ${member.id}`,
@@ -6036,7 +6046,9 @@ for (const channelId of [game.attVC, game.defVC]) {
             }
 
 if (interaction.customId === 'cancel_game') {
-  for (const id of [game.attVC, game.defVC]) {
+  // Annulation toujours possible, même en mode test avec un seul joueur.
+  // Nettoie également le salon de préparation s'il existe encore.
+  for (const id of [game.attVC, game.defVC, game.waitingVC]) {
     const ch = interaction.guild.channels.cache.get(id);
     if (!ch) continue;
 
@@ -6066,6 +6078,11 @@ if (interaction.customId === 'cancel_game') {
   );
 
   await deleteGame(game.id);
+  await setConfigValue(`ppTest_${game.id}`, false);
+  await interaction.followUp({
+    content: '✅ Partie annulée. Les salons vides ont été supprimés.',
+    flags: MessageFlags.Ephemeral
+  }).catch(console.error);
   break;
 }
 
@@ -6073,6 +6090,10 @@ if (interaction.customId === 'cancel_game') {
             const matchRR = {};
 
 for (const playerId of allPlayers) {
+  if (isTestGame) {
+    matchRR[playerId] = 0;
+    continue;
+  }
   const member =
     interaction.guild.members.cache.get(playerId) ||
     await interaction.guild.members.fetch(playerId).catch(() => null);
@@ -6088,12 +6109,12 @@ for (const playerId of allPlayers) {
   matchRR[playerId] = delta;
 }
 
-await updateleaderboardEmbed().catch(err =>
+if (!isTestGame) await updateleaderboardEmbed().catch(err =>
   console.error('Erreur update leaderboard après partie :', err)
 );
 
 // Supprime les vocaux Attaquants / Défenseurs puis la catégorie
-for (const id of [game.attVC, game.defVC]) {
+for (const id of [game.attVC, game.defVC, game.waitingVC]) {
   const ch = interaction.guild.channels.cache.get(id);
   if (!ch) continue;
 
@@ -6202,6 +6223,7 @@ gamesData.games = gamesData.games.filter(
 );
 
 await deleteGame(game.id);
+await setConfigValue(`ppTest_${game.id}`, false);
           } finally {
             delete gameLocks[game.id];
           }
