@@ -1220,6 +1220,20 @@ const BANNERS = {
 };
 
 
+// Charger uniquement les joueurs visibles : les stats restent indépendantes du cache,
+// mais les rôles de rang doivent être récupérés depuis Discord.
+async function fetchLeaderboardPageMembers(guild, sorted, page = 0) {
+  if (!guild) return;
+  const ids = sorted.slice(Math.max(0, page) * 10, (Math.max(0, page) + 1) * 10)
+    .map(([id]) => id);
+  await Promise.all(ids.map(async id => {
+    if (guild.members.cache.has(id)) return;
+    await guild.members.fetch(id).catch(err => {
+      console.warn(`⚠️ Rang indisponible pour ${id} : ${err.message}`);
+    });
+  }));
+}
+
 // ── Embed Leaderboard ──
 function buildLeaderboardContainer({
   sorted,
@@ -2946,6 +2960,8 @@ const sorted = sortLeaderboardPlayers(
   )
   .length;
 
+    await fetchLeaderboardPageMembers(guild, sorted, 0);
+
     const container = buildLeaderboardContainer({
       sorted,
       totalInvitesPerMember,
@@ -4197,6 +4213,8 @@ if (
       (data.games || 0) > 0
     )
     .length;
+
+  await fetchLeaderboardPageMembers(guild, sorted, page);
 
   const container = buildLeaderboardContainer({
     sorted,
