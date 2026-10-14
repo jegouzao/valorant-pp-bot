@@ -3822,7 +3822,7 @@ if (interaction.isButton() && interaction.customId === 'verify_riot') {
 }
 
     function findGame(interaction) {
-      if (interaction.isStringSelectMenu() && interaction.customId.startsWith('spectate_select_')) {
+      if (interaction.isStringSelectMenu() && interaction.customId?.startsWith('spectate_select_')) {
         const gameId = interaction.customId.replace('spectate_select_', '');
         return gamesData.games.find(g =>
           g.id === gameId || g.messageId === gameId || g.manageMessageId === gameId || g.betMessageId === gameId
@@ -3991,7 +3991,7 @@ return interaction.editReply({
 }
 
 if (
-  interaction.customId.startsWith(
+  interaction.customId?.startsWith(
     'clip_like_'
   )
 ) {
@@ -4078,14 +4078,11 @@ if (!updatedClip) {
       MessageFlags.IsComponentsV2
   });
 }
-    return;
-  }
-
   return interaction.editReply({
-    components: [
-      buildClipLikeContainer(updatedClip)
-    ]
+    components: [buildClipLikeContainer(updatedClip)]
   });
+}
+
 }
 
       if (interaction.customId === 'leaderboard_stats') {
@@ -4158,7 +4155,7 @@ return interaction.editReply({
 
 if (
   interaction.customId === 'leaderboard_open' ||
-  interaction.customId.startsWith('leaderboard_page_')
+  interaction.customId?.startsWith('leaderboard_page_')
 ) {
   const isOpen =
     interaction.customId === 'leaderboard_open';
@@ -4491,8 +4488,8 @@ if (interaction.customId === 'organizer_apply_cancel') {
 }
 
 if (
-  interaction.customId.startsWith('organizer_accept_') ||
-  interaction.customId.startsWith('organizer_refuse_')
+  interaction.customId?.startsWith('organizer_accept_') ||
+  interaction.customId?.startsWith('organizer_refuse_')
 ) {
   if (interaction.user.id !== BOT_OWNER_ID) {
     return simpleReply(
@@ -4502,7 +4499,7 @@ if (
   }
 
   const accepted =
-    interaction.customId.startsWith('organizer_accept_');
+    interaction.customId?.startsWith('organizer_accept_');
 
   const userId = interaction.customId
     .replace('organizer_accept_', '')
@@ -4572,7 +4569,7 @@ if (interaction.customId === 'open_rules') {
         return interaction.showModal(modal);
       }
 
-      if (interaction.customId.startsWith('close_ticket_')) {
+      if (interaction.customId?.startsWith('close_ticket_')) {
   const ticketOwnerId = interaction.customId.replace('close_ticket_', '');
 
 const staffRole = interaction.guild.roles.cache.find(
@@ -4610,8 +4607,8 @@ if (!isBotOwner && !isAdministrator) {
 
 
 
-      if (interaction.customId.startsWith('manage_add_') || interaction.customId.startsWith('manage_remove_')) {
-        const isAdd = interaction.customId.startsWith('manage_add_');
+      if (interaction.customId?.startsWith('manage_add_') || interaction.customId?.startsWith('manage_remove_')) {
+        const isAdd = interaction.customId?.startsWith('manage_add_');
         const userId = interaction.customId.split('_').pop();
 
         const modal = new ModalBuilder()
@@ -4628,7 +4625,7 @@ if (!isBotOwner && !isAdministrator) {
         return interaction.showModal(modal);
       }
 
-      if (interaction.customId.startsWith('manage_reset_')) {
+      if (interaction.customId?.startsWith('manage_reset_')) {
   await interaction.deferReply({
     flags:
     MessageFlags.Ephemeral |
@@ -5061,7 +5058,7 @@ await updateRegistrationEmbed(interaction.guild, newGame);
 // ── SELECT MENU OBSERVER ──
 if (
   interaction.isStringSelectMenu() &&
-  interaction.customId.startsWith('spectate_select_')
+  interaction.customId?.startsWith('spectate_select_')
 ) {
 
   await interaction.deferUpdate();
@@ -6634,7 +6631,7 @@ return simpleEditReply(
 }
 
     // ── Gestion du modal MANAGE ──
-    if (interaction.isModalSubmit() && interaction.customId.startsWith('manage_modal_')) {
+    if (interaction.isModalSubmit() && interaction.customId?.startsWith('manage_modal_')) {
       await interaction.deferReply({
   flags:
     MessageFlags.Ephemeral |
