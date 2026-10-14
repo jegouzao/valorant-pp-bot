@@ -29,7 +29,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Health server running on port ${PORT}`);
 });
-const TEST_MODE = process.env.TEST_MODE === 'true'; // TEST_MODE=true dans les variables d'environnement pour tester seul
+const TEST_MODE = true;
 const { 
   Client,
   GatewayIntentBits,
