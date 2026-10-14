@@ -2699,7 +2699,9 @@ client.on(Events.UserUpdate, async (oldUser, newUser) => {
 
 function sortLeaderboardPlayers(pointsData, totalInvitesPerMember, guildMembersCache) {
   return Object.entries(pointsData)
-    .filter(([id]) => guildMembersCache.has(id))
+    // Les joueurs sont issus de MongoDB, pas du cache Discord incomplet.
+    // Les comptes sans partie (dont le bot) ne figurent pas au classement RR.
+    .filter(([, data]) => Number(data.games || 0) > 0)
     .sort(([idA, a], [idB, b]) => {
       // 1. Plus de RR
       const rrDiff = (b.rr || 0) - (a.rr || 0);
@@ -2940,7 +2942,6 @@ const sorted = sortLeaderboardPlayers(
 
     const playerCount = Object.entries(pointsData)
   .filter(([id, data]) =>
-    guild.members.cache.has(id) &&
     (data.games || 0) > 0
   )
   .length;
@@ -4193,7 +4194,6 @@ if (
 
   const playerCount = Object.entries(pointsData)
     .filter(([id, data]) =>
-      guild.members.cache.has(id) &&
       (data.games || 0) > 0
     )
     .length;
