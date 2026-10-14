@@ -3634,8 +3634,8 @@ function buildAnnounceContainer({
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE EN PRÉPARATION ${mapName || ''}\n` +
-            `-# Partie organisée par **${organisateur}** — <#${waitingVCId}> \`${code}\` <@&${ROLE_NOTIF_PP}>\n` +
+            `## <:VIDE:1493046347337699499> <#${waitingVCId}> \`${code}\` ${mapName || ''}\n` +
+            `-# Partie organisée par **${organisateur}** — <@&${ROLE_NOTIF_PP}>\n` +
             `-# \`${remaining}\` place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} — Trouve un last ici : <#734895135019761733>\n` +
             `-# \`${votes}/${needed}\` votes pour changer la map ${mapName}`
           )
