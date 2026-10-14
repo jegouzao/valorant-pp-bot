@@ -1,13 +1,8 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path'); // ← mettre path avant son utilisation
-
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-
-
-
 const Points = require('./models/Points');
 const Invite = require('./models/Invite');
 const RiotUser = require('./models/RiotUser');
@@ -16,20 +11,13 @@ const Config = require('./models/Config');
 const Game = require('./models/Game');
 const Clip = require('./models/Clip');
 const maps = require('./config/maps');
-
 const mongoose = require('mongoose');
-
 async function initMongo() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log('✅ MongoDB connecté');
 }
-
-
-
 const http = require('http');
-
 const PORT = process.env.PORT || 3000;
-
 http.createServer((req, res) => {
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -41,11 +29,7 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Health server running on port ${PORT}`);
 });
-
-
 const TEST_MODE = false;
-
-
 const { 
   Client,
   GatewayIntentBits,
@@ -61,8 +45,6 @@ const {
   PermissionFlagsBits,
   PermissionsBitField,
   StringSelectMenuBuilder,
-
-  // Components V2
   ContainerBuilder,
   TextDisplayBuilder,
   MediaGalleryBuilder,
@@ -72,12 +54,9 @@ const {
   MessageFlags,
   SectionBuilder,
   ThumbnailBuilder,
-
-
   Events,
-Partials,
+  Partials,
 } = require('discord.js');
-
 const rankEmojis = {
   Unranked: '<:Unranked:1465744234182086789>',
   'Radiant': '<:Radiant:1461399011712958703>',
@@ -132,8 +111,6 @@ const RANK_ROLES = {
       Iron2: '1461352687777091666',
       Iron1: '1461352715631460516'
     };
-
-
     const RANK_UP_ORDER = [
   'Iron1',
   'Iron2',
@@ -161,7 +138,6 @@ const RANK_ROLES = {
   'Immortal3',
   'Radiant'
 ];
-
 const RANK_LABELS = {
   Iron1: 'Iron 1',
   Iron2: 'Iron 2',
@@ -189,14 +165,11 @@ const RANK_LABELS = {
   Immortal3: 'Immortal 3',
   Radiant: 'Radiant'
 };
-
 function getMemberRankKey(member) {
   return Object.entries(RANK_ROLES).find(
     ([, roleId]) => member.roles.cache.has(roleId)
   )?.[0] || null;
 }
-
-
 const RANK_ORDER = {
   'Radiant': 1, 
   'Immortal 3': 2, 'Immortal 2': 3, 'Immortal 1': 4,
@@ -207,26 +180,18 @@ const RANK_ORDER = {
   'Silver 3': 17, 'Silver 2': 18, 'Silver 1': 19,
   'Bronze 3': 20, 'Bronze 2': 21, 'Bronze 1': 22,
   'Iron 3': 23, 'Iron 2': 24, 'Iron 1': 25};
-  
-
 function getRankEmojiFromMember(member) {
   if (!member) return rankEmojis.Unranked || '';
-
   const rankKey = Object.entries(RANK_ROLES).find(
     ([, roleId]) => member.roles.cache.has(roleId)
   )?.[0];
-
   if (!rankKey) {
     return rankEmojis.Unranked || '';
   }
-
   const emojiKey = rankKey.replace(/([A-Za-z]+)(\d)$/, '$1 $2');
-
   return rankEmojis[emojiKey] || '';
 }
-
 const MIN_ACCOUNT_AGE_DAYS = 10;
-
 function formatAccountAge(createdAt) {
   const diffMs = Date.now() - createdAt.getTime();
 
@@ -246,23 +211,13 @@ function formatAccountAge(createdAt) {
 }
 
 const CLIPFARMING_CHANNEL_ID = '1473461253681971425';
-
 const spamMap = new Map();
-
 const spamStrikeMap = new Map();
-
 const SPAM_INTERVAL = 5000; // 5 secondes
-
-
-
 const STRIKE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
-
-
 const SERVER_TAG_ROLE_ID = '1497390571051024615'; // rôle donné quand le membre porte ton tag serveur
 const SERVER_TAG_GUILD_ID = process.env.GUILD_ID;
-
 let saveTimeouts = new Map();
-
 function getActiveStrike(strikeMap, userId, now = Date.now()) {
   const data = strikeMap.get(userId);
 
@@ -277,7 +232,6 @@ function getActiveStrike(strikeMap, userId, now = Date.now()) {
 
   return data.count;
 }
-
 function addStrike(strikeMap, userId, now = Date.now()) {
   const current = getActiveStrike(strikeMap, userId, now);
 
@@ -286,7 +240,6 @@ function addStrike(strikeMap, userId, now = Date.now()) {
     lastStrikeAt: now
   });
 }
-
 function getSpamPenalty(strike) {
   if (strike >= 2) {
     return {
@@ -310,32 +263,39 @@ function getSpamPenalty(strike) {
     label: '1 minute'
   };
 }
-
-
 function saveGameDebounced(game) {
-  if (saveTimeouts.has(game.id)) {
-    clearTimeout(saveTimeouts.get(game.id));
+  const existingTimeout = saveTimeouts.get(game.id);
+
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
   }
 
   const timeout = setTimeout(async () => {
     try {
       await saveGame(game);
     } catch (err) {
-      console.error('Erreur saveGameDebounced :', err);
+      console.error(
+        `❌ Sauvegarde échouée pour la partie ${game.id} :`,
+        err
+      );
+
+      setTimeout(() => {
+        if (!saveTimeouts.has(game.id)) {
+          saveGameDebounced(game);
+        }
+      }, 5000);
     } finally {
-      saveTimeouts.delete(game.id);
+      if (saveTimeouts.get(game.id) === timeout) {
+        saveTimeouts.delete(game.id);
+      }
     }
   }, 300);
 
   saveTimeouts.set(game.id, timeout);
 }
-
 function extractUrls(content = '') {
   return content.match(/https?:\/\/[^\s]+/gi) || [];
 }
-
-
-
 function isGifUrl(url = '') {
   const u = url.toLowerCase();
 
@@ -418,7 +378,11 @@ function scheduleRegistrationUpdate(guild, game) {
     } catch (err) {
       console.error('Erreur debounce update registration:', err);
     } finally {
-      registrationUpdateTimeouts.delete(game.id);
+      if (
+        registrationUpdateTimeouts.get(game.id) === timeout
+      ) {
+        registrationUpdateTimeouts.delete(game.id);
+      }
     }
   }, 800);
 
@@ -444,7 +408,10 @@ async function buildPlayerList(guild, playerIds) {
     let rankValue = 1000;
 
     if (member) {
-      const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+      const rankRole = member.roles.cache
+  .filter(role => RANK_ORDER[role.name] !== undefined)
+  .sort((a, b) => RANK_ORDER[a.name] - RANK_ORDER[b.name])
+  .first();
       if (rankRole) {
         rankEmoji = rankEmojis[rankRole.name] || rankEmojis.Unranked;
         rankValue = RANK_ORDER[rankRole.name];
@@ -552,6 +519,26 @@ const WELCOME_CHANNEL_ID = '1474066060528451743';
 
 const ACTIVITIES_CHANNEL_ID = WELCOME_CHANNEL_ID;
 
+function getPreviousMonthKey(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    month < 1 ||
+    month > 12
+  ) {
+    throw new Error(`Mois invalide : ${monthKey}`);
+  }
+
+  const previous = new Date(Date.UTC(year, month - 2, 1));
+
+  return (
+    `${previous.getUTCFullYear()}-` +
+    `${String(previous.getUTCMonth() + 1).padStart(2, '0')}`
+  );
+}
+
 function getParisMonthKey(date = new Date()) {
   const parts =
     new Intl.DateTimeFormat('en-CA', {
@@ -589,6 +576,26 @@ function toSmallCaps(text) {
     .split('')
     .map(char => map[char] || char)
     .join('');
+}
+
+const LEADERBOARD_MONTHS = [
+  'ᴊᴀɴᴠɪᴇʀ',
+  'ꜰᴇᴠʀɪᴇʀ',
+  'ᴍᴀʀꜱ',
+  'ᴀᴠʀɪʟ',
+  'ᴍᴀɪ',
+  'ᴊᴜɪɴ',
+  'ᴊᴜɪʟʟᴇᴛ',
+  'ᴀᴏᴜᴛ',
+  'ꜱᴇᴘᴛᴇᴍʙʀᴇ',
+  'ᴏᴄᴛᴏʙʀᴇ',
+  'ɴᴏᴠᴇᴍʙʀᴇ',
+  'ᴅᴇᴄᴇᴍʙʀᴇ'
+];
+
+function getLeaderboardMonthLabel(date = new Date()) {
+  const month = Number(getParisMonthKey(date).split('-')[1]);
+  return LEADERBOARD_MONTHS[month - 1];
 }
 
 function getParisMonthLabel(date = new Date()) {
@@ -896,21 +903,30 @@ async function getPlayerPoints(userId) {
   let doc = await Points.findOne({ userId });
 
   if (!doc) {
-    doc = await Points.create({
-      userId,
-      rr: 0,
-      games: 0,
-      wins: 0,
-      timeouts: 0
-    });
+    doc = await Points.findOneAndUpdate(
+      { userId },
+      {
+        $setOnInsert: {
+          userId,
+          rr: 0,
+          games: 0,
+          wins: 0,
+          timeouts: 0
+        }
+      },
+      {
+        upsert: true,
+        new: true
+      }
+    );
   }
 
   return {
     userId: doc.userId,
-    rr: doc.rr,
-    games: doc.games,
-    wins: doc.wins,
-    timeouts: doc.timeouts || 0
+    rr: doc.rr ?? 0,
+    games: doc.games ?? 0,
+    wins: doc.wins ?? 0,
+    timeouts: doc.timeouts ?? 0
   };
 }
 
@@ -939,6 +955,11 @@ async function incrementPlayerTimeouts(userId) {
 
 
 async function incrementPlayerStats(userId, rrDelta, isWinner) {
+  if (!Number.isFinite(rrDelta)) {
+    throw new Error(
+      `Variation RR invalide pour ${userId} : ${rrDelta}`
+    );
+  }
   await Points.updateOne(
     { userId },
     {
@@ -950,6 +971,8 @@ async function incrementPlayerStats(userId, rrDelta, isWinner) {
     },
     { upsert: true }
   );
+
+
 
   // Empêche les RR négatifs
   await Points.updateOne(
@@ -976,20 +999,25 @@ async function getAllPoints() {
 }
 
 async function getInviteData(inviterId) {
-  let doc = await Invite.findOne({ inviterId });
-
-  if (!doc) {
-    doc = await Invite.create({
-      inviterId,
-      invites: 0,
-      members: []
-    });
-  }
+  const doc = await Invite.findOneAndUpdate(
+    { inviterId },
+    {
+      $setOnInsert: {
+        inviterId,
+        invites: 0,
+        members: []
+      }
+    },
+    {
+      upsert: true,
+      new: true
+    }
+  );
 
   return {
     inviterId: doc.inviterId,
-    invites: doc.invites,
-    members: doc.members
+    invites: doc.invites ?? 0,
+    members: doc.members ?? []
   };
 }
 
@@ -1007,12 +1035,36 @@ async function setInviteData(inviterId, data) {
 }
 
 async function incrementInvite(inviterId, memberId) {
+  if (!inviterId || !memberId || inviterId === memberId) {
+    return;
+  }
+
+  const inviter = await client.users
+    .fetch(inviterId)
+    .catch(() => null);
+
+  if (!inviter || inviter.bot) return;
+
   await Invite.updateOne(
     { inviterId },
-    {
-      $inc: { invites: 1 },
-      $addToSet: { members: memberId }
-    },
+    [
+      {
+        $set: {
+          inviterId,
+          members: {
+            $setUnion: [
+              { $ifNull: ['$members', []] },
+              [memberId]
+            ]
+          }
+        }
+      },
+      {
+        $set: {
+          invites: { $size: '$members' }
+        }
+      }
+    ],
     { upsert: true }
   );
 }
@@ -1111,6 +1163,13 @@ async function saveGame(gameData) {
 }
 
 async function deleteGame(gameId) {
+  const pendingTimeout = saveTimeouts.get(gameId);
+
+  if (pendingTimeout) {
+    clearTimeout(pendingTimeout);
+    saveTimeouts.delete(gameId);
+  }
+
   await Game.deleteOne({ id: gameId });
 }
 
@@ -1194,7 +1253,10 @@ function buildLeaderboardContainer({
     }
   }
 
-  const maxRR = sorted[0][1].rr || 1;
+  const maxRR = Math.max(
+  1,
+  ...sorted.map(([, player]) => Math.max(0, player.rr || 0))
+);
 const playersPerPage = 10;
 const barLength = 8;
 const totalPages = Math.max(
@@ -1221,7 +1283,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
 
   // ── BARRE RR ──
   const rawBars =
-    (data.rr / maxRR) * barLength;
+  (Math.max(0, Number(data.rr) || 0) / maxRR) * barLength;
 
   const filledBars = Math.max(
     0,
@@ -1265,7 +1327,7 @@ const lines = pagePlayers.map(([id, data], idx) => {
   new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## <:VIDE:1493046347337699499> LEADERBOARD ᴏᴄᴛᴏʙʀᴇ\n` +
+        `## <:VIDE:1493046347337699499> LEADERBOARD ${getLeaderboardMonthLabel()}\n` +
         `-# ᴅᴇʀɴɪᴇʀᴇ ᴍɪꜱᴇ ᴀ ᴊᴏᴜʀ : <t:${Math.floor(Date.now() / 1000)}:R>\n` +
         `-# ᴊᴏᴜᴇᴜʀꜱ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛꜱ : \`${playerCount}\`\n` +
         `-# ᴄᴀꜱʜᴘʀɪᴢᴇ ᴅᴜ ᴍᴏɪꜱ : <:VIDE:1469100224289968242> ᴀ ᴅᴇꜰɪɴɪʀ`
@@ -1330,6 +1392,17 @@ if (page === 0) {
 
   container.addActionRowComponents(openLeaderboardRow);
 
+if (totalPages > 1) {
+  container.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('leaderboard_page_1')
+        .setEmoji({ id: '1543638348248121538' })
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
+}
+
 } else {
 
   const paginationRow = new ActionRowBuilder().addComponents(
@@ -1338,7 +1411,7 @@ if (page === 0) {
       .setCustomId(`leaderboard_page_${page - 1}`)
       .setEmoji({ id: '1543638363125588098' })
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(page <= 1),
+      .setDisabled(page <= 0),
 
     new ButtonBuilder()
       .setCustomId(`leaderboard_page_${page + 1}`)
@@ -1364,9 +1437,10 @@ function buildInvitationsLeaderboardContainer({
       const member = guildMembersCache.get(id);
 
       return (
-        member &&
-        !member.user.bot
-      );
+  member &&
+  !member.user.bot &&
+  Number(invitesData[id]?.invites || 0) > 0
+);
     })
     .sort(
       ([, a], [, b]) =>
@@ -1630,7 +1704,19 @@ const commands = [
     }
   ]
 },
-  { name: 'resetseason', description: 'Réinitialiser toutes les données', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
+  {
+  name: 'resetseason',
+  description: 'Réinitialiser les statistiques de la saison',
+  default_member_permissions: PermissionFlagsBits.Administrator.toString(),
+  options: [
+    {
+      name: 'confirmation',
+      description: 'Écrire CONFIRMER pour réinitialiser',
+      type: 3,
+      required: true
+    }
+  ]
+},
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'leaderboard', description: 'Afficher le leaderboard', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'manage', description: 'Gérer les données', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Joueur', type: 6, required: true }] },
@@ -1641,7 +1727,7 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
   .then(() => console.log('✅ Slash commands enregistrées'))
   .catch(console.error);
 
-  async function cleanupOrphanClips(guild) {
+async function cleanupOrphanClips(guild) {
   try {
     const monthKey = getParisMonthKey();
 
@@ -1650,67 +1736,64 @@ rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUIL
       monthKey
     });
 
-    if (!clips.length) {
-      console.log('🧹 Aucun clip à vérifier');
-      return;
-    }
-
     let deletedCount = 0;
 
     for (const clip of clips) {
-      const channel =
-        guild.channels.cache.get(clip.channelId) ||
-        await guild.channels
-          .fetch(clip.channelId)
-          .catch(() => null);
+      let channel;
 
-      if (!channel?.isTextBased()) {
-        await Clip.deleteOne({
-          _id: clip._id
-        });
-
-        deletedCount++;
+      try {
+        channel =
+          guild.channels.cache.get(clip.channelId) ||
+          await guild.channels.fetch(clip.channelId);
+      } catch (err) {
+        console.warn(
+          `⚠️ Salon inaccessible pour le clip ${clip._id}:`,
+          err.message
+        );
         continue;
       }
 
-      const sourceMessage =
-        await channel.messages
-          .fetch(clip.messageId)
-          .catch(() => null);
+      if (!channel?.isTextBased()) continue;
 
-      if (sourceMessage) {
+      try {
+        await channel.messages.fetch(clip.messageId);
         continue;
-      }
-
-      if (clip.botMessageId) {
-        const botMessage =
-          await channel.messages
-            .fetch(clip.botMessageId)
-            .catch(() => null);
-
-        if (botMessage?.deletable) {
-          await botMessage
-            .delete()
-            .catch(() => {});
+      } catch (err) {
+        // 10008 = message définitivement introuvable.
+        // Toute autre erreur : on conserve les données.
+        if (err.code !== 10008) {
+          console.warn(
+            `⚠️ Vérification impossible pour le clip ${clip._id}:`,
+            err.message
+          );
+          continue;
         }
       }
 
-      await Clip.deleteOne({
-        _id: clip._id
-      });
+      if (clip.botMessageId) {
+        try {
+          const botMessage =
+            await channel.messages.fetch(clip.botMessageId);
 
+          if (botMessage.deletable) {
+            await botMessage.delete();
+          }
+        } catch (err) {
+          console.warn(
+            `⚠️ Nettoyage du message bot impossible : ${err.message}`
+          );
+        }
+      }
+
+      await Clip.deleteOne({ _id: clip._id });
       deletedCount++;
     }
 
     console.log(
-      `🧹 Nettoyage clips terminé : ${deletedCount} entrée(s) supprimée(s)`
+      `🧹 Nettoyage clips terminé : ${deletedCount} supprimé(s)`
     );
-
   } catch (err) {
-    console.error(
-      '❌ Erreur cleanupOrphanClips :',
-      err
-    );
+    console.error('❌ Erreur cleanupOrphanClips :', err);
   }
 }
 
@@ -1809,7 +1892,157 @@ if (!hasServerTag && hasRole) {
     console.error('Erreur syncServerTagRole :', err);
   }
 }
+
+async function getMonthlyAnnouncementStatus(monthKey) {
+  return await getConfigValue(
+    `monthlyAnnouncements_${monthKey}`,
+    {
+      rr: null,
+      invites: null,
+      clip: null
+    }
+  );
+}
+
+async function markMonthlyAnnouncementSent(
+  monthKey,
+  category,
+  message
+) {
+  const key = `monthlyAnnouncements_${monthKey}`;
+
+  await Config.updateOne(
+    { key },
+    {
+      $set: {
+        [`value.${category}`]: {
+          messageId: message.id,
+          channelId: message.channelId,
+          sentAt: new Date().toISOString()
+        }
+      }
+    },
+    { upsert: true }
+  );
+}
+
+
+async function saveMonthlySnapshot(guild, monthKey) {
+
+    const activeMonth =
+    (await getConfigValue('leaderboardData', {})).monthKey;
+
+  if (!activeMonth || activeMonth !== monthKey) {
+    throw new Error(
+      `Snapshot refusé : période active ${activeMonth || 'inconnue'}, ` +
+      `période demandée ${monthKey}`
+    );
+  }
+  const key = `monthlySnapshot_${monthKey}`;
+
+  const existing = await getConfigValue(key, null);
+
+  // Ne jamais écraser une sauvegarde déjà figée.
+  if (existing) return existing;
+
+  const [players, invitations, clips] = await Promise.all([
+    Points.find({}).lean(),
+    Invite.find({}).lean(),
+    Clip.find({
+      guildId: guild.id,
+      monthKey
+    }).lean()
+  ]);
+
+  const snapshot = {
+    monthKey,
+    guildId: guild.id,
+    createdAt: new Date().toISOString(),
+
+    players: players.map(p => ({
+      userId: p.userId,
+      rr: p.rr ?? 0,
+      games: p.games ?? 0,
+      wins: p.wins ?? 0,
+      timeouts: p.timeouts ?? 0
+    })),
+
+    invitations: invitations.map(i => ({
+      inviterId: i.inviterId,
+      invites: i.invites ?? 0,
+      members: i.members ?? []
+    })),
+
+    clips: clips.map(c => ({
+      clipId: String(c._id),
+      authorId: c.authorId,
+      guildId: c.guildId,
+      channelId: c.channelId,
+      messageId: c.messageId,
+      mediaType: c.mediaType,
+      likes: c.likes ?? []
+    }))
+  };
+
+  if (
+  !Array.isArray(snapshot.players) ||
+  !Array.isArray(snapshot.invitations) ||
+  !Array.isArray(snapshot.clips)
+) {
+  throw new Error(
+    `Snapshot mensuel invalide : ${monthKey}`
+  );
+}
+
+  // Création sans écrasement, même si deux appels arrivent ensemble.
+  await Config.updateOne(
+    { key },
+    {
+      $setOnInsert: {
+        key,
+        value: snapshot
+      }
+    },
+    { upsert: true }
+  );
+
+  console.log(`💾 Snapshot mensuel enregistré : ${monthKey}`);
+
+  return await getConfigValue(key);
+}
+
 let monthlyWinnersRunning = false;
+
+async function getPendingMonthlyClosure() {
+  const leaderboardData =
+    await getConfigValue('leaderboardData', {});
+
+  const currentMonth = getParisMonthKey();
+
+  if (!leaderboardData.monthKey) {
+    return null;
+  }
+
+  if (leaderboardData.monthKey >= currentMonth) {
+    return null;
+  }
+
+  const lastAnnouncement =
+    await getConfigValue(
+      'monthlyWinnersLastAnnouncement',
+      null
+    );
+
+  if (lastAnnouncement === leaderboardData.monthKey) {
+    return null;
+  }
+
+  return {
+    monthKey: leaderboardData.monthKey,
+    currentMonth
+  };
+}
+
 async function announceMonthlyWinners(guild) {
   if (monthlyWinnersRunning) return;
   try {
@@ -1846,12 +2079,22 @@ async function announceMonthlyWinners(guild) {
 
     // Fenêtre d'annonce : dernière minute du dernier jour du mois
 if (
-  day !== lastDayOfMonth ||
-  hour !== 23 ||
-  minute !== 59
+  day === lastDayOfMonth &&
+  hour === 23 &&
+  minute === 59
 ) {
-  return;
+  console.log(
+    `🏆 Fenêtre de clôture mensuelle atteinte : ${year}-${String(month).padStart(2, '0')}`
+  );
 }
+
+    if (
+      day !== lastDayOfMonth ||
+      hour !== 23 ||
+      minute !== 59
+    ) {
+      return;
+    }
 
     monthlyWinnersRunning = true;
 
@@ -1862,17 +2105,62 @@ if (
     const lastAnnouncement =
       await getConfigValue('monthlyWinnersLastAnnouncement', null);
 
+      const leaderboardData =
+  await getConfigValue('leaderboardData', {});
+
+if (
+  leaderboardData.monthKey &&
+  leaderboardData.monthKey !== monthKey
+) {
+  console.warn(
+    `⚠️ Annonce refusée : classement ${leaderboardData.monthKey}, ` +
+    `période attendue ${monthKey}`
+  );
+  return;
+}
+
     if (lastAnnouncement === monthKey) {
       return;
     }
+
+        const monthlySnapshot =
+      await saveMonthlySnapshot(guild, monthKey);
+
+    if (!monthlySnapshot) {
+      throw new Error(
+        `Snapshot mensuel introuvable : ${monthKey}`
+      );
+    }
+
+        const announcementStatus =
+      await getMonthlyAnnouncementStatus(monthKey);
 
 
     // ==============================
     // LEADERBOARD
     // ==============================
 
-    const pointsData = await getAllPoints();
-    const invitesData = await getAllInvites();
+const pointsData = Object.fromEntries(
+  monthlySnapshot.players.map(player => [
+    player.userId,
+    {
+      rr: player.rr,
+      games: player.games,
+      wins: player.wins,
+      timeouts: player.timeouts
+    }
+  ])
+);
+
+const invitesData = Object.fromEntries(
+  monthlySnapshot.invitations.map(invite => [
+    invite.inviterId,
+    {
+      invites: invite.invites,
+      members: invite.members
+    }
+  ])
+);
 
     const totalInvitesPerMember = {};
 
@@ -1887,25 +2175,31 @@ if (
       guild.members.cache
     );
 
-    const leaderboardWinner = sorted[0] || null;
+    const leaderboardWinner =
+  sorted.find(([, player]) =>
+    (player.rr ?? 0) > 0 &&
+    (player.games ?? 0) > 0
+  ) || null;
+
+      if (!leaderboardWinner) {
+      console.log(
+        `ℹ️ Aucun joueur éligible au titre RR pour ${monthKey}`
+      );
+    }
 
     // ==============================
 // CLIP DU MOIS
 // ==============================
 
 const monthlyClips =
-  await Clip.find({
-    guildId: guild.id,
-    monthKey
-  }).lean();
+  monthlySnapshot.clips;
 
 const clipWinner =
   monthlyClips
     .filter(
       clip =>
-        guild.members.cache.has(
-          clip.authorId
-        )
+        guild.members.cache.has(clip.authorId) &&
+        (clip.likes?.length || 0) > 0
     )
     .sort(
       (a, b) =>
@@ -1946,7 +2240,7 @@ const clipWinner =
     // MESSAGE TOP LEADERBOARD
     // ==============================
 
-    if (leaderboardWinner) {
+    if (leaderboardWinner && !announcementStatus.rr) {
       const [winnerId, winnerData] = leaderboardWinner;
 
       const winnerMember =
@@ -2020,13 +2314,24 @@ if (
 if (!leaderboardWinnerMessage) {
   throw new Error('Impossible d’envoyer l’annonce du vainqueur mensuel');
 }
+
+await markMonthlyAnnouncementSent(
+  monthKey,
+  'rr',
+  leaderboardWinnerMessage
+);
+
     }
 
     // ==============================
     // MESSAGE TOP INVITEUR
     // ==============================
 
-    if (topInviterId && maxInvites > 0) {
+        if (
+      topInviterId &&
+      maxInvites > 0 &&
+      !announcementStatus.invites
+    ) {
       const inviterMember =
         guild.members.cache.get(topInviterId);
 
@@ -2067,12 +2372,19 @@ if (!leaderboardWinnerMessage) {
 if (!invitationWinnerMessage) {
   throw new Error('Impossible d’envoyer l’annonce du top invitations');
 }
+await markMonthlyAnnouncementSent(
+  monthKey,
+  'invites',
+  invitationWinnerMessage
+);
+
+}
 
 // ==============================
 // MESSAGE CLIP DU MOIS
 // ==============================
 
-if (clipWinner) {
+if (clipWinner && !announcementStatus.clip) {
 
   const clipMember =
     guild.members.cache.get(
@@ -2176,20 +2488,46 @@ if (clipWinner) {
       'Impossible d’envoyer l’annonce du clip du mois'
     );
   }
-}
 
-await setConfigValue(
-  'monthlyWinnersLastAnnouncement',
-  monthKey
-);
+    await markMonthlyAnnouncementSent(
+    monthKey,
+    'clip',
+    clipWinnerMessage
+  );
+
+
 
     }
+    if (
+      !leaderboardWinner &&
+      !(topInviterId && maxInvites > 0) &&
+      !clipWinner
+    ) {
+      console.log(
+        `ℹ️ Aucun gagnant à annoncer pour ${monthKey}`
+      );
+      return;
+    }
+    const finalStatus =
+      await getMonthlyAnnouncementStatus(monthKey);
 
+    const allSent =
+      (!leaderboardWinner || !!finalStatus.rr) &&
+      (!(topInviterId && maxInvites > 0) || !!finalStatus.invites) &&
+      (!clipWinner || !!finalStatus.clip);
+
+    if (!allSent) {
+      console.warn(
+        `⚠️ Annonces incomplètes pour ${monthKey}. ` +
+        'Une nouvelle tentative sera nécessaire.'
+      );
+      return;
+    }
 
     await setConfigValue(
-  'monthlyWinnersLastAnnouncement',
-  monthKey
-);
+      'monthlyWinnersLastAnnouncement',
+      monthKey
+    );
 
     console.log(
       `🏆 Gagnants mensuels annoncés pour ${monthKey}`
@@ -2227,19 +2565,37 @@ client.once(Events.ClientReady, async () => {
   return;
 }
 
-  await guild.members.fetch();
-  console.log('✅ Tous les membres du serveur ont été chargés en cache');
+try {
+  const pendingClosure = await getPendingMonthlyClosure();
 
-  await cleanupOrphanClips(guild);
-
-  for (const member of guild.members.cache.values()) {
-    await syncServerTagRole(member.id, member.user);
+  if (pendingClosure) {
+    console.warn(
+      `⚠️ Clôture mensuelle en attente : ` +
+      `${pendingClosure.monthKey} → ${pendingClosure.currentMonth}`
+    );
   }
-  console.log('✅ Rôles tag serveur synchronisés');
+} catch (err) {
+  console.error(
+    '❌ Vérification de clôture impossible :',
+    err
+  );
+}
 
-  const guildInvites = await guild.invites.fetch();
-  const allInvites = new Map();
-  guildInvites.forEach(inv => {
+
+
+    const guildInvites = await guild.invites.fetch().catch(err => {
+  console.error('❌ Initialisation des invitations impossible :', err);
+  return null;
+});
+
+const allInvites = new Map();
+
+if (!guildInvites) {
+  console.warn(
+    '⚠️ Cache invitations non initialisé : attribution suspendue.'
+  );
+}
+  if (guildInvites) guildInvites.forEach(inv => {
     allInvites.set(inv.code, {
       code: inv.code,
       inviter: inv.inviter?.id || null,
@@ -2250,7 +2606,11 @@ client.once(Events.ClientReady, async () => {
     });
   });
 
+  if (guildInvites) {
   invitesCache.set(guild.id, allInvites);
+} else {
+  invitesCache.delete(guild.id);
+}
   console.log(`${colors.green}✅ Invites initialisées en cache (y compris temporaires)${colors.reset}`);
   console.log(`${colors.green}✅ ${colors.bright}${client.user.tag}${colors.reset}${colors.green} est maintenant en ligne !${colors.reset}`);
   console.log(`${colors.blue}✅ Connecté sur le serveur: ${colors.bright}${guild.name}${colors.reset}`);
@@ -2309,12 +2669,24 @@ await updateleaderboardEmbed();
 console.log(
   `${colors.yellow}🚀 Leaderboard initialisé au démarrage${colors.reset}`
 );
-
+let monthlyCheckRunning = false;
 // Vérifie régulièrement pendant la dernière minute du mois.
 // Le verrou mensuel empêche toute double annonce.
-setInterval(() => {
-  announceMonthlyWinners(guild);
+setInterval(async () => {
+  if (monthlyCheckRunning) return;
+  monthlyCheckRunning = true;
+
+  try {
+    await announceMonthlyWinners(guild);
+    await checkMonthlyLeaderboardRollover(guild);
+  } catch (err) {
+    console.error('❌ Erreur vérification mensuelle :', err);
+  } finally {
+    monthlyCheckRunning = false;
+  }
 }, 15000);
+
+// await checkMonthlyLeaderboardRollover(guild);
 
 console.log(
   `${colors.green}✅ Annonce mensuelle des gagnants activée${colors.reset}`
@@ -2353,15 +2725,170 @@ function sortLeaderboardPlayers(pointsData, totalInvitesPerMember, guildMembersC
       if (invitesDiff !== 0) return invitesDiff;
 
       // 4. Moins de timeouts
-      return (a.timeouts || 0) - (b.timeouts || 0);
+const timeoutDiff =
+  (a.timeouts || 0) - (b.timeouts || 0);
+
+if (timeoutDiff !== 0) return timeoutDiff;
+
+// 5. Ordre stable en cas d'égalité parfaite
+return idA.localeCompare(idB);
     });
 }
 
+let leaderboardRolloverRunning = false;
 
+async function checkMonthlyLeaderboardRollover(guild) {
+  if (leaderboardRolloverRunning) return;
+
+  leaderboardRolloverRunning = true;
+
+  try {
+    const monthKey = getParisMonthKey();
+
+    const data = await getConfigValue('leaderboardData', {});
+
+    if (!data.channelId || !data.messageId) return;
+
+    // Migration : associer le classement existant
+    // au mois courant sans créer de doublon.
+    if (!data.monthKey) {
+      await setConfigValue('leaderboardData', {
+        ...data,
+        monthKey
+      });
+
+      console.log(`📅 Leaderboard existant associé à ${monthKey}`);
+      return;
+    }
+
+    if (data.monthKey === monthKey) return;
+
+    // Ne jamais réinitialiser les résultats avant
+    // l'enregistrement des gagnants du mois précédent.
+    const winnersMonth =
+      await getConfigValue(
+        'monthlyWinnersLastAnnouncement',
+        null
+      );
+
+    if (winnersMonth !== data.monthKey) {
+      console.warn(
+        `⚠️ Passage à ${monthKey} suspendu : ` +
+        `résultats de ${data.monthKey} non annoncés.`
+      );
+      return;
+    }
+
+    const channel =
+      guild.channels.cache.get(data.channelId) ||
+      await guild.channels.fetch(data.channelId).catch(() => null);
+
+    if (!channel?.isTextBased()) return;
+
+    // Sauvegarde des statistiques avant réinitialisation
+    const backupKey = `leaderboardBackup_${data.monthKey}`;
+
+    const existingBackup = await Config.findOne({
+      key: backupKey
+    });
+
+    if (!existingBackup) {
+      const playersBackup = await Points.find({}).lean();
+
+      await setConfigValue(backupKey, {
+        monthKey: data.monthKey,
+        createdAt: new Date().toISOString(),
+        players: playersBackup.map(player => ({
+          userId: player.userId,
+          rr: player.rr || 0,
+          games: player.games || 0,
+          wins: player.wins || 0,
+          timeouts: player.timeouts || 0
+        }))
+      });
+
+      console.log(
+        `💾 Sauvegarde du leaderboard ${data.monthKey} effectuée`
+      );
+    }
+    const verifiedBackup = await getConfigValue(backupKey);
+
+    if (
+      !verifiedBackup ||
+      verifiedBackup.monthKey !== data.monthKey ||
+      !Array.isArray(verifiedBackup.players)
+    ) {
+      throw new Error(
+        `Sauvegarde mensuelle ${data.monthKey} invalide : rotation annulée`
+      );
+    }
+
+    // Le nouveau classement est publié.
+    const container = buildLeaderboardContainer({
+      sorted: [],
+      totalInvitesPerMember: {},
+      guildMembersCache: guild.members.cache,
+      playerCount: 0
+    });
+
+    const msg = await channel.send({
+      components: [container],
+      files: [{
+        attachment: path.join(
+          __dirname,
+          'assets',
+          'images',
+          'leaderboard-icon.png'
+        ),
+        name: 'leaderboard-icon.png'
+      }],
+      flags: MessageFlags.IsComponentsV2
+    });
+
+
+    // Réinitialisation des statistiques mensuelles.
+await Points.updateMany({}, {
+  $set: {
+    rr: 0,
+    games: 0,
+    wins: 0,
+    timeouts: 0
+  }
+});
+
+    await setConfigValue('leaderboardData', {
+      channelId: channel.id,
+      messageId: msg.id,
+      monthKey
+    });
+
+    await updateleaderboardEmbed();
+
+    console.log(`✅ Nouveau leaderboard publié : ${monthKey}`);
+
+  } catch (err) {
+    console.error('❌ Erreur renouvellement leaderboard :', err);
+  } finally {
+    leaderboardRolloverRunning = false;
+  }
+}
 
 async function updateleaderboardEmbed() {
   try {
     const leaderboardData = await getConfigValue('leaderboardData', {});
+
+    const currentMonth = getParisMonthKey();
+
+    if (
+      leaderboardData.monthKey &&
+      leaderboardData.monthKey !== currentMonth
+    ) {
+      console.warn(
+        `⚠️ Leaderboard ${leaderboardData.monthKey} : ` +
+        `actualisation suspendue, mois courant ${currentMonth}.`
+      );
+      return;
+    }
 
     console.log('🔄 Update leaderboard demandé');
     console.log('Leaderboard config :', leaderboardData);
@@ -2439,9 +2966,10 @@ const sorted = sortLeaderboardPlayers(
 });
 
       await setConfigValue('leaderboardData', {
-        messageId: newMsg.id,
-        channelId: channel.id
-      });
+  messageId: newMsg.id,
+  channelId: channel.id,
+  monthKey: leaderboardData.monthKey || getParisMonthKey()
+});
 
       await msg.delete().catch(() => {});
 
@@ -2591,9 +3119,9 @@ const championshipLine =
   );
 
   const position =
-    positionIndex !== -1
-      ? positionIndex + 1
-      : '—';
+  positionIndex !== -1
+    ? `#${positionIndex + 1}`
+    : '—';
 
   const rankEmoji = getRankEmojiFromMember(member);
 
@@ -2601,16 +3129,25 @@ const championshipLine =
   let maxInvites = -1;
 
   for (const [id, data] of Object.entries(allInvites)) {
-    const invites = data.invites || 0;
+  const memberData = guild.members.cache.get(id);
 
-    if (invites > maxInvites) {
-      maxInvites = invites;
-      topInviterId = id;
-    }
+  if (!memberData || memberData.user.bot) continue;
+
+  const invites = Number(data.invites) || 0;
+
+  if (
+    invites > maxInvites ||
+    (invites === maxInvites &&
+      topInviterId !== null &&
+      id.localeCompare(topInviterId) < 0)
+  ) {
+    maxInvites = invites;
+    topInviterId = id;
   }
+}
 
   const badgeTop1 =
-  position === 1
+  positionIndex === 0
     ? BADGES.TOP1
     : '';
 
@@ -2656,9 +3193,14 @@ const badgesLine = [
   .filter(Boolean)
   .join(' ');
 
-  const winrate = stats.games
-    ? ((stats.wins / stats.games) * 100).toFixed(1)
-    : 0;
+  const games = Math.max(0, Number(stats.games) || 0);
+const wins = Math.max(0, Number(stats.wins) || 0);
+
+const winrate = games > 0
+  ? (
+      Math.min(100, (wins / games) * 100)
+    ).toFixed(1)
+  : '0.0';
 
   const joinedTs = member.joinedTimestamp
     ? Math.floor(member.joinedTimestamp / 1000)
@@ -2670,8 +3212,11 @@ const badgesLine = [
     .map(r => `<@&${r.id}>`)
     .join(', ') || 'Aucun';
 
-  const maxRR =
-    sorted[0]?.[1]?.rr || 1;
+  const maxRR = Math.max(
+  1,
+  Number(sorted[0]?.[1]?.rr) || 0,
+  Number(stats.rr) || 0
+);
 
 const barLength = 15;
   const rawBars =
@@ -2700,7 +3245,7 @@ const barLength = 15;
           `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
           `-# Tes statistiques personnelles sur **VALORANT PP**\n` +
           `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
-          `-# **#${position}** au classement général`
+          `-# **${position}** au classement général`
         )
       )
 
@@ -3156,7 +3701,7 @@ function buildResultContainer({
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE TERMINÉE ${mapName || ''}\n` +
+            `## <:VIDE:1493046347337699499> ʀᴇꜱᴜʟᴛᴀᴛ : ${toSmallCaps(winnerText)}\n` +
             `-# Partie validée par **${validatedBy}**\n` +
             `-# Victoire des **${winnerText}**\n` +
             `-# Le calcul prend en compte les avantages <:tag:1497390943928586300> et <:boost:1492125876437913641> de serveur`
@@ -3178,8 +3723,43 @@ function buildResultContainer({
       )
     );
 
+  container.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel('Voir le classement')
+        .setStyle(ButtonStyle.Link)
+        .setURL(
+          `https://discord.com/channels/${guild.id}/1468789000419409950`
+        ),
+
+      new ButtonBuilder()
+        .setCustomId('pp_relaunch')
+        .setLabel('Relancer une partie')
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
+
   return container;
 }
+
+function buildPPCreateModal() {
+  const modal = new ModalBuilder()
+    .setCustomId('pp_create_modal')
+    .setTitle('Créer une partie personnalisée');
+
+  const codeInput = new TextInputBuilder()
+    .setCustomId('valorant_code')
+    .setLabel('Code de groupe Valorant')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true)
+    .setMinLength(6)
+    .setMaxLength(6);
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(codeInput)
+  );
+
+  return modal;}
 
 // ===== Interaction Handler =====
 client.on('interactionCreate', async (interaction) => {
@@ -3410,9 +3990,18 @@ if (
   const clip =
     await Clip.findById(clipId).lean();
 
-  if (!clip) {
-    return;
-  }
+if (!clip || clip.guildId !== interaction.guildId) {
+  return interaction.followUp({
+    components: [
+      buildSimpleContainer(
+        '❌ Ce clip est introuvable ou indisponible.'
+      )
+    ],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+}
 
   // Impossible de liker son propre média
   if (
@@ -3430,32 +4019,48 @@ if (
     });
   }
 
-  const alreadyLiked =
-    clip.likes?.includes(
-      interaction.user.id
-    );
+  const userId = interaction.user.id;
 
-  // Modification atomique directement dans MongoDB
-  const updatedClip =
-    await Clip.findByIdAndUpdate(
-      clipId,
-      alreadyLiked
-        ? {
-            $pull: {
-              likes: interaction.user.id
-            }
-          }
-        : {
-            $addToSet: {
-              likes: interaction.user.id
-            }
-          },
-      {
-        new: true
-      }
-    );
+// Tentative de retrait si le like existe encore.
+let updatedClip = await Clip.findOneAndUpdate(
+  {
+    _id: clipId,
+    guildId: interaction.guildId,
+    likes: userId
+  },
+  {
+    $pull: { likes: userId }
+  },
+  { new: true }
+);
 
-  if (!updatedClip) {
+if (!updatedClip) {
+  // Ajout uniquement si le like n'existe pas.
+  updatedClip = await Clip.findOneAndUpdate(
+    {
+      _id: clipId,
+      guildId: interaction.guildId,
+      likes: { $ne: userId }
+    },
+    {
+      $addToSet: { likes: userId }
+    },
+    { new: true }
+  );
+}
+
+if (!updatedClip) {
+  return interaction.followUp({
+    components: [
+      buildSimpleContainer(
+        '❌ Le clip a changé entre-temps. Réessaie.'
+      )
+    ],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+}
     return;
   }
 
@@ -3493,6 +4098,20 @@ if (
     await interaction.deferUpdate();
 
   }
+
+  try {
+  await interaction.guild.members.fetch();
+} catch (err) {
+  console.error(
+    '❌ Chargement des membres impossible :',
+    err
+  );
+
+  return simpleEditReply(
+    interaction,
+    '❌ Impossible de charger le classement des invitations.'
+  );
+}
 
   const invitesData =
     await getAllInvites();
@@ -3543,7 +4162,7 @@ if (
   }
 
   const page = isOpen
-    ? 1
+    ? 0
     : parseInt(
         interaction.customId.replace(
           'leaderboard_page_',
@@ -3552,7 +4171,7 @@ if (
         10
       );
 
-  if (isNaN(page) || page < 1) return;
+  if (isNaN(page) || page < 0) return;
 
   const guild = interaction.guild;
 
@@ -4055,7 +4674,6 @@ if (interaction.isButton() && interaction.customId === 'toggle_notif_pp') {
     );
   }
 }
-}
 
 // ✅ Sécurité UNIQUEMENT pour les interactions qui ont un customId (boutons / menus)
 if (interaction.isButton()) {
@@ -4119,13 +4737,21 @@ if (interaction.isButton()) {
         if (vc.userLimit > 0 && vc.members.size >= vc.userLimit) {
           await vc.edit({ userLimit: vc.members.size + 1 });
         }
-        await member.voice.setChannel(vc).catch(() => {});
+        if (!member.voice.channelId) {
+  throw new Error(
+    `Le membre ${member.id} n'est connecté à aucun vocal.`
+  );
+}
+
+await member.voice.setChannel(vc);
       } finally {
         if (vc.editable) {
           await vc.edit({ userLimit: originalLimit }).catch(() => {});
         }
       }
     }
+
+
 
     // ── COMMANDES SLASH ──
     if (interaction.isChatInputCommand() && interaction.commandName === 'pp') {
@@ -4149,7 +4775,28 @@ if (interaction.isButton()) {
       return interaction.showModal(modal);
     }
 
-    if (interaction.isChatInputCommand() && interaction.commandName === 'resetseason') {
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === 'resetseason'
+    ) {
+      if (
+        !interaction.memberPermissions?.has(
+          PermissionFlagsBits.Administrator
+        )
+      ) {
+        return simpleReply(
+          interaction,
+          '❌ Commande réservée aux administrateurs.'
+        );
+      }
+      if (
+        interaction.options.getString('confirmation') !== 'CONFIRMER'
+      ) {
+        return simpleReply(
+          interaction,
+          '❌ Réinitialisation annulée. Écris exactement CONFIRMER.'
+        );
+      }
       await interaction.deferReply({
   flags:
     MessageFlags.Ephemeral |
@@ -4157,8 +4804,54 @@ if (interaction.isButton()) {
 });
 
       try {
-        const result = await Points.updateMany({}, { $set: { rr: 0, games: 0, wins: 0 } });
-        await updateleaderboardEmbed();
+        const backupKey = `manualResetBackup_${Date.now()}`;
+
+const playersBackup = await Points.find({}).lean();
+
+await setConfigValue(backupKey, {
+  createdAt: new Date().toISOString(),
+  players: playersBackup.map(player => ({
+    userId: player.userId,
+    rr: player.rr ?? 0,
+    games: player.games ?? 0,
+    wins: player.wins ?? 0,
+    timeouts: player.timeouts ?? 0
+  }))
+});
+
+const savedBackup = await getConfigValue(backupKey);
+
+if (
+  !savedBackup ||
+  !Array.isArray(savedBackup.players) ||
+  savedBackup.players.length !== playersBackup.length
+) {
+  throw new Error('Sauvegarde non vérifiée : reset annulé');
+}
+
+const result = await Points.updateMany(
+  {},
+  {
+    $set: {
+      rr: 0,
+      games: 0,
+      wins: 0,
+      timeouts: 0
+    }
+  }
+);
+
+console.log(`💾 Sauvegarde du reset : ${backupKey}`);
+
+const leaderboardData =
+  await getConfigValue('leaderboardData', {});
+
+await setConfigValue('leaderboardData', {
+  ...leaderboardData,
+  monthKey: getParisMonthKey()
+});
+
+await updateleaderboardEmbed();
 
         return simpleEditReply(
   interaction,
@@ -4175,7 +4868,17 @@ if (interaction.isButton()) {
     }
 
     // ── MODAL SUBMIT ──
-if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
+if (
+  (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') ||
+  (interaction.isButton() && interaction.customId === 'pp_relaunch')
+) {
+  const isRelaunch = interaction.isButton();
+  if (isRelaunch) {
+    const authorized = interaction.user.id === BOT_OWNER_ID ||
+      interaction.member?.roles?.cache?.has(ORGANIZER_ROLE_ID);
+    if (!authorized) return simpleReply(interaction, '⛔ Seuls les organisateurs peuvent relancer une partie.');
+  }
+
   if (interaction.replied || interaction.deferred) return;
 
   await interaction.deferReply({
@@ -4184,11 +4887,17 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
     MessageFlags.IsComponentsV2
 });
 
-  const valorantCode = interaction.fields.getTextInputValue('valorant_code');
+  // Une relance reprend automatiquement le code Valorant de la partie terminée.
+  const valorantCode = isRelaunch
+    ? await getConfigValue(`ppRelaunch_${interaction.message.id}`, null)
+    : interaction.fields.getTextInputValue('valorant_code');
+  if (!valorantCode || !/^[\s\S]{6}$/.test(valorantCode)) {
+    return simpleEditReply(interaction, '❌ Code de la partie précédente introuvable. Utilise /pp pour créer une nouvelle partie.');
+  }
 
-  const verifiedRole = interaction.guild.roles.cache.find(
-    r => r.name === 'Vérifié'
-  );
+const verifiedRole = interaction.guild.roles.cache.get(
+  ROLE_VERIFIE
+);
 
   if (!verifiedRole) {
   return simpleEditReply(
@@ -4232,7 +4941,14 @@ if (interaction.isModalSubmit() && interaction.customId === 'pp_create_modal') {
         ]
       });
 
-      const map = maps[Math.floor(Math.random() * maps.length)];
+      if (!Array.isArray(maps) || maps.length === 0) {
+  return simpleEditReply(
+    interaction,
+    '❌ Impossible de créer la partie : aucune map configurée.'
+  );
+}
+
+const map = maps[Math.floor(Math.random() * maps.length)];
 
       const container = buildAnnounceContainer({
   waitingVCId: waitingVC.id,
@@ -4305,8 +5021,19 @@ const msg = await interaction.channel.send({
 }),
       };
 
-      gamesData.games.push(newGame);
-      await saveGame(newGame);
+gamesData.games.push(newGame);
+
+await interaction.guild.members.fetch({
+  withPresences: false
+}).catch(() => {});
+
+newGame.players = [...waitingVC.members.values()]
+  .filter(member => !member.user.bot)
+  .slice(0, 10)
+  .map(member => member.id);
+
+await saveGame(newGame);
+await updateRegistrationEmbed(interaction.guild, newGame);
       return simpleEditReply(
   interaction,
   '✅ Partie créée.'
@@ -4335,7 +5062,26 @@ if (
     );
   }
 
+
+    const isPlayerInGame =
+    game.players?.includes(interaction.user.id) ||
+    game.attackers?.some(p => p.id === interaction.user.id) ||
+    game.defenders?.some(p => p.id === interaction.user.id);
+
+  if (isPlayerInGame) {
+    return simpleEditReply(
+      interaction,
+      '⛔ Tu participes à cette partie : impossible de passer spectateur.'
+    );
+  }
+
   const choice = interaction.values[0];
+  if (!['attack', 'defense'].includes(choice)) {
+  return simpleEditReply(
+    interaction,
+    '❌ Choix de spectateur invalide.'
+  );
+}
 
   const att =
     interaction.guild.channels.cache.get(game.attVC);
@@ -4344,8 +5090,7 @@ if (
     interaction.guild.channels.cache.get(game.defVC);
 
   const vc =
-    (choice === 'attack' ? att : def) ||
-    waitingVC;
+    choice === 'attack' ? att : def;
 
   if (!vc) {
     return simpleEditReply(
@@ -4354,17 +5099,31 @@ if (
     );
   }
 
-await markAsSpectator(
-  interaction.member
-);
-
-await moveVerifiedToVC(
-  interaction.member,
-  vc
-);
-
 if (!game.spectators) {
   game.spectators = {};
+}
+
+// Le spectateur doit être enregistré AVANT le déplacement vocal.
+game.spectators[interaction.user.id] = choice;
+
+await markAsSpectator(interaction.member);
+
+try {
+  await moveVerifiedToVC(interaction.member, vc);
+} catch (err) {
+  delete game.spectators[interaction.user.id];
+
+  await restoreSpectatorNickname(interaction.member);
+
+  console.error(
+    `❌ Déplacement spectateur impossible : ${interaction.user.id}`,
+    err
+  );
+
+  return simpleEditReply(
+    interaction,
+    '❌ Impossible de rejoindre le vocal spectateur.'
+  );
 }
 
 game.spectators[
@@ -4400,6 +5159,12 @@ case 'join_game': {
     "❌ Cette partie n'existe plus."
   );
 }
+if (game.attackers?.length || game.defenders?.length) {
+  return simpleReply(
+    interaction,
+    '⛔ Cette partie a déjà commencé. Inscriptions fermées.'
+  );
+}
 
   const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
 
@@ -4431,18 +5196,34 @@ case 'join_game': {
   );
 }
 
-  await interaction.member.voice
-    .setChannel(prepVC)
-    .catch(() => null);
+try {
+  await interaction.member.voice.setChannel(prepVC);
+} catch (err) {
+  console.error(
+    `❌ Impossible de déplacer ${interaction.user.id} :`,
+    err
+  );
 
   return simpleReply(
+    interaction,
+    '❌ Impossible de rejoindre le vocal de préparation.'
+  );
+}
+
+return simpleReply(
   interaction,
-  '✅ Tu as rejoint la partie.'
+  '✅ Tu as rejoint le vocal de préparation.'
 );
 }
 
         case 'change_map': {
           if (!game) {
+if (game.attackers?.length || game.defenders?.length) {
+  return simpleReply(
+    interaction,
+    '⛔ La partie est déjà lancée. Impossible de changer la map.'
+  );
+}
   return simpleReply(
     interaction,
     "❌ Cette partie n'existe plus."
@@ -4450,6 +5231,18 @@ case 'join_game': {
 }
 
           const voterId = interaction.user.id;
+          if (!game.players.includes(voterId)) {
+  return simpleReply(
+    interaction,
+    '⛔ Tu dois participer à cette partie pour voter.'
+  );
+}
+          if (!game.players.includes(voterId)) {
+  return simpleReply(
+    interaction,
+    '⛔ Seuls les joueurs inscrits peuvent voter pour changer la map.'
+  );
+}
           const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
           const inPrepVC = prepVC?.members?.has(voterId);
 
@@ -4475,8 +5268,15 @@ game.changeMapVotes.push(voterId);
           const votes = game.changeMapVotes.length;
 
           if (votes >= needed) {
-            const currentName = game.mapName;
-            const pool = maps.filter(m => m.name !== currentName);
+            if (!Array.isArray(maps) || maps.length === 0) {
+  return simpleReply(
+    interaction,
+    '❌ Aucune map disponible dans la configuration.'
+  );
+}
+
+const currentName = game.mapName;
+const pool = maps.filter(m => m.name !== currentName);
             const newMap = pool.length ? pool[Math.floor(Math.random() * pool.length)] : maps[Math.floor(Math.random() * maps.length)];
 
             game.mapName = newMap.name;
@@ -4506,9 +5306,8 @@ game.changeMapVotes.push(voterId);
           const lobbyVC = interaction.guild.channels.cache.get(WAITING_ROOM_ID);
 
           if (!lobbyVC) {
-  return simpleReply(
-    interaction,
-    "❌ Salon 'salle d'attente' introuvable."
+  console.warn(
+    `⚠️ Salon d'attente introuvable lors de l'annulation de ${game.id}`
   );
 }
           
@@ -4517,8 +5316,14 @@ game.changeMapVotes.push(voterId);
             await Promise.all(game.players.map(async (id) => {
               const member = interaction.guild.members.cache.get(id) || null;
               if (member?.voice?.channel) {
-                await member.voice.setChannel(lobbyVC).catch(() => {});
-              }
+  await member.voice.setChannel(lobbyVC || null)
+    .catch(err => {
+      console.error(
+        `❌ Déplacement impossible pour ${member.id} :`,
+        err
+      );
+    });
+}
             }));
           }
 
@@ -4526,8 +5331,14 @@ game.changeMapVotes.push(voterId);
             await Promise.all(Object.keys(game.spectators).map(async (id) => {
               const member = interaction.guild.members.cache.get(id) || null;
               if (member?.voice?.channel) {
-                await member.voice.setChannel(lobbyVC).catch(() => {});
-              }
+  await member.voice.setChannel(lobbyVC || null)
+    .catch(err => {
+      console.error(
+        `❌ Déplacement impossible pour ${member.id} :`,
+        err
+      );
+    });
+}
             }));
           }
 
@@ -4571,12 +5382,33 @@ game.changeMapVotes.push(voterId);
         }
 
         case 'start': {
+          if (!game) {
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'existe plus."
+  );
+}
+
+if (game.attackers?.length || game.defenders?.length) {
+  return simpleReply(
+    interaction,
+    '⛔ Les équipes de cette partie ont déjà été créées.'
+  );
+}
+
+          if (game.attackers?.length || game.defenders?.length) {
+  return simpleReply(
+    interaction,
+    '⛔ Cette partie a déjà été lancée.'
+  );
+}
   await simpleReply(
     interaction,
     '⏳ Lancement de la partie...'
   );
 
-          const verifiedRole = interaction.guild.roles.cache.find(r => r.name === 'Vérifié');
+          const verifiedRole =
+  interaction.guild.roles.cache.get(ROLE_VERIFIE);
           if (!verifiedRole) {
   return simpleEditReply(
     interaction,
@@ -4606,7 +5438,9 @@ if (TEST_MODE && game.players.length < 1) {
 
           function balanceTeams(players) {
 
-  players.sort((a, b) => b.rankValue - a.rankValue);
+  players = [...players].sort(
+  (a, b) => b.rankValue - a.rankValue
+);
 
   // ── MODE TEST : fonctionne avec 1, 2, 3... joueurs ──
   if (TEST_MODE && players.length !== 10) {
@@ -4712,8 +5546,13 @@ if (TEST_MODE && game.players.length < 1) {
           const sortedPlayers = game.players.map(userId => {
             const member = interaction.guild.members.cache.get(userId);
             const rankValue = member
-              ? member.roles.cache.reduce((val, role) => val || RANK_VALUES_BY_ID[role.id], 0)
-              : 0;
+  ? Math.max(
+      0,
+      ...member.roles.cache.map(
+        role => RANK_VALUES_BY_ID[role.id] || 0
+      )
+    )
+  : 0;
             return { id: userId, member, rankValue };
           });
 
@@ -4780,31 +5619,127 @@ if (TEST_MODE && game.players.length < 1) {
 
           const movePromises = [];
 
+                   // Déplacement progressif des joueurs et spectateurs
+          const membersToMove = new Map();
+
           for (const p of game.attackers) {
-            if (p.member?.voice?.channel) movePromises.push(p.member.voice.setChannel(attVC).catch(() => {}));
+            membersToMove.set(p.id, attVC);
           }
+
           for (const p of game.defenders) {
-            if (p.member?.voice?.channel) movePromises.push(p.member.voice.setChannel(defVC).catch(() => {}));
+            membersToMove.set(p.id, defVC);
           }
+
           if (game.spectators) {
             for (const [id, choice] of Object.entries(game.spectators)) {
-              const member = interaction.guild.members.cache.get(id) || null;
-              const vc = choice === 'attack' ? attVC : defVC;
-              if (member?.voice?.channel) movePromises.push(member.voice.setChannel(vc).catch(() => {}));
+              if (!membersToMove.has(id)) {
+                membersToMove.set(
+                  id,
+                  choice === 'attack' ? attVC : defVC
+                );
+              }
             }
           }
 
-          await Promise.all(movePromises);
+          // Déplacement séquentiel : vérifie le salon réel et retente une fois
+          // en cas d'échec Discord, sans modifier les équipes calculées.
+          async function movePPMember(member, destination) {
+            if (!member?.voice?.channelId || !destination) return false;
+            for (let attempt = 0; attempt < 2; attempt++) {
+              try {
+                if (member.voice.channelId === destination.id) return true;
+                await member.voice.setChannel(destination, 'Répartition vocale PP');
+                const refreshed = await interaction.guild.members.fetch({ user: member.id, force: true });
+                if (refreshed.voice.channelId === destination.id) return true;
+              } catch (err) {
+                if (attempt === 1) console.error(`❌ Déplacement vocal PP ${member.id} :`, err);
+              }
+            }
+            return false;
+          }
+
+          for (const [id, destination] of membersToMove) {
+            try {
+              const member =
+                interaction.guild.members.cache.get(id) ||
+                await interaction.guild.members.fetch(id).catch(() => null);
+
+              if (!member?.voice?.channelId) continue;
+              if (member.voice.channelId === destination.id) continue;
+
+              await movePPMember(member, destination);
+
+            } catch (err) {
+              console.error(
+                `❌ Déplacement PP impossible pour ${id} :`,
+                err
+              );
+            }
+          }
 
           const prepVC = interaction.guild.channels.cache.get(game.waitingVC);
-          if (prepVC) await prepVC.delete().catch(() => {});
+
+          if (prepVC) {
+            // Récupère les membres encore présents
+            const remainingMembers = [...prepVC.members.values()];
+
+            // Nouvelle tentative de déplacement
+            for (const member of remainingMembers) {
+              const isAttacker = game.attackers.some(
+                p => p.id === member.id
+              );
+
+              const isDefender = game.defenders.some(
+                p => p.id === member.id
+              );
+
+              const spectatorChoice = game.spectators?.[member.id];
+
+              const destination = isAttacker
+                ? attVC
+                : isDefender
+                  ? defVC
+                  : spectatorChoice === 'attack'
+                    ? attVC
+                    : spectatorChoice === 'defense'
+                      ? defVC
+                      : null;
+
+              if (!destination) continue;
+
+              try {
+                await movePPMember(member, destination);
+              } catch (err) {
+                console.error(
+                  `❌ Déplacement impossible pour ${member.id} :`,
+                  err
+                );
+              }
+            }
+
+            // Actualise les états vocaux avant de supprimer le salon.
+            await interaction.guild.members.fetch({ withPresences: false }).catch(() => {});
+            // Ne supprime le vocal que lorsqu'il est vide
+            const updatedPrepVC =
+              await interaction.guild.channels.fetch(game.waitingVC)
+                .catch(() => null);
+
+            if (updatedPrepVC && updatedPrepVC.members.size === 0) {
+              await updatedPrepVC.delete().catch(err =>
+                console.error('Erreur suppression vocal préparation :', err)
+              );
+            }
+          }
 
           const sortTeamByRank = (team) => {
             let data = [];
             for (const player of team) {
               const member = interaction.guild.members.cache.get(player.id) || null;
               if (!member) continue;
-              const rankRole = member.roles.cache.find(r => RANK_ORDER[r.name]);
+              const rankRole = member.roles.cache
+  .filter(role => RANK_ORDER[role.name] !== undefined)
+  .sort((a, b) => RANK_ORDER[a.name] - RANK_ORDER[b.name])
+  .first();
               const rankValue = rankRole ? RANK_ORDER[rankRole.name] : 999;
               const rankEmoji = rankRole ? rankEmojis[rankRole.name] : '<:Unranked:1465744234182086789>';
               data.push({ id: player.id, rankValue, rankEmoji });
@@ -4878,11 +5813,14 @@ await simpleEditReply(
         }
 
         case 'spectate': {
-  const verifiedRole = interaction.guild.roles.cache.find(
-    r => r.name === 'Vérifié'
-  );
 
-  if (!verifiedRole || !interaction.member.roles.cache.has(verifiedRole.id)) {
+          if (!game || !game.attVC || !game.defVC) {
+  return simpleReply(
+    interaction,
+    "❌ Cette partie n'est plus disponible."
+  );
+}
+  if (!interaction.member.roles.cache.has(ROLE_VERIFIE)) {
   return simpleReply(
     interaction,
     '❌ Seuls les membres Vérifiés peuvent observer.'
@@ -4936,7 +5874,19 @@ await simpleEditReply(
             const attChannel = interaction.guild.channels.cache.get(game.attVC);
             const defChannel = interaction.guild.channels.cache.get(game.defVC);
 
-            const attackers =
+            if (
+  !Array.isArray(game.attackers) ||
+  !Array.isArray(game.defenders) ||
+  game.attackers.length !== 5 ||
+  game.defenders.length !== 5
+) {
+  console.error(
+    `❌ Résultat refusé : équipes invalides pour ${game.id}`
+  );
+  return;
+}
+
+const attackers =
   game.attackers.map(p => p.id);
 
 const defenders =
@@ -4946,6 +5896,13 @@ const allPlayers = [
   ...attackers,
   ...defenders
 ];
+
+if (new Set(allPlayers).size !== 10) {
+  console.error(
+    `❌ Résultat refusé : joueurs dupliqués pour ${game.id}`
+  );
+  return;
+}
 
 const membersToMove = new Map();
 
@@ -4973,43 +5930,81 @@ if (defChannel) {
   }
 }
 
-await Promise.all(
-  [...membersToMove.values()].map(
-    member =>
-      member.voice
-        .setChannel(waitingVC)
-        .catch(() => {})
-  )
-);
+// Déplacements progressifs pour éviter les rafales
+// de requêtes Discord et vérifier chaque transfert.
+for (const member of membersToMove.values()) {
+  try {
+    if (
+      member.voice.channelId === game.attVC ||
+      member.voice.channelId === game.defVC
+    ) {
+      await member.voice.setChannel(waitingVC);
+    }
+  } catch (err) {
+    console.error(
+      `❌ Déplacement vocal impossible pour ${member.id} :`,
+      err
+    );
+  }
+}
+
+// Deuxième passage : récupère les membres encore présents,
+// y compris les spectateurs non répertoriés.
+for (const channelId of [game.attVC, game.defVC]) {
+  const channel =
+    interaction.guild.channels.cache.get(channelId);
+
+  if (!channel) continue;
+
+  for (const member of channel.members.values()) {
+    try {
+      await member.voice.setChannel(waitingVC);
+    } catch (err) {
+      console.error(
+        `❌ Membre resté dans ${channelId} : ${member.id}`,
+        err
+      );
+    }
+  }
+}
 
             if (game.manageMessageId) {
               const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
               if (inGameMsg?.deletable) await inGameMsg.delete().catch(() => {});
             }
 
-            if (interaction.customId === 'cancel_game') {
-
+if (interaction.customId === 'cancel_game') {
   for (const id of [game.attVC, game.defVC]) {
     const ch = interaction.guild.channels.cache.get(id);
+    if (!ch) continue;
 
-    if (ch) {
-      await ch.delete().catch(() => {});
+    if (ch.members.size > 0) {
+      console.warn(`⚠️ Vocal ${id} conservé : encore occupé.`);
+      continue;
     }
+
+    await ch.delete().catch(console.error);
   }
 
   if (game.categoryId) {
-    const category =
-      interaction.guild.channels.cache.get(game.categoryId);
+    const category = interaction.guild.channels.cache.get(game.categoryId);
 
-    if (category) {
-      await category.delete().catch(() => {});
+    if (
+      category &&
+      !interaction.guild.channels.cache.some(
+        ch => ch.parentId === category.id
+      )
+    ) {
+      await category.delete().catch(console.error);
     }
   }
 
-  gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-  await deleteGame(game.id);
+  gamesData.games = gamesData.games.filter(
+    g => g.id !== game.id
+  );
 
-  return;
+  await deleteGame(game.id);
+  break;
 }
 
             const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
@@ -5038,28 +6033,38 @@ await updateleaderboardEmbed().catch(err =>
 // Supprime les vocaux Attaquants / Défenseurs puis la catégorie
 for (const id of [game.attVC, game.defVC]) {
   const ch = interaction.guild.channels.cache.get(id);
+  if (!ch) continue;
 
-  if (ch) {
-    await ch.delete().catch(err =>
-      console.error(`Erreur suppression salon ${id} :`, err)
+  // Ne jamais supprimer un salon s'il reste des membres.
+  if (ch.members.size > 0) {
+    console.warn(
+      `⚠️ Salon ${id} conservé : ${ch.members.size} membre(s) encore présents.`
     );
+    continue;
   }
+
+  await ch.delete().catch(err =>
+    console.error(`Erreur suppression salon ${id} :`, err)
+  );
 }
 
-// La catégorie doit être supprimée APRÈS ses salons
 if (game.categoryId) {
-  const category =
-    interaction.guild.channels.cache.get(game.categoryId);
+  const category = interaction.guild.channels.cache.get(game.categoryId);
 
   if (category) {
-    await category.delete().catch(err =>
-      console.error('Erreur suppression catégorie de partie :', err)
+    const hasRemainingChannels = interaction.guild.channels.cache.some(
+      channel => channel.parentId === category.id
     );
+
+    if (!hasRemainingChannels) {
+      await category.delete().catch(err =>
+        console.error('Erreur suppression catégorie PP :', err)
+      );
+    }
   }
 }
 
-gamesData.games = gamesData.games.filter(g => g.id !== game.id);
-await deleteGame(game.id);
+
 
   
 
@@ -5073,9 +6078,10 @@ await deleteGame(game.id);
 
     if (!member) continue;
 
-    const rankRole = member.roles?.cache?.find(
-      r => RANK_ORDER[r.name]
-    );
+    const rankRole = member.roles?.cache
+  ?.filter(role => RANK_ORDER[role.name] !== undefined)
+  .sort((a, b) => RANK_ORDER[a.name] - RANK_ORDER[b.name])
+  .first();
 
     const rankValue = rankRole
       ? RANK_ORDER[rankRole.name]
@@ -5118,18 +6124,25 @@ const resultContainer = buildResultContainer({
   guild: interaction.guild
 });
 
-await interaction.channel.send({
+const finishedMessage = await interaction.channel.send({
   components: [resultContainer],
   files: [{
     attachment: `./assets/maps/${game.mapImage}`,
     name: game.mapImage
   }],
   flags: MessageFlags.IsComponentsV2
-}).catch(console.error);
+});
+// Conservation du code de la partie terminée, sans exposer de saisie à la relance.
+await setConfigValue(`ppRelaunch_${finishedMessage.id}`, game.valorantCode);
+
+gamesData.games = gamesData.games.filter(
+  g => g.id !== game.id
+);
+
+await deleteGame(game.id);
           } finally {
             delete gameLocks[game.id];
           }
-
           break;
         }
       }
@@ -5454,9 +6467,10 @@ return;
 });
 
   await setConfigValue('leaderboardData', {
-    messageId: msg.id,
-    channelId: interaction.channel.id
-  });
+  messageId: msg.id,
+  channelId: interaction.channel.id,
+  monthKey: getParisMonthKey()
+});
 
   await updateleaderboardEmbed();
 
@@ -5650,6 +6664,56 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   const guild = newState.guild || oldState.guild;
   if (!guild) return;
 
+  // Empêche un joueur de rejoindre le vocal adverse.
+  if (
+    newState.channelId &&
+    oldState.channelId !== newState.channelId
+  ) {
+    const game = gamesData.games.find(g =>
+      g.attVC === newState.channelId ||
+      g.defVC === newState.channelId
+    );
+
+    if (game) {
+      const userId = newState.id;
+
+      const isAttacker = game.attackers?.some(
+        p => p.id === userId
+      );
+
+      const isDefender = game.defenders?.some(
+        p => p.id === userId
+      );
+
+      const isSpectator = Boolean(
+  game.spectators &&
+  Object.prototype.hasOwnProperty.call(
+    game.spectators,
+    userId
+  )
+);
+
+const forbidden =
+  (isAttacker && newState.channelId === game.defVC) ||
+  (isDefender && newState.channelId === game.attVC) ||
+  (!isAttacker && !isDefender && !isSpectator);
+
+      if (forbidden) {
+        const ownVC = guild.channels.cache.get(
+          isAttacker ? game.attVC : game.defVC
+        );
+
+        await newState.member.voice
+          .setChannel(ownVC || null)
+          .catch(err =>
+            console.error('Erreur anti-espionnage PP :', err)
+          );
+
+        return;
+      }
+    }
+  }
+
 
   const spectatorGame =
   gamesData.games.find(game =>
@@ -5662,7 +6726,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 if (
   spectatorGame &&
-  oldState.channelId !== newState.channelId
+  oldState.channelId !== newState.channelId &&
+  newState.channelId !== spectatorGame.attVC &&
+  newState.channelId !== spectatorGame.defVC
 ) {
 
   await restoreSpectatorNickname(
@@ -5697,9 +6763,16 @@ if (
     }
 
     if (oldState.channelId === affectedGame.waitingVC && oldState.channelId !== newState.channelId) {
-      affectedGame.players = affectedGame.players.filter(id => id !== oldState.member.id);
-      saveGameDebounced(affectedGame);
-      scheduleRegistrationUpdate(guild, affectedGame);
+      affectedGame.players = affectedGame.players.filter(
+  id => id !== oldState.member.id
+);
+
+affectedGame.changeMapVotes = (
+  affectedGame.changeMapVotes || []
+).filter(id => id !== oldState.member.id);
+
+saveGameDebounced(affectedGame);
+scheduleRegistrationUpdate(guild, affectedGame);
     }
   }
 
@@ -5869,12 +6942,22 @@ async function startMemberOnboarding(member) {
   }
 
   const guild = member.guild;
-  const cachedInvites = invitesCache.get(guild.id) || new Map();
+  const cachedInvites = invitesCache.get(guild.id);
 
-  const guildInvites = await guild.invites.fetch();
-  const newInvites = new Map();
+ const guildInvites = await guild.invites.fetch().catch(err => {
+  console.error('❌ Invitations indisponibles :', err);
+  return null;
+});
 
-  guildInvites.forEach(inv => {
+if (!guildInvites) {
+  console.warn(
+    `⚠️ Invitation inconnue pour ${member.id}, accueil maintenu.`
+  );
+}
+
+const newInvites = new Map();
+
+  if (guildInvites) guildInvites.forEach(inv => {
     newInvites.set(inv.code, {
       code: inv.code,
       inviter: inv.inviter || null,
@@ -5886,21 +6969,37 @@ async function startMemberOnboarding(member) {
 
   let usedInvite;
 
-  for (const [code, invite] of newInvites.entries()) {
-    const oldUses = cachedInvites.get(code)?.uses || 0;
+    for (const [code, invite] of (
+    invitesCache.has(guild.id) ? newInvites : new Map()
+  ).entries()) {
+    const oldUses = cachedInvites?.get(code)?.uses;
 
-    if (invite.uses > oldUses) {
+    if (
+      oldUses !== undefined &&
+      invite.uses > oldUses
+    ) {
       usedInvite = invite;
       break;
     }
   }
 
-  invitesCache.set(guild.id, newInvites);
+    if (guildInvites) {
+    invitesCache.set(guild.id, newInvites);
+  }
 
   const accountAge = formatAccountAge(member.user.createdAt);
+if (welcomeChannel?.isTextBased()) {
+  // Construction et envoi du welcomeContainer existants
+}
+  const welcomeChannel =
+  guild.channels.cache.get(WELCOME_CHANNEL_ID) ||
+  await guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
 
-  const welcomeChannel = guild.channels.cache.get(WELCOME_CHANNEL_ID);
-  if (!welcomeChannel) return;
+if (!welcomeChannel) {
+  console.warn(
+    `⚠️ Salon de bienvenue introuvable pour ${member.id}`
+  );
+}
 
   const inviterText = usedInvite?.inviter
     ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
@@ -5930,11 +7029,18 @@ inviterText
 )
     );
 
-await welcomeChannel.send({
-  components: [welcomeContainer],
-  ...(avatar.file ? { files: [avatar.file] } : {}),
-  flags: MessageFlags.IsComponentsV2
-});
+try {
+  await welcomeChannel.send({
+    components: [welcomeContainer],
+    ...(avatar.file ? { files: [avatar.file] } : {}),
+    flags: MessageFlags.IsComponentsV2
+  });
+} catch (err) {
+  console.error(
+    `❌ Message de bienvenue impossible pour ${member.id} :`,
+    err
+  );
+}
 
   if (usedInvite) {
     const inviterId = usedInvite.inviter?.id;
