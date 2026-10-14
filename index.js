@@ -740,6 +740,7 @@ const EXEMPT_VC_IDS = [
 
 const invitesCache = new Map();
 const autoCreateLocks = new Map();
+const ppCreationLocks = new Set();
 const gameLocks = {};
 const spectatorOriginalNicknames = new Map();
 
@@ -1241,7 +1242,8 @@ function buildLeaderboardContainer({
   guildMembersCache,
   playerCount,
   seasonLabel = 'Saison 1',
-  page = 0
+  page = 0,
+  ephemeralPagination = false
 }) {
 
   if (!sorted.length) {
@@ -1406,7 +1408,7 @@ if (page === 0) {
 
   container.addActionRowComponents(openLeaderboardRow);
 
-if (totalPages > 1) {
+if (ephemeralPagination && totalPages > 1) {
   container.addActionRowComponents(
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -1417,7 +1419,7 @@ if (totalPages > 1) {
   );
 }
 
-} else {
+} else if (ephemeralPagination) {
 
   const paginationRow = new ActionRowBuilder().addComponents(
 
@@ -4218,7 +4220,8 @@ if (
     totalInvitesPerMember,
     guildMembersCache: guild.members.cache,
     playerCount,
-    page
+    page,
+    ephemeralPagination: true
   });
 
 return interaction.editReply({
@@ -4921,6 +4924,16 @@ const verifiedRole = interaction.guild.roles.cache.get(
   );
 }
 
+  // Empêche deux créations simultanées par le même organisateur.
+  const creationKey = `${interaction.guildId}:${interaction.user.id}`;
+  if (ppCreationLocks.has(creationKey)) {
+    return simpleEditReply(interaction, '⏳ Une création de partie est déjà en cours.');
+  }
+  ppCreationLocks.add(creationKey);
+  let createdCategory = null;
+  let createdMessage = null;
+  let gamePersisted = false;
+  try {
   const category = await interaction.guild.channels.create({
         name: 'ᴘᴀʀᴛɪᴇ ᴇɴ ᴄᴏᴜʀꜱ',
         type: 4,
@@ -4933,6 +4946,8 @@ const verifiedRole = interaction.guild.roles.cache.get(
           }] : [])
         ]
       });
+
+      createdCategory = category;
 
       const communityCategory = interaction.guild.channels.cache.get(COMMUNITY_CATEGORY_ID)
         || await interaction.guild.channels.fetch(COMMUNITY_CATEGORY_ID).catch(() => null);
@@ -5016,7 +5031,9 @@ const msg = await interaction.channel.send({
   flags: MessageFlags.IsComponentsV2
 });
 
-      const newGame = {
+      createdMessage = msg;
+
+const newGame = {
         id: msg.id,
         messageId: msg.id,
         channelId: interaction.channel.id,
@@ -5036,23 +5053,45 @@ const msg = await interaction.channel.send({
 }),
       };
 
+// Enregistrer immédiatement avant toute opération lente ou événement vocal.
+await saveGame(newGame);
+gamePersisted = true;
 gamesData.games.push(newGame);
 
-await interaction.guild.members.fetch({
-  withPresences: false
-}).catch(() => {});
-
+// Un membre peut déjà être dans le salon : ne charger que ses occupants.
 newGame.players = [...waitingVC.members.values()]
   .filter(member => !member.user.bot)
   .slice(0, 10)
   .map(member => member.id);
 
-await saveGame(newGame);
-await updateRegistrationEmbed(interaction.guild, newGame);
-      return simpleEditReply(
-  interaction,
-  '✅ Partie créée.'
+if (newGame.players.length) {
+  await saveGame(newGame);
+}
+
+// Répondre à /pp avant la mise à jour cosmétique du container.
+await simpleEditReply(interaction, '✅ Partie créée.');
+updateRegistrationEmbed(interaction.guild, newGame).catch(err =>
+  console.error('Erreur mise à jour annonce PP :', err)
 );
+return;
+  } catch (err) {
+    console.error('Erreur création PP :', err);
+    if (!gamePersisted) {
+      // Ne laisser ni annonce orpheline ni catégorie vide après un échec.
+      if (createdMessage) await createdMessage.delete().catch(() => {});
+      if (createdCategory) {
+        const children = interaction.guild.channels.cache.filter(ch => ch.parentId === createdCategory.id);
+        for (const child of children.values()) await child.delete().catch(() => {});
+        await createdCategory.delete().catch(() => {});
+      }
+    }
+    if (interaction.deferred && !interaction.replied) {
+      await simpleEditReply(interaction, '❌ Création impossible. Vérifie les logs du bot.').catch(() => {});
+    }
+    return;
+  } finally {
+    ppCreationLocks.delete(creationKey);
+  }
     }
 
 // ── SELECT MENU OBSERVER ──
