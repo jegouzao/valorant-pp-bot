@@ -1696,6 +1696,21 @@ return container;
 
 // ===== Slash Commands =====
 const commands = [
+
+  {
+  name: 'closemonth',
+  description: 'Rattraper une clôture mensuelle manquée',
+  default_member_permissions:
+    PermissionFlagsBits.Administrator.toString(),
+  options: [
+    {
+      name: 'confirmation',
+      description: 'Écrire CONFIRMER pour clôturer le mois précédent',
+      type: 3,
+      required: true
+    }
+  ]
+},
   {
   name: 'addchampion',
   description: 'Ajouter un ancien vainqueur au palmarès',
@@ -2062,7 +2077,10 @@ async function getPendingMonthlyClosure() {
   };
 }
 
-async function announceMonthlyWinners(guild) {
+async function announceMonthlyWinners(
+  guild,
+  forcedMonthKey = null
+) {
   if (monthlyWinnersRunning) return;
   try {
     const now = new Date();
@@ -2107,17 +2125,17 @@ if (
   );
 }
 
-    if (
+    if (!forcedMonthKey && (
       day !== lastDayOfMonth ||
       hour !== 23 ||
       minute !== 59
-    ) {
+    )) {
       return;
     }
 
     monthlyWinnersRunning = true;
 
-    const monthKey =
+    const monthKey = forcedMonthKey ||
       `${year}-${String(month).padStart(2, '0')}`;
 
     // Sécurité : empêche une double annonce
@@ -2249,11 +2267,16 @@ const clipWinner =
       }
     }
 
+    const [seasonYear, seasonMonth] =
+      monthKey.split('-').map(Number);
+
     const monthLabel = new Intl.DateTimeFormat('fr-FR', {
       timeZone: 'Europe/Paris',
       month: 'long',
       year: 'numeric'
-    }).format(now);
+    }).format(
+      new Date(Date.UTC(seasonYear, seasonMonth - 1, 15))
+    );
 
     // ==============================
     // MESSAGE TOP LEADERBOARD
@@ -4799,6 +4822,126 @@ await member.voice.setChannel(vc);
       modal.addComponents(new ActionRowBuilder().addComponents(valorantCodeInput));
       return interaction.showModal(modal);
     }
+
+    if (
+  interaction.isChatInputCommand() &&
+  interaction.commandName === 'closemonth'
+) {
+  if (
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return simpleReply(
+      interaction,
+      '❌ Commande réservée aux administrateurs.'
+    );
+  }
+
+  if (
+    interaction.options.getString('confirmation') !== 'CONFIRMER'
+  ) {
+    return simpleReply(
+      interaction,
+      '❌ Écris exactement CONFIRMER.'
+    );
+  }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const guild = interaction.guild;
+
+    if (!guild) {
+      return interaction.editReply(
+        '❌ Serveur introuvable.'
+      );
+    }
+
+    const data = await getConfigValue(
+      'leaderboardData',
+      {}
+    );
+
+    const currentMonth = getParisMonthKey();
+
+    if (!data.monthKey) {
+      return interaction.editReply(
+        '❌ Aucun mois associé au leaderboard.'
+      );
+    }
+
+    if (data.monthKey >= currentMonth) {
+      return interaction.editReply(
+        'ℹ️ Aucune clôture en retard.'
+      );
+    }
+
+    const closingMonth = data.monthKey;
+
+    // Sauvegarder les données avant toute annonce.
+    const snapshot = await saveMonthlySnapshot(
+      guild,
+      closingMonth
+    );
+
+    if (!snapshot) {
+      throw new Error('Snapshot introuvable');
+    }
+
+    // Publier les gagnants manquants.
+    await announceMonthlyWinners(
+      guild,
+      closingMonth
+    );
+
+    // Vérifier que les annonces sont terminées.
+    const announcedMonth = await getConfigValue(
+      'monthlyWinnersLastAnnouncement',
+      null
+    );
+
+    if (announcedMonth !== closingMonth) {
+      return interaction.editReply(
+        '⚠️ Clôture incomplète. ' +
+        'Les statistiques sont conservées. ' +
+        'Vérifie les logs avant de réessayer.'
+      );
+    }
+
+    // Créer le classement du nouveau mois.
+    await checkMonthlyLeaderboardRollover(guild);
+
+    const updatedData = await getConfigValue(
+      'leaderboardData',
+      {}
+    );
+
+    if (updatedData.monthKey !== currentMonth) {
+      return interaction.editReply(
+        '⚠️ Gagnants annoncés, mais création ' +
+        'du nouveau classement non confirmée. ' +
+        'Vérifie les logs.'
+      );
+    }
+
+    return interaction.editReply(
+      `✅ Clôture de ${closingMonth} terminée.\n` +
+      `🏆 Annonces traitées.\n` +
+      `📊 Leaderboard ${currentMonth} initialisé.`
+    );
+
+  } catch (err) {
+    console.error('❌ Erreur closemonth :', err);
+
+    return interaction.editReply(
+      '❌ Erreur pendant la clôture. ' +
+      'Vérifie les logs avant de relancer.'
+    );
+  }
+}
 
     if (
       interaction.isChatInputCommand() &&
