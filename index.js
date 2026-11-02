@@ -2286,10 +2286,15 @@ const clipWinner =
       const [winnerId, winnerData] = leaderboardWinner;
 
       const winnerMember =
-        guild.members.cache.get(winnerId);
+  guild.members.cache.get(winnerId) ||
+  await guild.members.fetch(winnerId).catch(() => null);
 
-        const winnerAvatar = winnerMember
-  ? await getPermanentAvatar(winnerMember.user)
+const winnerUser =
+  winnerMember?.user ||
+  await client.users.fetch(winnerId).catch(() => null);
+
+        const winnerAvatar = winnerUser
+  ? await getPermanentAvatar(winnerUser)
   : null;
   
       const winnerRank =
@@ -2331,7 +2336,7 @@ if (
               .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
                   `## ${BADGES.TOP1} VAINQUEUR DU MOIS\n` +
-`-# **${winnerMember?.user.tag || 'Utilisateur inconnu'}** (<@${winnerId}>)\n` +
+`-# **${winnerUser?.tag || 'Utilisateur inconnu'}** (<@${winnerId}>)\n` +
 `-# Termine la saison à la **1re place** avec **${winnerData.rr || 0}<:Roles:1541125087384829962>**`
                 )
               )
@@ -2541,15 +2546,14 @@ if (clipWinner && !announcementStatus.clip) {
 
     }
     if (
-      !leaderboardWinner &&
-      !(topInviterId && maxInvites > 0) &&
-      !clipWinner
-    ) {
-      console.log(
-        `ℹ️ Aucun gagnant à annoncer pour ${monthKey}`
-      );
-      return;
-    }
+  !leaderboardWinner &&
+  !(topInviterId && maxInvites > 0) &&
+  !clipWinner
+) {
+  console.log(
+    `ℹ️ Aucun gagnant éligible pour ${monthKey} — clôture autorisée`
+  );
+}
     const finalStatus =
       await getMonthlyAnnouncementStatus(monthKey);
 
