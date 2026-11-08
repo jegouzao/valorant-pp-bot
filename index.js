@@ -7428,7 +7428,7 @@ if (
   inviterText === '-# Provenance : **non déterminée**' &&
   guild.features.includes('DISCOVERABLE')
 ) {
-  inviterText = '-# Provenance : **Découverte de serveurs (supposée)**';
+  inviterText = '-# Provenance : **Découverte de serveurs**';
 }
 
 
