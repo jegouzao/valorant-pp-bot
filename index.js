@@ -7228,9 +7228,7 @@ const newInvites = new Map();
   }
 
   const accountAge = formatAccountAge(member.user.createdAt);
-if (welcomeChannel?.isTextBased()) {
-  // Construction et envoi du welcomeContainer existants
-}
+
   const welcomeChannel =
   guild.channels.cache.get(WELCOME_CHANNEL_ID) ||
   await guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
@@ -7241,13 +7239,24 @@ if (!welcomeChannel) {
   );
 }
 
-  const inviterText = usedInvite?.inviter
-    ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
-    : `-# Invité via **.gg/valorant-pp**`;
+const inviterText = usedInvite?.inviter
+  ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
+  : usedInvite?.code === 'valorant-pp'
+    ? '-# Invité via **.gg/valorant-pp**'
+    : '-# Provenance : **non déterminée**';
 
-    const avatar = await getPermanentAvatar(
-  member.user
-);
+const avatar = await getPermanentAvatar(member.user)
+  .catch(err => {
+    console.error('Erreur récupération avatar :', err);
+
+    return {
+      url: member.user.displayAvatarURL({
+        extension: 'png',
+        size: 256
+      }),
+      file: null
+    };
+  });
 
 
   const welcomeContainer = new ContainerBuilder()
