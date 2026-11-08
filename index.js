@@ -742,6 +742,49 @@ const EXEMPT_VC_IDS = [
 
 
 const invitesCache = new Map();
+
+const vanityCache = new Map();
+
+async function fetchVanityUses(guild) {
+  try {
+    const data = await guild.fetchVanityData();
+
+    if (!data || data.code !== 'valorant-pp') {
+      return null;
+    }
+
+    return Number.isInteger(data.uses) ? data.uses : null;
+  } catch (err) {
+    console.warn(
+      `⚠️ Compteur du lien public indisponible pour ${guild.id} :`,
+      err.message
+    );
+    return null;
+  }
+}
+
+
+const memberJoinQueues = new Map();
+
+function queueMemberJoin(member, handler) {
+  const guildId = member.guild.id;
+  const previous = memberJoinQueues.get(guildId) || Promise.resolve();
+
+  const current = previous
+    .catch(() => {})
+    .then(() => handler(member));
+
+  memberJoinQueues.set(guildId, current);
+
+  current.finally(() => {
+    if (memberJoinQueues.get(guildId) === current) {
+      memberJoinQueues.delete(guildId);
+    }
+  }).catch(() => {});
+
+  return current;
+}
+
 const autoCreateLocks = new Map();
 const ppCreationLocks = new Set();
 const gameLocks = {};
@@ -873,6 +916,7 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildBans,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessages,
@@ -883,6 +927,41 @@ const client = new Client({
     Partials.Message,
     Partials.Channel
   ]
+});
+
+
+client.on('inviteCreate', invite => {
+  const guild = invite.guild;
+  if (!guild) return;
+
+  const cache = invitesCache.get(guild.id);
+  if (!cache) return;
+
+  cache.set(invite.code, {
+    code: invite.code,
+    inviter: invite.inviter || null,
+    uses: invite.uses ?? 0,
+    maxAge: invite.maxAge,
+    temporary: invite.temporary
+  });
+
+  console.log(
+    `🔗 Invitation créée : ${invite.code}`
+  );
+});
+
+client.on('inviteDelete', invite => {
+  const guild = invite.guild;
+  if (!guild) return;
+
+  const cache = invitesCache.get(guild.id);
+  if (!cache) return;
+
+  cache.delete(invite.code);
+
+  console.log(
+    `🗑️ Invitation supprimée : ${invite.code}`
+  );
 });
 
 
@@ -2641,22 +2720,40 @@ if (!guildInvites) {
     '⚠️ Cache invitations non initialisé : attribution suspendue.'
   );
 }
-  if (guildInvites) guildInvites.forEach(inv => {
+
+if (guildInvites) {
+  guildInvites.forEach(inv => {
     allInvites.set(inv.code, {
       code: inv.code,
-      inviter: inv.inviter?.id || null,
-      inviterTag: inv.inviter?.tag || "Inconnu",
-      uses: inv.uses,
+      inviter: inv.inviter || null,
+      uses: inv.uses ?? 0,
       maxAge: inv.maxAge,
       temporary: inv.temporary
     });
   });
+}
+
 
   if (guildInvites) {
   invitesCache.set(guild.id, allInvites);
 } else {
   invitesCache.delete(guild.id);
 }
+
+
+const initialVanityUses = await fetchVanityUses(guild);
+
+if (initialVanityUses !== null) {
+  vanityCache.set(guild.id, initialVanityUses);
+
+  console.log(
+    `🔗 Lien public valorant-pp initialisé : ${initialVanityUses} utilisations`
+  );
+} else {
+  vanityCache.delete(guild.id);
+}
+
+
   console.log(`${colors.green}✅ Invites initialisées en cache (y compris temporaires)${colors.reset}`);
   console.log(`${colors.green}✅ ${colors.bright}${client.user.tag}${colors.reset}${colors.green} est maintenant en ligne !${colors.reset}`);
   console.log(`${colors.blue}✅ Connecté sur le serveur: ${colors.bright}${guild.name}${colors.reset}`);
@@ -7207,25 +7304,94 @@ const newInvites = new Map();
     });
   });
 
-  let usedInvite;
+  
+let usedInvite = null;
 
-    for (const [code, invite] of (
-    invitesCache.has(guild.id) ? newInvites : new Map()
-  ).entries()) {
-    const oldUses = cachedInvites?.get(code)?.uses;
 
-    if (
-      oldUses !== undefined &&
-      invite.uses > oldUses
-    ) {
-      usedInvite = invite;
-      break;
+if (cachedInvites && guildInvites) {
+  const changedInvites = [];
+
+  for (const [code, invite] of newInvites.entries()) {
+    const oldUses = cachedInvites.get(code)?.uses;
+
+    if (oldUses === undefined) continue;
+
+    const difference = (invite.uses ?? 0) - oldUses;
+
+    if (difference > 0) {
+      changedInvites.push({
+        ...invite,
+        difference
+      });
     }
   }
 
-    if (guildInvites) {
-    invitesCache.set(guild.id, newInvites);
+  if (
+    changedInvites.length === 1 &&
+    changedInvites[0].difference === 1
+  ) {
+    usedInvite = changedInvites[0];
+  } else if (changedInvites.length > 0) {
+    console.warn(
+      `⚠️ Attribution ambiguë pour ${member.id} :`,
+      changedInvites.map(inv => ({
+        code: inv.code,
+        nouvellesUtilisations: inv.difference
+      }))
+    );
   }
+}
+
+// Actualisation après chaque récupération réussie.
+if (guildInvites) {
+  invitesCache.set(guild.id, newInvites);
+}
+
+
+
+let joinedViaVanity = false;
+
+const previousVanityUses = vanityCache.get(guild.id);
+const currentVanityUses = await fetchVanityUses(guild);
+
+if (currentVanityUses !== null) {
+  if (previousVanityUses !== undefined) {
+    const vanityDifference =
+      currentVanityUses - previousVanityUses;
+
+    const classicInviteChanged =
+      guildInvites && cachedInvites
+        ? [...newInvites.entries()].some(([code, invite]) => {
+            const previous = cachedInvites.get(code)?.uses;
+            return previous !== undefined &&
+              invite.uses > previous;
+          })
+        : false;
+
+    if (
+      vanityDifference === 1 &&
+      !classicInviteChanged &&
+      guildInvites &&
+      cachedInvites
+    ) {
+      joinedViaVanity = true;
+      usedInvite = null;
+
+      console.log(
+        `🔗 Arrivée probablement via discord.gg/valorant-pp : ${member.id}`
+      );
+    } else if (vanityDifference > 0) {
+      usedInvite = null;
+
+      console.warn(
+        `⚠️ Plusieurs utilisations ou sources possibles pour ${member.id}`
+      );
+    }
+  }
+
+  vanityCache.set(guild.id, currentVanityUses);
+}
+
 
   const accountAge = formatAccountAge(member.user.createdAt);
 
@@ -7233,17 +7399,38 @@ const newInvites = new Map();
   guild.channels.cache.get(WELCOME_CHANNEL_ID) ||
   await guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
 
-if (!welcomeChannel) {
-  console.warn(
-    `⚠️ Salon de bienvenue introuvable pour ${member.id}`
+
+if (!welcomeChannel?.isTextBased()) {
+  console.error(
+    `❌ Salon système introuvable ou non textuel pour ${member.id}`
   );
+  return;
 }
 
-const inviterText = usedInvite?.inviter
-  ? `-# Invité par **${usedInvite.inviter.displayName || usedInvite.inviter.tag}**`
-  : usedInvite?.code === 'valorant-pp'
-    ? '-# Invité via **.gg/valorant-pp**'
-    : '-# Provenance : **non déterminée**';
+
+let inviterText = '-# Provenance : **non déterminée**';
+
+if (joinedViaVanity) {
+  inviterText = '-# Invité via **discord.gg/valorant-pp**';
+} else if (usedInvite?.inviter?.id) {
+  const inviterName =
+    usedInvite.inviter.displayName ||
+    usedInvite.inviter.globalName ||
+    usedInvite.inviter.username ||
+    usedInvite.inviter.tag;
+
+  inviterText = `-# Invité par **${inviterName}**`;
+}
+
+if (
+  !usedInvite &&
+  !joinedViaVanity &&
+  inviterText === '-# Provenance : **non déterminée**' &&
+  guild.features.includes('DISCOVERABLE')
+) {
+  inviterText = '-# Provenance : **Découverte de serveurs (supposée)**';
+}
+
 
 const avatar = await getPermanentAvatar(member.user)
   .catch(err => {
@@ -7291,17 +7478,44 @@ try {
   );
 }
 
-  if (usedInvite) {
-    const inviterId = usedInvite.inviter?.id;
 
-    if (inviterId) {
-      await incrementInvite(inviterId, member.id);
-    }
+if (usedInvite?.inviter?.id) {
+  try {
+    await incrementInvite(
+      usedInvite.inviter.id,
+      member.id
+    );
+
+    console.log(
+      `✅ Invitation enregistrée : ${member.user.tag} ` +
+      `via ${usedInvite.code}`
+    );
+  } catch (err) {
+    console.error(
+      `❌ Erreur comptage invitation pour ${member.id} :`,
+      err
+    );
   }
 }
 
+}
+
+
 client.on('guildMemberAdd', async member => {
   console.log(`Nouveau membre détecté : ${member.displayName}`);
+
+  try {
+    await queueMemberJoin(member, processMemberJoin);
+  } catch (err) {
+    console.error(
+      `❌ Erreur traitement arrivée ${member.id} :`,
+      err
+    );
+  }
+});
+
+async function processMemberJoin(member) {
+
 
 const accountAgeDays = Math.floor(
   (Date.now() - member.user.createdAt) / (1000 * 60 * 60 * 24)
@@ -7353,19 +7567,84 @@ if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) {
         )
       );
 
+
     await welcomeChannel.send({
-  components: [restrictedContainer],
-  ...(avatar.file ? { files: [avatar.file] } : {}),
-  flags: MessageFlags.IsComponentsV2
-}).catch(() => {});
+      components: [restrictedContainer],
+      ...(avatar.file ? { files: [avatar.file] } : {}),
+      flags: MessageFlags.IsComponentsV2
+    }).catch(err => {
+      console.error(
+        `❌ Erreur annonce compte restreint ${member.id} :`,
+        err
+      );
+    });
   }
+
+  // Actualiser les compteurs même pour un compte restreint.
+  try {
+    const guild = member.guild;
+    const latestInvites = await guild.invites.fetch();
+
+    const updatedCache = new Map();
+
+    latestInvites.forEach(inv => {
+      updatedCache.set(inv.code, {
+        code: inv.code,
+        inviter: inv.inviter || null,
+        uses: inv.uses ?? 0,
+        maxAge: inv.maxAge,
+        temporary: inv.temporary
+      });
+    });
+
+    invitesCache.set(guild.id, updatedCache);
+
+    console.log(
+      `✅ Cache invitations actualisé après compte restreint : ${member.id}`
+    );
+  } catch (err) {
+    console.error(
+      `❌ Actualisation invitations impossible pour ${member.id} :`,
+      err
+    );
+  }
+
+  
+  // Synchronisation du lien public après une arrivée restreinte.
+  try {
+    const latestVanityUses = await fetchVanityUses(member.guild);
+
+    if (latestVanityUses === null) {
+  vanityCache.delete(member.guild.id);
+} else {
+  vanityCache.set(member.guild.id, latestVanityUses);
+
+      console.log(
+        `🔗 Compteur vanity actualisé après arrivée restreinte : ${member.id}`
+      );
+    }
+  } catch (err) {
+    console.error(
+      `❌ Synchronisation vanity impossible pour ${member.id} :`,
+      err
+    );
+  }
+
 
   return;
 }
 
-await startMemberOnboarding(member);
 
-});
+try {
+  await startMemberOnboarding(member);
+} catch (err) {
+  console.error(
+    `❌ Erreur arrivée membre ${member.id} :`,
+    err
+  );
+}
+
+}
 
 client.on('guildMemberRemove', async member => {
   try {
