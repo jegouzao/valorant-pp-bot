@@ -1386,6 +1386,7 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
+    `\n\n` +
     `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
   )
 )
