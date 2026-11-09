@@ -1275,47 +1275,168 @@ function buildSimpleContainer(content, accentColor = EMBED_COLOR) {
 }
 
 
+
 const REFERRAL_OFFERS = {
   '┃boursobank': {
     title: 'BOURSOBANK',
-    description: 'Ouvre un compte BoursoBank grâce au parrainage.',
-    bonus: 'Montant variable selon l’offre en vigueur.',
-    conditions: 'Premier versement minimum requis. Vérifie les conditions officielles avant de souscrire.',
-    withdrawal: 'Versement et disponibilité de la prime selon les conditions de l’offre.',
-    url: 'https://bour.so/p/7hnst7yBbZr'
+    subtitle: 'Parrainage bancaire',
+    bonus: '180 €',
+    url: 'https://bour.so/p/7hnst7yBbZr',
+    verifiedAt: '09/11/2026',
+
+    openingBonus: 20,
+
+    depositTiers: [
+      { deposit: '1 à 49 €', bonus: 10 },
+      { deposit: '50 à 299 €', bonus: 20 },
+      { deposit: '300 € ou plus', bonus: 40 }
+    ],
+
+    cardBonuses: [
+      { period: 'Jours 1 à 30', bonus: 20 },
+      { period: 'Jours 31 à 60', bonus: 10 },
+      { period: 'Jours 61 à 90', bonus: 10 }
+    ],
+
+    mobilityBonus: 80
   }
 };
 
+
+
 function buildReferralContainer(offer) {
-  return new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
+  const tiers = offer.depositTiers
+    .map(tier =>
+      `> **${tier.deposit}** déposés → **+${tier.bonus} €**`
+    )
+    .join('\n');
+
+  const cardSteps = offer.cardBonuses
+    .map(step =>
+      `> ${step.period} : **+${step.bonus} €**`
+    )
+    .join('\n');
+
+  const container = new ContainerBuilder()
+    .setAccentColor(0x242429)
+
+    // EN-TÊTE
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## ${offer.title}\n` +
-        `-# ᴏꜰꜰʀᴇ ᴅᴇ ᴘᴀʀʀᴀɪɴᴀɢᴇ\n\n` +
-        `${offer.description}`
+        `# 🏦 ${offer.title}\n` +
+        `-# ${offer.subtitle} · Offre vérifiée le ${offer.verifiedAt}\n\n` +
+        `## 💸 JUSQU'À ${offer.bonus}\n` +
+        `-# Prime maximale pour le filleul, sous conditions.`
       )
     )
+
     .addSeparatorComponents(
-      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large)
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     )
+
+    // PALIERS
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### PRIME DE BIENVENUE\n${offer.bonus}\n\n` +
-        `### CONDITIONS\n${offer.conditions}\n\n` +
-        `### VERSEMENT ET RETRAIT\n${offer.withdrawal}\n\n` +
-        `-# L’utilisation du lien peut également donner droit à une récompense au parrain.`
+        `### 💰 1. PRIME DE BIENVENUE\n` +
+        `**+${offer.openingBonus} €** à l'ouverture effective du compte.\n\n` +
+        `**Premier versement :**\n${tiers}\n\n` +
+        `-# Le versement est déposé sur ton propre compte. ` +
+        `Pour maximiser cette prime, dépose au moins 300 €.`
       )
     )
+
     .addSeparatorComponents(
-      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large)
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
     )
+
+    // CARTE
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### 💳 2. BONUS CARTE : +40 €\n` +
+        `Effectue au moins **un paiement ou retrait par carte** ` +
+        `pendant chacune des trois périodes :\n\n` +
+        `${cardSteps}\n\n` +
+        `-# Les opérations doivent être réalisées depuis le compte BoursoBank.`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // EASYMOVE
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### 🔄 3. EASYMOVE : +${offer.mobilityBonus} €\n` +
+        `EasyMove permet de transférer tes prélèvements ` +
+        `et virements réguliers depuis une autre banque.\n\n` +
+        `**Pour obtenir la prime :**\n` +
+        `> • Signer la demande de mobilité dans le mois suivant l'ouverture.\n` +
+        `> • Avoir au moins une opération récurrente éligible à transférer.\n` +
+        `> • Maintenir la domiciliation bancaire pendant 24 mois.\n\n` +
+        `-# La simple activation sans transfert éligible ne suffit pas.`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // TUTORIEL
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### 📋 TUTORIEL RAPIDE\n` +
+        `**①** Clique sur « Profiter de l'offre ».\n` +
+        `**②** Ouvre ton premier compte individuel BoursoBank.\n` +
+        `**③** Verse idéalement 300 € minimum.\n` +
+        `**④** Effectue les trois opérations par carte requises.\n` +
+        `**⑤** Réalise EasyMove si tu es éligible.\n\n` +
+        `-# Réservé aux personnes majeures n'ayant jamais été clientes BoursoBank.`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // AVERTISSEMENTS
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ⚠️ À SAVOIR\n` +
+        `• **24 mois :** une fermeture anticipée du compte peut ` +
+        `entraîner la reprise des primes commerciales.\n` +
+        `• **EasyMove :** sa prime peut être reprise si la ` +
+        `domiciliation n'est pas maintenue 24 mois.\n` +
+        `• **Délais :** les primes sont versées progressivement ` +
+        `après validation des conditions.\n` +
+        `• **Parrain :** le lien peut également lui rapporter ` +
+        `une prime distincte.\n\n` +
+        `-# Vérifie les conditions applicables avant toute inscription.`
+      )
+    )
+
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Large)
+    )
+
+    // BOUTONS
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setLabel('Accéder à l’offre')
+          .setLabel("Profiter de l'offre")
           .setStyle(ButtonStyle.Link)
           .setURL(offer.url),
+
+        new ButtonBuilder()
+          .setLabel('Conditions officielles')
+          .setStyle(ButtonStyle.Link)
+          .setURL('https://www.boursobank.com/bon-plan/parrainage-boursobank'),
 
         new ButtonBuilder()
           .setCustomId('open_ticket')
@@ -1323,7 +1444,10 @@ function buildReferralContainer(offer) {
           .setStyle(ButtonStyle.Secondary)
       )
     );
+
+  return container;
 }
+
 
 async function syncReferralPanels(guild) {
   const configKey = 'referralPanelMessages';
