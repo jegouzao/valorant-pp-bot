@@ -1407,7 +1407,7 @@ function buildReferralContainer(offer) {
 
         new ButtonBuilder()
           .setCustomId('open_referral_ticket_boursobank')
-          .setLabel('Ouvrir un ticket')
+          .setLabel("Besoin d'aide ?")
           .setStyle(ButtonStyle.Secondary)
       )
     );
