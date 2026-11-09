@@ -1304,7 +1304,7 @@ const REFERRAL_OFFERS = {
     '┃fortuneo': {
     title: 'Fortuneo',
     subtitle: 'Parrainage bancaire et financier',
-    logoUrl: 'https://www.fortuneo.fr/favicon.ico',
+    logoUrl: 'https://cdn.discordapp.com/attachments/1461761854563942400/1569439521609883679/fortuneo-logo.png?ex=6af375f4&is=6af22474&hm=6c70c12d4b339895a7ee26b2864cbd1df8aff0129dd48ae260c9415c5d269d29&',
     bonus: '150 €',
     url: 'https://www.fortuneo.fr/',
     verifiedAt: '09/11/2026',
