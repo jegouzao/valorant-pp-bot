@@ -1342,23 +1342,48 @@ function buildReferralContainer(offer) {
   new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Small)
 )
+
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `## Comment en profiter ?\n` +
-`- **Ouvre ton premier compte via le lien**\n` +
-`-# +20 € de prime pour toi à l'ouverture du compte\n\n` +
-`- **Verse 300 € pour le palier maximal**\n` +
-`-# +10 € de prime pour toi si 1 à 49 € déposés, +20 € si 50 à 299 €, +40 € si 300 € ou +\n\n` +
-`- **Utilise ta carte sur les 3 périodes**\n` +
-`-# +40 € de prime pour toi\n\n` +
-`- **Réalise une mobilité EasyMove éligible**\n` +
-`-# +80 € de prime pour toi`
+    `- **Ouvre ton premier compte via le lien**\n` +
+    `-# +20 € de prime pour toi à l'ouverture du compte`
   )
 )
 .addSeparatorComponents(
   new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Small)
 )
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `- **Verse 300 € pour le palier maximal**\n` +
+    `-# +10 € de prime pour toi si 1 à 49 € déposés, +20 € si 50 à 299 €, +40 € si 300 € ou +`
+  )
+)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `- **Utilise ta carte sur les 3 périodes**\n` +
+    `-# +40 € de prime pour toi`
+  )
+)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `- **Réalise une mobilité EasyMove éligible**\n` +
+    `-# +80 € de prime pour toi`
+  )
+)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+
 
 
     .addActionRowComponents(
