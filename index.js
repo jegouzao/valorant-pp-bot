@@ -1278,7 +1278,7 @@ function buildSimpleContainer(content, accentColor = EMBED_COLOR) {
 
 const REFERRAL_OFFERS = {
   '┃boursobank': {
-    title: 'BOURSOBANK',
+    title: 'BoursoBank',
     subtitle: 'Parrainage bancaire',
     logoUrl: 'https://www.google.com/s2/favicons?domain=boursobank.com&sz=256',
     bonus: '180 €',
@@ -1309,8 +1309,8 @@ const REFERRAL_OFFERS = {
 
 function buildReferralContainer(offer) {
   const tiers = offer.depositTiers
-    .map(t => `**${t.deposit}** : +${t.bonus} €`)
-    .join('  •  ');
+  .map(t => `- **${t.deposit}** : +${t.bonus} € de prime pour le filleul`)
+  .join('\n');
 
   const header = new SectionBuilder()
     .addTextDisplayComponents(
@@ -1343,7 +1343,7 @@ function buildReferralContainer(offer) {
     )
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `### Premier versement\n` +
+    `### Premier versement :\n` +
         `${tiers}\n` +
         `-# +20 € à l'ouverture du compte`
       )
