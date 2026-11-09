@@ -1274,6 +1274,107 @@ function buildSimpleContainer(content, accentColor = EMBED_COLOR) {
     );
 }
 
+
+const REFERRAL_OFFERS = {
+  '┃boursobank': {
+    title: 'BOURSOBANK',
+    description: 'Ouvre un compte BoursoBank grâce au parrainage.',
+    bonus: 'Montant variable selon l’offre en vigueur.',
+    conditions: 'Premier versement minimum requis. Vérifie les conditions officielles avant de souscrire.',
+    withdrawal: 'Versement et disponibilité de la prime selon les conditions de l’offre.',
+    url: 'https://bour.so/p/7hnst7yBbZr'
+  }
+};
+
+function buildReferralContainer(offer) {
+  return new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${offer.title}\n` +
+        `-# ᴏꜰꜰʀᴇ ᴅᴇ ᴘᴀʀʀᴀɪɴᴀɢᴇ\n\n` +
+        `${offer.description}`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### PRIME DE BIENVENUE\n${offer.bonus}\n\n` +
+        `### CONDITIONS\n${offer.conditions}\n\n` +
+        `### VERSEMENT ET RETRAIT\n${offer.withdrawal}\n\n` +
+        `-# L’utilisation du lien peut également donner droit à une récompense au parrain.`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large)
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel('Accéder à l’offre')
+          .setStyle(ButtonStyle.Link)
+          .setURL(offer.url),
+
+        new ButtonBuilder()
+          .setCustomId('open_ticket')
+          .setLabel('Ouvrir un ticket')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+}
+
+async function syncReferralPanels(guild) {
+  const configKey = 'referralPanelMessages';
+  const saved = await getConfigValue(configKey, {});
+  const messageIds = { ...saved };
+
+  for (const [channelName, offer] of Object.entries(REFERRAL_OFFERS)) {
+    const channel = guild.channels.cache.find(
+      ch => ch.name === channelName && ch.type === ChannelType.GuildText
+    );
+
+    if (!channel) {
+      console.warn(`Salon de parrainage introuvable : ${channelName}`);
+      continue;
+    }
+
+    try {
+      const payload = {
+        components: [buildReferralContainer(offer)],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      };
+
+      let message = null;
+
+      if (messageIds[channel.id]) {
+        message = await channel.messages
+          .fetch(messageIds[channel.id])
+          .catch(() => null);
+      }
+
+      if (message && message.author.id === client.user.id) {
+        await message.edit({
+          components: payload.components,
+          allowedMentions: payload.allowedMentions
+        });
+      } else {
+        message = await channel.send(payload);
+      }
+
+      messageIds[channel.id] = message.id;
+      await setConfigValue(configKey, messageIds);
+
+      console.log(`✅ Fiche synchronisée : ${channelName}`);
+    } catch (error) {
+      console.error(`❌ Erreur fiche ${channelName}:`, error);
+    }
+  }
+}
+
+
 function simpleReply(interaction, content, accentColor = EMBED_COLOR) {
   return interaction.reply({
     components: [
@@ -2799,7 +2900,7 @@ if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
   } catch (error) {
     console.error(`${colors.red}❌ Erreur lors de la création automatique:${colors.reset}`, error);
   }
-
+await syncReferralPanels(guild);
 await updateleaderboardEmbed();
 
 console.log(
