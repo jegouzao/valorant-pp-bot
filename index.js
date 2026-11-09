@@ -1345,8 +1345,8 @@ function buildReferralContainer(offer) {
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `# Jusqu'à ${offer.bonus}\n` +
-    `-# Pour le filleul · Sous conditions\n\n` +
-    `### 💰 Premier versement\n` +
+    `-# Pour le filleul · Sous conditions\n` +
+    `-#  💰 Premier versement\n` +
         `${tiers}\n` +
         `-# +20 € à l'ouverture du compte`
       )
