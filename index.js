@@ -1315,9 +1315,8 @@ function buildReferralContainer(offer) {
   const header = new SectionBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## ${offer.title}\n` +
-`-# ${offer.subtitle}\n` +
-`-# Primes soumises à conditions, avec risque de reprise avant 24 mois.\n` +
+        `# ${offer.title} — Jusqu'à ${offer.bonus}\n` +
+`-# Prime du filleul, soumise à conditions, avec risque de reprise avant 24 mois.\n` +
 `-# Offre consultée le ${offer.verifiedAt}`
       )
     );
@@ -1344,9 +1343,7 @@ function buildReferralContainer(offer) {
     )
     .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `# Jusqu'à ${offer.bonus}\n` +
-    `-# Pour le filleul · Sous conditions\n` +
-    `-#  💰 Premier versement\n` +
+    `### Premier versement\n` +
         `${tiers}\n` +
         `-# +20 € à l'ouverture du compte`
       )
