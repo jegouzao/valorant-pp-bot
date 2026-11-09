@@ -2783,20 +2783,13 @@ if (initialVanityUses !== null) {
       console.log(`✅ Rôle Administrateur créé automatiquement`);
     }
 
-    let ticketCategory = guild.channels.cache.find(c => c.type === 4 && c.name === 'ᴍᴏᴅᴇʀᴀᴛɪᴏɴ');
+    let ticketCategory = await guild.channels
+  .fetch('1569390219063463986')
+  .catch(() => null);
 
-    if (!ticketCategory) {
-      ticketCategory = await guild.channels.create({
-        name: 'ᴍᴏᴅᴇʀᴀᴛɪᴏɴ',
-        type: 4,
-        permissionOverwrites: [
-          { id: guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-          { id: staffRole.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ManageChannels] }
-        ],
-        reason: 'Création automatique de la catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ'
-      });
-      console.log(`${colors.red}✅ Catégorie ᴍᴏᴅᴇʀᴀᴛɪᴏɴ créée automatiquement (ID: ${ticketCategory.id})${colors.reset}`);
-    }
+if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
+  throw new Error('Catégorie TICKETS EN COURS introuvable ou invalide.');
+}
 
     const configFile = path.join(__dirname, 'data', 'config.json');
     const config = fs.existsSync(configFile) ? JSON.parse(fs.readFileSync(configFile, 'utf8')) : {};
