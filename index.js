@@ -1281,7 +1281,7 @@ const REFERRAL_OFFERS = {
     title: 'BoursoBank',
     subtitle: 'Parrainage bancaire',
     logoUrl: 'https://www.google.com/s2/favicons?domain=boursobank.com&sz=256',
-    bonus: '180 €',
+    bonus: '180 €',
     url: 'https://bour.so/p/7hnst7yBbZr',
     verifiedAt: '09/11/2026',
 
@@ -1336,36 +1336,30 @@ function buildReferralContainer(offer) {
 
   return new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
-    .addSectionComponents(header)
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `### Premier versement :\n` +
-        `${tiers}\n` +
-        `-# +20 € à l'ouverture du compte`
-      )
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### Comment en profiter ?\n` +
-        `- Ouvre ton premier compte via le lien.\n` +
-        `- Verse 300 € pour le palier maximal.\n` +
-        `- Utilise ta carte sur les 3 périodes : **+40 €**.\n` +
-        `- Réalise une mobilité EasyMove éligible : **+80 €**.`
-      )
-    )
-
-    .addSeparatorComponents(
+    
+.addSectionComponents(header)
+.addSeparatorComponents(
   new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Small)
 )
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `### Comment en profiter ?\n` +
+`- Ouvre ton premier compte via le lien.\n` +
+`-# +20 € de prime pour le filleul à l'ouverture du compte.\n\n` +
+`- Verse 300 € pour le palier maximal.\n` +
+`-# +10 € si 1 à 49 € déposés, +20 € si 50 à 299 € déposés, +40 € si 300 € ou plus déposés.\n\n` +
+`- Utilise ta carte sur les 3 périodes.\n` +
+`-# +40 € de prime pour le filleul.\n\n` +
+`- Réalise une mobilité EasyMove éligible.\n` +
+`-# +80 € de prime pour le filleul.`
+  )
+)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+
 
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
