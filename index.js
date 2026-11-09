@@ -1280,6 +1280,7 @@ const REFERRAL_OFFERS = {
   '┃boursobank': {
     title: 'BOURSOBANK',
     subtitle: 'Parrainage bancaire',
+    logoUrl: 'https://www.google.com/s2/favicons?domain=boursobank.com&sz=256',
     bonus: '180 €',
     url: 'https://bour.so/p/7hnst7yBbZr',
     verifiedAt: '09/11/2026',
@@ -1305,34 +1306,62 @@ const REFERRAL_OFFERS = {
 
 
 
+
 function buildReferralContainer(offer) {
   const tiers = offer.depositTiers
-    .map(t => `**${t.deposit}** → **+${t.bonus} €**`)
-    .join('  |  ');
+    .map(t => `**${t.deposit}** : +${t.bonus} €`)
+    .join('  •  ');
+
+  const header = new SectionBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${offer.title}\n` +
+        `-# ${offer.subtitle}\n\n` +
+        `# Jusqu'à ${offer.bonus}\n` +
+        `-# Pour le filleul · Sous conditions`
+      )
+    );
+
+  if (offer.logoUrl) {
+    header.setThumbnailAccessory(
+      new ThumbnailBuilder().setURL(offer.logoUrl)
+    );
+  } else {
+    header.setButtonAccessory(
+      new ButtonBuilder()
+        .setLabel('BoursoBank')
+        .setStyle(ButtonStyle.Link)
+        .setURL('https://www.boursobank.com/')
+    );
+  }
 
   return new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
+    .addSectionComponents(header)
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Small)
+    )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `# 🏦 ${offer.title}\n` +
-        `-# ${offer.subtitle} · Conditions consultées le ${offer.verifiedAt}\n\n` +
-        `## Jusqu'à ${offer.bonus} pour le filleul\n` +
-        `-# Montant maximal, sous conditions.\n\n` +
-        `**Premier versement**\n${tiers}\n` +
-        `-# +20 € à l'ouverture du compte.`
+        `### 💰 Premier versement\n` +
+        `${tiers}\n` +
+        `-# +20 € à l'ouverture du compte`
       )
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `**Comment ça marche ?**\n` +
-        `① Ouvre ton premier compte avec le lien ci-dessous.\n` +
-        `② Verse au moins 300 € pour obtenir le meilleur palier.\n` +
-        `③ Fais 1 opération par carte sur chacune des 3 périodes de 30 jours (**+40 €**).\n` +
-        `④ Si tu es éligible, transfère tes opérations récurrentes avec EasyMove (**+80 €**).\n\n` +
-        `-# EasyMove nécessite un transfert éligible. Les primes peuvent être reprises si le compte est fermé ou la domiciliation arrêtée avant 24 mois.`
+        `### Comment en profiter ?\n` +
+        `① Ouvre ton premier compte via le lien.\n` +
+        `② Verse 300 € pour le palier maximal.\n` +
+        `③ Utilise ta carte sur les 3 périodes : **+40 €**.\n` +
+        `④ Réalise une mobilité EasyMove éligible : **+80 €**.\n\n` +
+        `-# Primes soumises à conditions, avec risque de reprise avant 24 mois.\n` +
+        `-# Offre consultée le ${offer.verifiedAt}`
       )
     )
     .addActionRowComponents(
@@ -1353,6 +1382,123 @@ function buildReferralContainer(offer) {
           .setStyle(ButtonStyle.Secondary)
       )
     );
+}
+
+
+const crypto = require('node:crypto');
+
+const REFERRAL_OFFICIAL_PAGES = {
+  '┃boursobank':
+    'https://www.boursobank.com/bon-plan/parrainage-boursobank'
+};
+
+let referralCheckRunning = false;
+
+async function checkReferralOfficialPages() {
+  if (referralCheckRunning) return;
+  referralCheckRunning = true;
+
+  try {
+    const saved = await getConfigValue(
+      'referralOfficialPageHashes',
+      {}
+    );
+    const hashes = { ...saved };
+
+    for (const [name, url] of Object.entries(
+      REFERRAL_OFFICIAL_PAGES
+    )) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(
+          () => controller.abort(),
+          15000
+        );
+
+        let response;
+        try {
+          response = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'Mozilla/5.0'
+            }
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const html = await response.text();
+
+        // Retirer les éléments les plus volatils.
+        const content = html
+          .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+          .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+          .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;|&#160;/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        if (content.length < 300) {
+          throw new Error('Contenu insuffisant ou page protégée');
+        }
+
+        const hash = crypto
+          .createHash('sha256')
+          .update(content)
+          .digest('hex');
+
+        if (!hashes[name]) {
+          hashes[name] = hash;
+          console.log(`📋 Référence enregistrée : ${name}`);
+        } else if (hashes[name] !== hash) {
+          // On conserve le nouvel état pour éviter
+          // une notification identique chaque jour.
+          hashes[name] = hash;
+
+          const owner = await client.users
+            .fetch(BOT_OWNER_ID)
+            .catch(() => null);
+
+          if (owner) {
+            await owner.send(
+              `🔎 **Parrainage : changement détecté**\n\n` +
+              `Enseigne : **${name}**\n` +
+              `La page publique officielle a été modifiée.\n` +
+              `Vérifie si les primes ou conditions ont changé :\n${url}\n\n` +
+              `Aucun montant n'a été modifié automatiquement.`
+            ).catch(err => {
+              console.warn(
+                'Notification parrainage impossible :',
+                err.message
+              );
+            });
+          }
+
+          console.log(`🔔 Changement détecté : ${name}`);
+        } else {
+          console.log(`✅ Page inchangée : ${name}`);
+        }
+
+        await setConfigValue(
+          'referralOfficialPageHashes',
+          hashes
+        );
+      } catch (err) {
+        console.warn(
+          `⚠️ Surveillance ${name} : ${err.message}`
+        );
+      }
+    }
+  } catch (err) {
+    console.error('❌ Surveillance parrainages :', err);
+  } finally {
+    referralCheckRunning = false;
+  }
 }
 
 
@@ -2968,6 +3114,11 @@ if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
     console.error(`${colors.red}❌ Erreur lors de la création automatique:${colors.reset}`, error);
   }
 await syncReferralPanels(guild);
+await checkReferralOfficialPages();
+
+setInterval(() => {
+  checkReferralOfficialPages().catch(console.error);
+}, 24 * 60 * 60 * 1000);
 await updateleaderboardEmbed();
 
 console.log(
