@@ -1300,6 +1300,22 @@ const REFERRAL_OFFERS = {
     ],
 
     mobilityBonus: 80
+  },
+    '┃fortuneo': {
+    title: 'Fortuneo',
+    subtitle: 'Parrainage bancaire et financier',
+    logoUrl: 'https://www.google.com/s2/favicons?domain=fortuneo.fr&sz=256',
+    bonus: '150 €',
+    url: 'https://www.fortuneo.fr/',
+    verifiedAt: '09/11/2026',
+    referralCode: '13665767',
+    type: 'fortuneo',
+    bankOffers: [
+      { card: 'Fosfo Mastercard', bonus: 80 },
+      { card: 'Gold Mastercard', bonus: 150 }
+    ],
+    stockMarketBonus: 80,
+    lifeInsuranceBonus: 120
   }
 };
 
@@ -1308,6 +1324,89 @@ const REFERRAL_OFFERS = {
 
 
 function buildReferralContainer(offer) {
+  
+  if (offer.type === 'fortuneo') {
+    const header = new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `# ${offer.title} — Jusqu'à ${offer.bonus}\n` +
+          `-# Offre bancaire jusqu'au 30/11/2026, sous conditions et avec conservation du compte et de la carte pendant 1 an.\n` +
+          `-# Offre consultée le ${offer.verifiedAt}`
+        )
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder().setURL(offer.logoUrl)
+      );
+
+    const separator = () =>
+      new SeparatorBuilder()
+        .setSpacing(SeparatorSpacingSize.Small);
+
+    return new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+      .addSectionComponents(header)
+      .addSeparatorComponents(separator())
+
+      
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `**Ouvre ton premier compte Fortuneo avec Fosfo ou Gold**\n` +
+          `-# +80 € de prime avec Fosfo ou +150 € avec Gold Mastercard`
+        )
+      )
+      .addSeparatorComponents(separator())
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `**Renseigne le code parrain ${offer.referralCode}**\n` +
+          `-# À saisir pendant ton inscription`
+        )
+      )
+      .addSeparatorComponents(separator())
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `**Verse-y 300 € dans les 6 jours suivant l'ouverture**\n` +
+          `-# Pour obtenir la prime correspondant à ta carte`
+        )
+      )
+      .addSeparatorComponents(separator())
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `**Découvre aussi les offres Bourse et assurance-vie**\n` +
+          `-# Jusqu'à 80 € en Bourse ou 120 € en assurance-vie, avec 1 000 € de versement initial`
+        )
+      )
+      .addSeparatorComponents(separator())
+
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
+        )
+      )
+
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Profiter de l'offre")
+            .setStyle(ButtonStyle.Link)
+            .setURL(offer.url),
+
+          new ButtonBuilder()
+            .setLabel('Conditions officielles')
+            .setStyle(ButtonStyle.Link)
+            .setURL('https://www.fortuneo.fr/parrainage'),
+
+          new ButtonBuilder()
+            .setCustomId('open_referral_ticket_fortuneo')
+            .setLabel("Besoin d'aide ?")
+            .setStyle(ButtonStyle.Secondary)
+        )
+      );
+
+  }
+
   const tiers = offer.depositTiers
   .map(t => `- **${t.deposit}** : +${t.bonus} € de prime pour le filleul`)
   .join('\n');
@@ -1386,7 +1485,6 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `\n\n` +
     `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
   )
 )
@@ -1419,7 +1517,9 @@ const crypto = require('node:crypto');
 
 const REFERRAL_OFFICIAL_PAGES = {
   '┃boursobank':
-    'https://www.boursobank.com/bon-plan/parrainage-boursobank'
+    'https://www.boursobank.com/bon-plan/parrainage-boursobank',
+  '┃fortuneo':
+    'https://www.fortuneo.fr/parrainage'
 };
 
 let referralCheckRunning = false;
@@ -2106,8 +2206,9 @@ const commands = [
         type: 3,
         required: true,
         choices: [
-          { name: 'BoursoBank', value: '┃boursobank' }
-        ]
+  { name: 'BoursoBank', value: '┃boursobank' },
+  { name: 'Fortuneo', value: '┃fortuneo' }
+]
       },
       {
         name: 'url',
@@ -4293,10 +4394,18 @@ if (
   } catch {}
 
   const hostname = parsed?.hostname?.toLowerCase();
-  const validDomain =
-    hostname === 'bour.so' ||
-    hostname === 'boursobank.com' ||
-    hostname?.endsWith('.boursobank.com');
+  const validDomain = enseigne === '┃boursobank'
+  ? (
+      hostname === 'bour.so' ||
+      hostname === 'boursobank.com' ||
+      hostname?.endsWith('.boursobank.com')
+    )
+  : enseigne === '┃fortuneo'
+    ? (
+        hostname === 'fortuneo.fr' ||
+        hostname?.endsWith('.fortuneo.fr')
+      )
+    : false;
 
   if (
     parsed?.protocol !== 'https:' ||
@@ -4306,7 +4415,7 @@ if (
     parsed.password
   ) {
     return interaction.reply({
-      content: 'Lien invalide : utilise une URL HTTPS BoursoBank ou bour.so.',
+      content: `Lien invalide : utilise une URL HTTPS officielle correspondant à ${enseigne}.`,
       flags: MessageFlags.Ephemeral
     });
   }
@@ -5096,7 +5205,16 @@ if (interaction.customId === 'open_rules') {
 }
 
 
-if (interaction.customId === 'open_referral_ticket_boursobank') {
+
+if (
+  interaction.customId === 'open_referral_ticket_boursobank' ||
+  interaction.customId === 'open_referral_ticket_fortuneo'
+) {
+  const isFortuneo =
+    interaction.customId === 'open_referral_ticket_fortuneo';
+
+  const referralBrand = isFortuneo ? 'Fortuneo' : 'BoursoBank';
+  const referralSlug = isFortuneo ? 'fortuneo' : 'boursobank';
   await interaction.deferReply({
     flags: MessageFlags.Ephemeral
   });
@@ -5134,7 +5252,8 @@ if (interaction.customId === 'open_referral_ticket_boursobank') {
       ch.permissionOverwrites.cache.has(member.id) &&
       (
         ch.name.startsWith('┃ticket-') ||
-        ch.name.startsWith('┃boursobank-')
+        ch.name.startsWith('┃boursobank-') ||
+ch.name.startsWith('┃fortuneo-')
       )
     );
 
@@ -5155,10 +5274,10 @@ if (interaction.customId === 'open_referral_ticket_boursobank') {
       .slice(0, 35) || member.id;
 
     const ticketChannel = await guild.channels.create({
-      name: `┃boursobank-${username}`,
+      name: `┃${referralSlug}-${username}`,
       type: ChannelType.GuildText,
       parent: category.id,
-      topic: `Parrainage BoursoBank | Membre : ${member.id}`,
+      topic: `Parrainage ${referralBrand} | Membre : ${member.id}`,
       permissionOverwrites: [
         {
           id: guild.id,
@@ -5192,11 +5311,11 @@ if (interaction.customId === 'open_referral_ticket_boursobank') {
         new SectionBuilder()
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
-              `## 🏦 TICKET BOURSOBANK\n` +
-              `-# Ouvert par <@${member.id}>\n\n` +
-              `Bienvenue ! Pose ta question concernant ` +
-              `le parrainage BoursoBank.\n` +
-              `L'équipe te répondra ici.`
+              `## 🏦 TICKET ${referralBrand.toUpperCase()}\n` +
+`-# Ouvert par <@${member.id}>\n\n` +
+`Bienvenue ! Pose ta question concernant ` +
+`le parrainage ${referralBrand}.\n` +
+`L'équipe te répondra ici.`
             )
           )
           .setThumbnailAccessory(
@@ -5228,11 +5347,11 @@ if (interaction.customId === 'open_referral_ticket_boursobank') {
     });
 
     return interaction.editReply({
-      content: `✅ Ton ticket BoursoBank a été créé : <#${ticketChannel.id}>`
+      content: `✅ Ton ticket ${referralBrand} a été créé : <#${ticketChannel.id}>`
     });
 
   } catch (error) {
-    console.error('❌ Ticket BoursoBank :', error);
+    console.error(`❌ Ticket ${referralBrand} :`, error);
 
     return interaction.editReply({
       content: '❌ Impossible de créer le ticket. Réessaie plus tard.'
