@@ -1357,7 +1357,7 @@ function buildReferralContainer(offer) {
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `**Verse-y 300 € pour obtenir la prime maximale**\n` +
-    `-#+40 € de prime si 300 € déposés`
+    `-# +40 € de prime si 300 € déposés`
   )
 )
 .addSeparatorComponents(
