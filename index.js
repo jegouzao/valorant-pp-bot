@@ -1316,9 +1316,9 @@ function buildReferralContainer(offer) {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${offer.title}\n` +
-        `-# ${offer.subtitle}\n\n` +
-        `# Jusqu'à ${offer.bonus}\n` +
-        `-# Pour le filleul · Sous conditions`
+`-# ${offer.subtitle}\n` +
+`-# Primes soumises à conditions, avec risque de reprise avant 24 mois.\n` +
+`-# Offre consultée le ${offer.verifiedAt}`
       )
     );
 
@@ -1343,8 +1343,10 @@ function buildReferralContainer(offer) {
         .setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### 💰 Premier versement\n` +
+  new TextDisplayBuilder().setContent(
+    `# Jusqu'à ${offer.bonus}\n` +
+    `-# Pour le filleul · Sous conditions\n\n` +
+    `### 💰 Premier versement\n` +
         `${tiers}\n` +
         `-# +20 € à l'ouverture du compte`
       )
@@ -1356,14 +1358,18 @@ function buildReferralContainer(offer) {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `### Comment en profiter ?\n` +
-        `① Ouvre ton premier compte via le lien.\n` +
-        `② Verse 300 € pour le palier maximal.\n` +
-        `③ Utilise ta carte sur les 3 périodes : **+40 €**.\n` +
-        `④ Réalise une mobilité EasyMove éligible : **+80 €**.\n\n` +
-        `-# Primes soumises à conditions, avec risque de reprise avant 24 mois.\n` +
-        `-# Offre consultée le ${offer.verifiedAt}`
+        `- Ouvre ton premier compte via le lien.\n` +
+        `- Verse 300 € pour le palier maximal.\n` +
+        `- Utilise ta carte sur les 3 périodes : **+40 €**.\n` +
+        `- Réalise une mobilité EasyMove éligible : **+80 €**.`
       )
     )
+
+    .addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
