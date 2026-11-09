@@ -1383,7 +1383,7 @@ function buildReferralContainer(offer) {
           .setURL('https://www.boursobank.com/bon-plan/parrainage-boursobank'),
 
         new ButtonBuilder()
-          .setCustomId('open_ticket')
+          .setCustomId('open_referral_ticket_boursobank')
           .setLabel('Ouvrir un ticket')
           .setStyle(ButtonStyle.Secondary)
       )
@@ -5069,6 +5069,151 @@ if (interaction.customId === 'open_rules') {
     components: [buildRulesContainer()],
     flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
   });
+}
+
+
+if (interaction.customId === 'open_referral_ticket_boursobank') {
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(interaction.user.id);
+
+    const category = await guild.channels
+      .fetch('1569390219063463986')
+      .catch(() => null);
+
+    if (!category || category.type !== ChannelType.GuildCategory) {
+      return interaction.editReply({
+        content: '❌ Catégorie des tickets introuvable.'
+      });
+    }
+
+    const staffRole = guild.roles.cache.find(
+      role => role.name === 'Administrateur'
+    );
+
+    if (!staffRole) {
+      return interaction.editReply({
+        content: '❌ Rôle Administrateur introuvable.'
+      });
+    }
+
+    // Empêcher plusieurs tickets simultanés.
+    await guild.channels.fetch();
+
+    const existing = guild.channels.cache.find(ch =>
+      ch.parentId === category.id &&
+      ch.type === ChannelType.GuildText &&
+      ch.permissionOverwrites.cache.has(member.id) &&
+      (
+        ch.name.startsWith('┃ticket-') ||
+        ch.name.startsWith('┃boursobank-')
+      )
+    );
+
+    if (existing) {
+      return interaction.editReply({
+        content: `❌ Tu as déjà un ticket ouvert : <#${existing.id}>`
+      });
+    }
+
+    // Pseudo compatible avec un nom de salon Discord.
+    const username = member.user.username
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 35) || member.id;
+
+    const ticketChannel = await guild.channels.create({
+      name: `┃boursobank-${username}`,
+      type: ChannelType.GuildText,
+      parent: category.id,
+      topic: `Parrainage BoursoBank | Membre : ${member.id}`,
+      permissionOverwrites: [
+        {
+          id: guild.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: member.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory,
+            PermissionsBitField.Flags.AttachFiles
+          ]
+        },
+        {
+          id: staffRole.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory,
+            PermissionsBitField.Flags.AttachFiles,
+            PermissionsBitField.Flags.ManageMessages
+          ]
+        }
+      ]
+    });
+
+    const container = new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+      .addSectionComponents(
+        new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `## 🏦 TICKET BOURSOBANK\n` +
+              `-# Ouvert par <@${member.id}>\n\n` +
+              `Bienvenue ! Pose ta question concernant ` +
+              `le parrainage BoursoBank.\n` +
+              `L'équipe te répondra ici.`
+            )
+          )
+          .setThumbnailAccessory(
+            new ThumbnailBuilder().setURL(
+              member.displayAvatarURL({
+                extension: 'png',
+                size: 256
+              })
+            )
+          )
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setSpacing(SeparatorSpacingSize.Small)
+      )
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`close_ticket_${member.id}`)
+            .setLabel('Clôturer la discussion')
+            .setStyle(ButtonStyle.Secondary)
+        )
+      );
+
+    await ticketChannel.send({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] }
+    });
+
+    return interaction.editReply({
+      content: `✅ Ton ticket BoursoBank a été créé : <#${ticketChannel.id}>`
+    });
+
+  } catch (error) {
+    console.error('❌ Ticket BoursoBank :', error);
+
+    return interaction.editReply({
+      content: '❌ Impossible de créer le ticket. Réessaie plus tard.'
+    });
+  }
 }
 
       if (interaction.customId === 'open_ticket') {
