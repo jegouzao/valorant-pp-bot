@@ -1357,7 +1357,7 @@ function buildReferralContainer(offer) {
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `**Verse-y 300 € pour obtenir la prime maximale**\n` +
-    `-# +10 € si 1 à 49 €, +20 € si 50 à 299 €, +40 € de prime si 300 € déposés`
+    `-#+40 € de prime si 300 € déposés`
   )
 )
 .addSeparatorComponents(
@@ -1367,7 +1367,7 @@ function buildReferralContainer(offer) {
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `**Utilise ta carte une fois par mois pendant 3 mois**\n` +
-    `-# +40 € de prime pour toi`
+    `-# +40 € de prime supplémentaire`
   )
 )
 .addSeparatorComponents(
@@ -1377,7 +1377,7 @@ function buildReferralContainer(offer) {
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
     `**Réalise une mobilité bancaire via EasyMove**\n` +
-    `-# +80 € de prime pour toi`
+    `-# +80 € de prime supplémentaire`
   )
 )
 .addSeparatorComponents(
