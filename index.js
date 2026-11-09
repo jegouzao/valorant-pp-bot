@@ -1343,9 +1343,10 @@ function buildReferralContainer(offer) {
     .setSpacing(SeparatorSpacingSize.Small)
 )
 
+
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `- **Ouvre ton premier compte via le lien**\n` +
+    `**Ouvre ton premier compte via le lien ci-dessous**\n` +
     `-# +20 € de prime pour toi à l'ouverture du compte`
   )
 )
@@ -1355,7 +1356,7 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `- **Verse 300 € pour le palier maximal**\n` +
+    `**Verse-y 300 € pour atteindre le palier maximal de prime**\n` +
     `-# +10 € de prime pour toi si 1 à 49 € déposés, +20 € si 50 à 299 €, +40 € si 300 € ou +`
   )
 )
@@ -1365,7 +1366,7 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `- **Utilise ta carte sur les 3 périodes**\n` +
+    `**Utilise ta carte une fois par mois pendant 3 mois**\n` +
     `-# +40 € de prime pour toi`
   )
 )
@@ -1375,7 +1376,7 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `- **Réalise une mobilité EasyMove éligible**\n` +
+    `**Réalise une mobilité bancaire via EasyMove**\n` +
     `-# +80 € de prime pour toi`
   )
 )
@@ -1383,6 +1384,16 @@ function buildReferralContainer(offer) {
   new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Small)
 )
+.addTextDisplayComponents(
+  new TextDisplayBuilder().setContent(
+    `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
+  )
+)
+.addSeparatorComponents(
+  new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Small)
+)
+
 
 
 
