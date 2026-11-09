@@ -1356,8 +1356,8 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `**Verse-y 300 € pour atteindre le palier maximal de prime**\n` +
-    `-# +10 € de prime pour toi si 1 à 49 € déposés, +20 € si 50 à 299 €, +40 € si 300 € ou +`
+    `**Verse-y 300 € pour obtenir la prime maximale**\n` +
+    `-# +10 € si 1 à 49 €, +20 € si 50 à 299 €, +40 € de prime si 300 € déposés`
   )
 )
 .addSeparatorComponents(
@@ -1388,10 +1388,6 @@ function buildReferralContainer(offer) {
   new TextDisplayBuilder().setContent(
     `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
   )
-)
-.addSeparatorComponents(
-  new SeparatorBuilder()
-    .setSpacing(SeparatorSpacingSize.Small)
 )
 
 
