@@ -1304,128 +1304,37 @@ const REFERRAL_OFFERS = {
 
 
 
+
 function buildReferralContainer(offer) {
   const tiers = offer.depositTiers
-    .map(tier =>
-      `> **${tier.deposit}** déposés → **+${tier.bonus} €**`
-    )
-    .join('\n');
+    .map(t => `**${t.deposit}** → **+${t.bonus} €**`)
+    .join('  |  ');
 
-  const cardSteps = offer.cardBonuses
-    .map(step =>
-      `> ${step.period} : **+${step.bonus} €**`
-    )
-    .join('\n');
-
-  const container = new ContainerBuilder()
-    .setAccentColor(0x242429)
-
-    // EN-TÊTE
+  return new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `# 🏦 ${offer.title}\n` +
-        `-# ${offer.subtitle} · Offre vérifiée le ${offer.verifiedAt}\n\n` +
-        `## 💸 JUSQU'À ${offer.bonus}\n` +
-        `-# Prime maximale pour le filleul, sous conditions.`
+        `-# ${offer.subtitle} · Conditions consultées le ${offer.verifiedAt}\n\n` +
+        `## Jusqu'à ${offer.bonus} pour le filleul\n` +
+        `-# Montant maximal, sous conditions.\n\n` +
+        `**Premier versement**\n${tiers}\n` +
+        `-# +20 € à l'ouverture du compte.`
       )
     )
-
     .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
+      new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
     )
-
-    // PALIERS
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### 💰 1. PRIME DE BIENVENUE\n` +
-        `**+${offer.openingBonus} €** à l'ouverture effective du compte.\n\n` +
-        `**Premier versement :**\n${tiers}\n\n` +
-        `-# Le versement est déposé sur ton propre compte. ` +
-        `Pour maximiser cette prime, dépose au moins 300 €.`
+        `**Comment ça marche ?**\n` +
+        `① Ouvre ton premier compte avec le lien ci-dessous.\n` +
+        `② Verse au moins 300 € pour obtenir le meilleur palier.\n` +
+        `③ Fais 1 opération par carte sur chacune des 3 périodes de 30 jours (**+40 €**).\n` +
+        `④ Si tu es éligible, transfère tes opérations récurrentes avec EasyMove (**+80 €**).\n\n` +
+        `-# EasyMove nécessite un transfert éligible. Les primes peuvent être reprises si le compte est fermé ou la domiciliation arrêtée avant 24 mois.`
       )
     )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // CARTE
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### 💳 2. BONUS CARTE : +40 €\n` +
-        `Effectue au moins **un paiement ou retrait par carte** ` +
-        `pendant chacune des trois périodes :\n\n` +
-        `${cardSteps}\n\n` +
-        `-# Les opérations doivent être réalisées depuis le compte BoursoBank.`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // EASYMOVE
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### 🔄 3. EASYMOVE : +${offer.mobilityBonus} €\n` +
-        `EasyMove permet de transférer tes prélèvements ` +
-        `et virements réguliers depuis une autre banque.\n\n` +
-        `**Pour obtenir la prime :**\n` +
-        `> • Signer la demande de mobilité dans le mois suivant l'ouverture.\n` +
-        `> • Avoir au moins une opération récurrente éligible à transférer.\n` +
-        `> • Maintenir la domiciliation bancaire pendant 24 mois.\n\n` +
-        `-# La simple activation sans transfert éligible ne suffit pas.`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // TUTORIEL
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### 📋 TUTORIEL RAPIDE\n` +
-        `**①** Clique sur « Profiter de l'offre ».\n` +
-        `**②** Ouvre ton premier compte individuel BoursoBank.\n` +
-        `**③** Verse idéalement 300 € minimum.\n` +
-        `**④** Effectue les trois opérations par carte requises.\n` +
-        `**⑤** Réalise EasyMove si tu es éligible.\n\n` +
-        `-# Réservé aux personnes majeures n'ayant jamais été clientes BoursoBank.`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // AVERTISSEMENTS
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### ⚠️ À SAVOIR\n` +
-        `• **24 mois :** une fermeture anticipée du compte peut ` +
-        `entraîner la reprise des primes commerciales.\n` +
-        `• **EasyMove :** sa prime peut être reprise si la ` +
-        `domiciliation n'est pas maintenue 24 mois.\n` +
-        `• **Délais :** les primes sont versées progressivement ` +
-        `après validation des conditions.\n` +
-        `• **Parrain :** le lien peut également lui rapporter ` +
-        `une prime distincte.\n\n` +
-        `-# Vérifie les conditions applicables avant toute inscription.`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    // BOUTONS
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -1444,17 +1353,21 @@ function buildReferralContainer(offer) {
           .setStyle(ButtonStyle.Secondary)
       )
     );
-
-  return container;
 }
+
 
 
 async function syncReferralPanels(guild) {
   const configKey = 'referralPanelMessages';
   const saved = await getConfigValue(configKey, {});
   const messageIds = { ...saved };
+  const savedLinks = await getConfigValue('referralCustomLinks', {});
 
-  for (const [channelName, offer] of Object.entries(REFERRAL_OFFERS)) {
+  for (const [channelName, baseOffer] of Object.entries(REFERRAL_OFFERS)) {
+  const offer = {
+    ...baseOffer,
+    url: savedLinks[channelName] || baseOffer.url
+  };
     const channel = guild.channels.cache.find(
       ch => ch.name === channelName && ch.type === ChannelType.GuildText
     );
@@ -2000,6 +1913,36 @@ return container;
 
 // ===== Slash Commands =====
 const commands = [
+
+  
+{
+  name: 'parrainage',
+  description: 'Gérer les liens de parrainage',
+  default_member_permissions: PermissionFlagsBits.Administrator.toString(),
+  options: [{
+    name: 'lien',
+    description: 'Modifier le lien d’une enseigne',
+    type: 1,
+    options: [
+      {
+        name: 'enseigne',
+        description: 'Enseigne',
+        type: 3,
+        required: true,
+        choices: [
+          { name: 'BoursoBank', value: '┃boursobank' }
+        ]
+      },
+      {
+        name: 'url',
+        description: 'Nouveau lien de parrainage',
+        type: 3,
+        required: true
+      }
+    ]
+  }]
+},
+
 
   {
   name: 'closemonth',
@@ -4140,6 +4083,68 @@ client.on('interactionCreate', async (interaction) => {
 
     const isMod = interaction.member?.roles?.cache?.has(MOD_ROLE_ID);
     const isVerified = interaction.member?.roles?.cache?.has(VERIFIED_ROLE_ID);
+
+    
+if (
+  interaction.isChatInputCommand() &&
+  interaction.commandName === 'parrainage'
+) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    return interaction.reply({
+      content: 'Commande réservée aux administrateurs.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const enseigne = interaction.options.getString('enseigne', true);
+  const rawUrl = interaction.options.getString('url', true).trim();
+
+  if (!REFERRAL_OFFERS[enseigne]) {
+    return interaction.reply({
+      content: 'Enseigne non configurée.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {}
+
+  const hostname = parsed?.hostname?.toLowerCase();
+  const validDomain =
+    hostname === 'bour.so' ||
+    hostname === 'boursobank.com' ||
+    hostname?.endsWith('.boursobank.com');
+
+  if (
+    parsed?.protocol !== 'https:' ||
+    !validDomain ||
+    rawUrl.length > 1500 ||
+    parsed.username ||
+    parsed.password
+  ) {
+    return interaction.reply({
+      content: 'Lien invalide : utilise une URL HTTPS BoursoBank ou bour.so.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const links = await getConfigValue('referralCustomLinks', {});
+  links[enseigne] = rawUrl;
+
+  await setConfigValue('referralCustomLinks', links);
+  await syncReferralPanels(interaction.guild);
+
+  return interaction.editReply({
+    content: `Lien enregistré et synchronisation lancée pour ${enseigne}.`
+  });
+}
+
 
     // --------------------------------------
 // BOUTON RIOT
