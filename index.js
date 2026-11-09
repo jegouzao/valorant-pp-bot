@@ -1344,13 +1344,13 @@ function buildReferralContainer(offer) {
 )
 .addTextDisplayComponents(
   new TextDisplayBuilder().setContent(
-    `### Comment en profiter ?\n` +
+    `## Comment en profiter ?\n` +
 `- Ouvre ton premier compte via le lien.\n` +
-`-# +20 € de prime pour le filleul à l'ouverture du compte.\n\n` +
+`-# +20 € de prime pour le filleul à l'ouverture du compte.\n` +
 `- Verse 300 € pour le palier maximal.\n` +
-`-# +10 € si 1 à 49 € déposés, +20 € si 50 à 299 € déposés, +40 € si 300 € ou plus déposés.\n\n` +
+`-# +10 € de prime pour le filleul si 1 à 49 € déposés, +20 € si 50 à 299 €, +40 € si 300 € ou +.\n` +
 `- Utilise ta carte sur les 3 périodes.\n` +
-`-# +40 € de prime pour le filleul.\n\n` +
+`-# +40 € de prime pour le filleul.\n` +
 `- Réalise une mobilité EasyMove éligible.\n` +
 `-# +80 € de prime pour le filleul.`
   )
