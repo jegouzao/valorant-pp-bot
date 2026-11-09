@@ -1304,7 +1304,7 @@ const REFERRAL_OFFERS = {
     '┃fortuneo': {
     title: 'Fortuneo',
     subtitle: 'Parrainage bancaire et financier',
-    logoUrl: 'https://www.google.com/s2/favicons?domain=fortuneo.fr&sz=256',
+    logoUrl: 'https://www.fortuneo.fr/favicon.ico',
     bonus: '150 €',
     url: 'https://www.fortuneo.fr/',
     verifiedAt: '09/11/2026',
