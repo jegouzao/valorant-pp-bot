@@ -1561,6 +1561,38 @@ const REFERRAL_CATALOG = {
   ]
 };
 
+
+
+
+
+const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
+
+const BOOKMAKER_ENTRIES = [
+  ['winamax', 'Winamax'],
+  ['betclic', 'Betclic'],
+  ['unibet', 'Unibet'],
+  ['pmu', 'PMU'],
+  ['betsson', 'Betsson'],
+  ['olybet', 'OlyBet'],
+  ['feelingbet', 'Feelingbet']
+];
+
+for (const [slug, title] of BOOKMAKER_ENTRIES) {
+  addReferralOffer(slug, {
+    title,
+    category: 'bookmakers',
+    bonus: null,
+    notice: 'Réservé aux majeurs. Jeux d’argent : risques de pertes et de dépendance. Conditions du programme à confirmer.',
+    steps: [
+      ['Disponibilité du programme', 'Consulte les conditions en vigueur auprès de l’opérateur.'],
+      ['Éligibilité', 'Réservé aux personnes majeures ; des restrictions supplémentaires peuvent s’appliquer.'],
+      ['Conditions du parrainage', 'Montant, dépôt éventuel et délais dépendent de l’offre applicable.'],
+      ['Précautions', 'Ne joue pas pour obtenir une récompense ; les jeux d’argent peuvent entraîner des pertes.']
+    ],
+    draft: false
+  });
+}
+
 const REFERRAL_DEFAULT_STEPS = {
   banque: [
     ['Consulte l’offre de bienvenue', 'Vérifie les primes et conditions applicables.'],
@@ -3198,6 +3230,21 @@ Object.assign(REFERRAL_OFFERS['┃sumeria'], {
 
 
 function buildReferralContainer(offer) {
+
+
+  const hideBookmakerReferral =
+    offer.category === 'bookmakers' && offer.draft;
+
+  if (hideBookmakerReferral) {
+    offer = {
+      ...offer,
+      url: null,
+      signupUrl: null,
+      officialUrl: null,
+      referralCode: null
+    };
+  }
+
   const separator = () =>
     new SeparatorBuilder()
       .setSpacing(SeparatorSpacingSize.Small);
@@ -3322,7 +3369,10 @@ function buildReferralContainer(offer) {
   : (offer.url || offer.signupUrl || offer.officialUrl);
 
       // Tous les liens configurés peuvent être affichés publiquement
-  const publicMainUrl = mainUrl;
+    const publicMainUrl =
+    offer.category === 'bookmakers' && offer.draft
+      ? null
+      : mainUrl;
 
   if (publicMainUrl) {
     buttons.push(
@@ -3507,12 +3557,16 @@ async function syncReferralPanels(guild) {
   const savedLinks = await getConfigValue('referralCustomLinks', {});
   const savedCodes = await getConfigValue('referralCustomCodes', {});
 
+
   for (const [channelName, baseOffer] of Object.entries(REFERRAL_OFFERS)) {
     
 const isAid = baseOffer.category === 'aides';
 
+
 const offer = {
   ...baseOffer,
+  draft: baseOffer.draft,
+
   url: isAid
     ? null
     : (savedLinks[channelName] || baseOffer.url),
@@ -3529,6 +3583,17 @@ const offer = {
       console.warn(`Salon de parrainage introuvable : ${channelName}`);
       continue;
     }
+
+    if (
+      baseOffer.category === 'bookmakers' &&
+      channel.parentId !== BOOKMAKERS_CATEGORY_ID
+    ) {
+      console.warn(
+        `Salon bookmaker hors catégorie : ${channelName}`
+      );
+      continue;
+    }
+
 
     try {
       const payload = {
@@ -6726,7 +6791,17 @@ const REFERRAL_ALLOWED_DOMAINS = {
   '┃naomi': ['naomi.fr'],
   '┃capital-koala': ['capitalkoala.com'],
   '┃topcashback': ['topcashback.fr'],
-  '┃wanteeed': ['wanteeed.com']
+  '┃wanteeed': ['wanteeed.com'],
+
+
+  '┃winamax': ['winamax.fr'],
+  '┃betclic': ['betclic.fr'],
+  '┃unibet': ['unibet.fr'],
+  '┃pmu': ['pmu.fr'],
+  '┃betsson': ['betsson.fr'],
+  '┃olybet': ['olybet.fr'],
+  '┃feelingbet': ['feelingbet.fr']
+
 };
 
 const hostname = parsed?.hostname?.toLowerCase();
@@ -9527,6 +9602,7 @@ const resultContainer = buildResultContainer({
   winningSide,
   guild: interaction.guild
 });
+
 
 const finishedMessage = await interaction.channel.send({
   components: [resultContainer],
