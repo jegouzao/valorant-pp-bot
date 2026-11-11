@@ -1680,7 +1680,38 @@ pmu: {
 },
 
 
-  betsson: {
+  
+betsson: {
+  title: 'Betsson',
+  bonus: '20 € de bonus par parrainage réussi',
+  url: null,
+  referralCode: null,
+  officialUrl: 'https://www.betsson.fr/',
+  notice: 'Le programme affiché annonce 20 € de bonus par parrainage réussi et jusqu’à 50 € de bonus. Le parrain doit valider son compte et effectuer un premier dépôt avant de pouvoir parrainer. Les conditions détaillées restent à vérifier.',
+  steps: [
+    [
+      'Activation du parrainage',
+      'Le parrain doit d’abord valider son compte Betsson et effectuer son premier dépôt.'
+    ],
+    [
+      'Invitation',
+      'Une fois le programme accessible, le parrain peut partager son lien personnel ou son QR code.'
+    ],
+    [
+      'Inscription du filleul',
+      'Le filleul doit suivre l’invitation et respecter les conditions du programme.'
+    ],
+    [
+      'Récompense annoncée',
+      'Betsson affiche 20 € de bonus par parrainage réussi. Les conditions d’attribution et le plafond annoncé de 50 € doivent être vérifiés.'
+    ],
+    [
+      'Restrictions',
+      'La récompense du filleul, le dépôt minimum et la durée de validité des bonus ne sont pas précisés sur cette capture.'
+    ]
+  ]
+},
+
 
 
   olybet: {
