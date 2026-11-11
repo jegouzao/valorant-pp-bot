@@ -1570,31 +1570,41 @@ const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
 
 const BOOKMAKER_OFFERS = {
-  winamax: {
-    title: 'Winamax',
-    bonus: null,
-    officialUrl: 'https://www.winamax.fr/',
-    notice: 'Conditions du parrainage Winamax à confirmer auprès de l’opérateur.',
-    steps: [
-      ['Programme de parrainage', 'Vérifie la disponibilité et les récompenses dans ton compte Winamax.'],
-      ['Inscription', 'Utilise uniquement un lien ou code de parrainage valide et autorisé.'],
-      ['Conditions de validation', 'Consulte les éventuels dépôts, vérifications et opérations requis.'],
-      ['Restrictions', 'Vérifie les plafonds, exclusions et conditions de validité des récompenses.']
-    ]
-  },
+  
+winamax: {
+  title: 'Winamax — Wina Squad',
+  bonus: '20 € pour le filleul : 10 € de Freebets + 10 € de bonus',
+  url: 'https://www.winamax.fr/parrain?code=JEGIYZ',
+  referralCode: 'JEGIYZ',
+  officialUrl: 'https://www.winamax.fr/',
+  notice: 'Offre réservée aux nouveaux joueurs majeurs. Le filleul dispose de 30 jours après son inscription pour valider son compte et effectuer un premier dépôt d’au moins 10 €. Maximum 5 filleuls par mois.',
+  steps: [
+    ['Inscription', 'Inscris-toi avec le code JEGIYZ ou le lien de parrainage.'],
+    ['Validation du compte', 'Fais vérifier ton compte Winamax dans les 30 jours suivant ton inscription.'],
+    ['Premier dépôt', 'Effectue un premier dépôt de 10 € minimum dans ce même délai de 30 jours.'],
+    ['Récompense du filleul', 'Après validation des conditions, bénéficie de 10 € de Freebets et de 10 € de bonus.'],
+    ['Limite mensuelle', 'Le parrain peut faire valider jusqu’à 5 filleuls par mois. Au-delà, les récompenses supplémentaires sont limitées et la progression est suspendue jusqu’au mois suivant.']
+  ]
+},
 
-  betclic: {
-    title: 'Betclic',
-    bonus: '10 € en freebets pour le filleul',
-    officialUrl: 'https://dam.begmedia.com/account/terms-and-conditions/BetclicFr/Fr/TermsAndConditions.html',
-    notice: 'Parrain : 10 € en freebets. Filleul : 10 € en freebets supplémentaires, sous conditions.',
-    steps: [
-      ['Saisis le code parrain à l’inscription', 'Le code doit être renseigné pendant la création du compte.'],
-      ['Valide ton compte', 'Justificatifs d’identité et d’adresse requis.'],
-      ['Effectue un premier dépôt de 10 € minimum', 'Active également la mission Défi Bienvenue dans la rubrique Défis.'],
-      ['Reçois les freebets', '10 € chacun sous conditions ; maximum 5 filleuls récompensés par an pour le parrain.']
-    ]
-  },
+
+  
+betclic: {
+  title: 'Betclic',
+  bonus: '10 € en Freebets pour le filleul',
+  url: 'https://betclic.onelink.me/2887093520/6c3132b8?af_sub5=JEGZXNG1',
+  referralCode: 'JEGZXNG1',
+  officialUrl: 'https://www.betclic.fr/',
+  notice: 'Parrain et filleul : 10 € chacun en Freebets. Le filleul doit effectuer un dépôt et valider son compte avec les justificatifs obligatoires. Crédits de jeu non retirables.',
+  steps: [
+    ['Inscription', 'Utilise le code JEGZXNG1 ou le lien de parrainage Betclic.'],
+    ['Premier dépôt', 'Effectue un dépôt conformément aux conditions de l’offre.'],
+    ['Validation du compte', 'Transmets les documents obligatoires pour faire vérifier ton compte.'],
+    ['Récompenses', 'Le parrain et le filleul reçoivent chacun 10 € en Freebets lorsque les conditions sont remplies.'],
+    ['Restrictions', 'Les Freebets sont des crédits de jeu non retirables. Vérifie leur durée de validité et leurs conditions d’utilisation.']
+  ]
+},
+
 
   unibet: {
     title: 'Unibet',
@@ -6879,7 +6889,7 @@ const REFERRAL_ALLOWED_DOMAINS = {
 
 
   '┃winamax': ['winamax.fr'],
-  '┃betclic': ['betclic.fr'],
+  '┃betclic': ['betclic.fr', 'betclic.onelink.me'],
   '┃unibet': ['unibet.fr'],
   '┃pmu': ['pmu.fr'],
   '┃betsson': ['betsson.fr'],
