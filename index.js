@@ -1287,9 +1287,10 @@ function addReferralOffer(slug, data) {
     bonus: data.bonus ?? null,
     notice: data.notice || 'Offre soumise à conditions.',
     verifiedAt: data.verifiedAt || null,
-    logoUrl: null,
+        logoUrl: null,
     url: null,
     referralCode: null,
+    signupUrl: data.signupUrl || null,
     officialUrl: data.officialUrl || null,
     steps: data.steps || [],
     ticketId: data.ticketId || null,
@@ -1335,7 +1336,8 @@ addReferralOffer('fortuneo', {
   bonus: '150 €',
   verifiedAt: '09/11/2026',
   notice: 'Offre bancaire jusqu’au 30/11/2026, sous conditions. Compte et carte à conserver au moins 1 an.',
-  officialUrl: 'https://www.fortuneo.fr/parrainage',
+    officialUrl: 'https://www.fortuneo.fr/parrainage',
+  signupUrl: 'https://www.fortuneo.fr/compte-bancaire',
   ticketId: 'open_referral_ticket_fortuneo',
   steps: [
     [
@@ -2491,6 +2493,566 @@ for (const [slug, details] of Object.entries(AID_RESEARCH_UPDATES)) {
   });
 }
 
+// ==========================
+// REVOLUT — CAMPAGNE NOVEMBRE 2026
+// ==========================
+
+Object.assign(REFERRAL_OFFERS['┃revolut'], {
+  bonus: '60 € pour le filleul',
+  verifiedAt: '10/11/2026',
+  draft: false,
+
+  notice:
+    'Offre de partage de prime proposée par le parrain : ' +
+    '50 € reversés au filleul après validation du parrainage, ' +
+    'ou 60 € si le bonus Épargne est également obtenu. ' +
+    'Ce versement est effectué par le parrain, et non par Revolut. ' +
+    'Offre valable jusqu’au 17/11/2026 à 20h59 UTC, ' +
+    'sous réserve des conditions de la campagne.',
+
+  steps: [
+    [
+      'Inscris-toi sur Revolut avec le lien',
+      'Crée ton compte et vérifie ton identité avant la date limite.'
+    ],
+    [
+      'Ajoute de l’argent sur ton compte',
+      'Effectue un approvisionnement par carte de débit ou virement bancaire.'
+    ],
+    [
+      'Effectue 3 achats de 5 € minimum chacun',
+      'Les jeux d’argent, cartes cadeaux et virements ne sont pas éligibles.'
+    ],
+    [
+      'Commande une carte physique',
+      'Ajoute-la à Apple Pay ou Google Pay. ' +
+      'Une fois la prime de 100 € reçue par le parrain, ' +
+      '50 € te sont reversés. Si tu ouvres également un compte Épargne ' +
+      'et y déposes au moins 100 €, un bonus de 20 € peut être obtenu ' +
+      'par le parrain, portant ton reversement total à 60 €.'
+    ]
+  ]
+});
+
+
+
+Object.assign(REFERRAL_OFFERS['┃trade-republic'], {
+  bonus: 'Bonus de bienvenue',
+  verifiedAt: '10/11/2026',
+  draft: false,
+  notice: 'Le filleul reçoit un bonus de bienvenue dont le montant est précisé dans son invitation. Le parrain reçoit 10 € en actions lorsque les conditions sont remplies.',
+  steps: [
+    [
+      'Accepte ton invitation Trade Republic',
+      'Inscris-toi en utilisant notre lien de parrainage.'
+    ],
+    [
+      'Ouvre et vérifie ton compte',
+      'Finalise ton inscription et la vérification de ton identité.'
+    ],
+    [
+      'Verse 100 € et réalise 3 investissements',
+      'Ces deux conditions doivent être remplies dans les 21 premiers jours.'
+    ],
+    [
+      'Reçois ton bonus de bienvenue',
+      'Le montant de ta récompense est indiqué dans ton invitation. Le parrain reçoit 10 € en actions.'
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃finary'], {
+  bonus: '1 mois de Finary Premium offert',
+  referralCode: 'MCK3YT',
+  verifiedAt: '10/11/2026',
+  draft: false,
+  notice: 'Le filleul reçoit 1 mois de Finary Premium après inscription et synchronisation de 2 comptes. Le parrain bénéficie d’une prolongation de 1 mois de son abonnement, sous réserve d’éligibilité. Les abonnements souscrits via iOS ou Android ne sont pas éligibles aux mois gratuits.',
+  steps: [
+    [
+      'Accepte ton invitation Finary',
+      'Inscris-toi en utilisant notre lien de parrainage.'
+    ],
+    [
+      'Crée ton compte gratuitement',
+      'Termine ton inscription sur Finary.'
+    ],
+    [
+      'Synchronise 2 comptes',
+      'Connecte deux comptes financiers pour remplir les conditions du parrainage.'
+    ],
+    [
+      'Profite de 1 mois de Premium offert',
+      'Découvre les fonctionnalités Premium, notamment les analyses et les synchronisations illimitées.'
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃coinbase'], {
+  bonus: '20 € en bitcoin offerts',
+  verifiedAt: '10/11/2026',
+  draft: false,
+  notice: 'Offre réservée aux nouveaux clients Coinbase résidant en France. Première transaction éligible de 20 € minimum. Le filleul et le parrain reçoivent chacun 20 € en BTC, sous réserve des conditions de Coinbase. Récompense annoncée environ 48 h après la transaction. Maximum 10 parrainages récompensés. Les cryptomonnaies présentent un risque de perte en capital.',
+  steps: [
+    [
+      'Accepte ton invitation Coinbase',
+      'Inscris-toi via notre lien de parrainage personnel.'
+    ],
+    [
+      'Crée et vérifie ton compte',
+      'Termine la vérification de ton identité. Offre réservée aux nouveaux clients résidant en France.'
+    ],
+    [
+      'Effectue une transaction de 20 € minimum',
+      'Achète une cryptomonnaie éligible sur Coinbase avec un moyen de paiement accepté.'
+    ],
+    [
+      'Reçois 20 € en bitcoin',
+      'Le filleul et le parrain reçoivent chacun 20 € en BTC, généralement sous environ 48 heures selon l’offre affichée.'
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃swissborg'], {
+  bonus: "Jusqu'à 50 € en BTC",
+  referralCode: 'lucasaO6L7RAV9',
+  verifiedAt: '10/11/2026',
+  draft: false,
+  notice: "Le parrain et le filleul peuvent recevoir chacun jusqu'à 50 € en BTC après un échange éligible de 100 € minimum. Montant variable, non garanti. Une campagne supplémentaire de 20 € chacun est proposée jusqu'au 31/12/2026 après 250 € d'achats éligibles, uniquement si la cagnotte collective atteint 150 parrainages qualifiés. Les crypto-actifs présentent un risque de perte en capital.",
+  steps: [
+    [
+      'Accepte ton invitation SwissBorg',
+      'Inscris-toi via notre lien et confirme le code de parrainage.'
+    ],
+    [
+      'Crée et vérifie ton compte',
+      "Termine l'inscription et la vérification de ton identité."
+    ],
+    [
+      'Échange au moins 100 €',
+      "Effectue un échange éligible de 100 € minimum, ou l'équivalent dans une devise acceptée."
+    ],
+    [
+      'Débloque ta récompense en BTC',
+      "Le parrain et le filleul reçoivent chacun un coupon bonus pouvant atteindre 50 € en bitcoin."
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃igraal'], {
+  bonus: '11 € offerts au filleul',
+  verifiedAt: '11/11/2026',
+  draft: false,
+  notice: "Le filleul reçoit 11 € de bonus après inscription via le lien de parrainage et validation d'un achat éligible de 8,33 € minimum dans les 90 jours. Le parrain reçoit 11 € après validation de 1 € de cashback cumulé par le filleul, ainsi que 10 % du cashback de ce dernier pendant 365 jours. Offre soumise aux conditions iGraal.",
+  steps: [
+    [
+      'Accepte ton invitation iGraal',
+      'Inscris-toi gratuitement via notre lien de parrainage.'
+    ],
+    [
+      'Effectue un achat chez un partenaire',
+      "Réalise un achat éligible d'au moins 8,33 € dans les 90 jours suivant ton inscription."
+    ],
+    [
+      'Cumule 1 € de cashback validé',
+      'Attends la validation de ton cashback pour remplir les conditions de parrainage.'
+    ],
+    [
+      'Débloque tes 11 € de bienvenue',
+      'Profite de ton bonus de parrainage selon les conditions iGraal.'
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃joko'], {
+  bonus: '5 € offerts au filleul',
+  referralCode: 'lorwfa',
+  verifiedAt: '11/11/2026',
+  draft: false,
+  notice: "Le filleul reçoit 5 € après avoir cumulé 5 € de cashback éligible sur ses achats dans les 90 jours suivant son inscription. Les bonus ne comptent pas dans ce seuil. Le parrain reçoit 20 € et 10 % du cashback du filleul pendant un an. Le code LORWFA doit être saisi lors de l'inscription.",
+  steps: [
+    [
+      'Télécharge Joko avec notre lien',
+      "Ouvre le lien d'invitation pour installer l'application Joko."
+    ],
+    [
+      'Inscris-toi avec le code LORWFA',
+      "Saisis le code de parrainage pendant l'inscription et vérifie ton adresse e-mail."
+    ],
+    [
+      'Cumule 5 € de cashback',
+      "Effectue des achats éligibles et cumule 5 € de cashback dans les 90 jours. Les bonus ne sont pas comptabilisés."
+    ],
+    [
+      'Récupère tes 5 € de bonus',
+      "Une fois les conditions validées, collecte ta récompense dans l'application Joko."
+    ]
+  ]
+});
+
+
+Object.assign(REFERRAL_OFFERS['┃pass-culture'], {
+  bonus: 'Jusqu’à 200 € de crédit culturel',
+  verifiedAt: '11/11/2026',
+  draft: false,
+  notice: "Dispositif public gratuit, sans parrainage. Offres gratuites à 15-16 ans, 50 € à 17 ans et 150 € à 18 ans. Bonus supplémentaire de 50 € sous conditions. Les crédits sont cumulables et utilisables jusqu'à la veille des 21 ans. Activation du crédit dans les délais d'âge requis.",
+  steps: [
+    [
+      'Vérifie ton éligibilité',
+      "Tu dois notamment respecter les conditions d'âge et de résidence en France."
+    ],
+    [
+      'Inscris-toi sur pass Culture',
+      "Crée ton compte sur l'application ou le site officiel."
+    ],
+    [
+      'Active ton crédit culturel',
+      "Vérifie ton identité et débloque le crédit correspondant à ton âge."
+    ],
+    [
+      'Réserve tes activités culturelles',
+      "Utilise ton crédit pour des livres, des concerts, des séances de cinéma et d'autres offres éligibles."
+    ]
+  ]
+});
+
+
+/* ============================================================
+   CATÉGORIE AIDES — 12 FICHES OFFICIELLES
+   Vérification : 11/11/2026
+   Aucun lien personnel, aucune commission, aucun parrainage
+   ============================================================ */
+
+const PUBLIC_AID_UPDATES = {
+
+  // 01 — PASS CULTURE
+  '┃pass-culture': {
+    bonus: '50 € à 17 ans · 150 € à 18 ans',
+    officialUrl: 'https://pass.culture.fr/',
+    notice: "Dispositif public gratuit. Offres gratuites dès 15 ans. Crédit de 50 € à 17 ans et de 150 € à 18 ans, avec 50 € supplémentaires sous conditions. Activation du crédit avant 19 ans et utilisation possible jusqu'à 21 ans. Conditions de résidence applicables.",
+    steps: [
+      [
+        "Vérifie ton âge et ta résidence",
+        "Consulte les critères d'accès au pass Culture."
+      ],
+      [
+        "Crée ton compte",
+        "Télécharge l'application officielle et inscris-toi."
+      ],
+      [
+        "Vérifie ton identité",
+        "Active le crédit correspondant à ton âge si tu es éligible."
+      ],
+      [
+        "Réserve tes offres culturelles",
+        "Profite des livres, concerts, spectacles, cinémas et autres activités éligibles."
+      ]
+    ]
+  },
+
+  // 02 — PRIME D'ACTIVITÉ
+  '┃prime-activité': {
+    bonus: 'Complément de revenus mensuel',
+    officialUrl: 'https://www.caf.fr/',
+    notice: "Aide versée par la CAF ou la MSA aux travailleurs éligibles de 18 ans ou plus. Le montant dépend des revenus, de la composition du foyer et de la situation personnelle. Les étudiants et apprentis sont soumis à des conditions spécifiques. Déclaration trimestrielle des ressources nécessaire.",
+    steps: [
+      [
+        "Vérifie ton éligibilité",
+        "Tu dois notamment avoir au moins 18 ans et exercer une activité professionnelle."
+      ],
+      [
+        "Simule tes droits",
+        "Utilise le simulateur de prime d'activité de la CAF ou de la MSA."
+      ],
+      [
+        "Dépose ta demande",
+        "Renseigne ta situation familiale, professionnelle et tes ressources."
+      ],
+      [
+        "Actualise tes ressources",
+        "Effectue les déclarations trimestrielles nécessaires au maintien de tes droits."
+      ]
+    ]
+  },
+
+  // 03 — CONTRAT D'ENGAGEMENT JEUNE
+  '┃contrat-engagement-jeune': {
+    bonus: "Jusqu'à 566,17 € / mois",
+    officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F32700',
+    notice: "Le CEJ s'adresse principalement aux jeunes de 16 à 25 ans qui rencontrent des difficultés d'accès à l'emploi durable et ne sont ni étudiants ni en formation. Accompagnement de 15 à 20 heures par semaine. Allocation éventuelle selon l'âge, les ressources et la situation fiscale. Montant maximal indiqué pour certains majeurs éligibles.",
+    steps: [
+      [
+        "Vérifie les conditions",
+        "Consulte les critères d'âge, de formation et de situation professionnelle."
+      ],
+      [
+        "Contacte un conseiller",
+        "Adresse-toi à France Travail ou à ta Mission locale."
+      ],
+      [
+        "Construis ton parcours",
+        "Définis un programme personnalisé d'accompagnement vers l'emploi."
+      ],
+      [
+        "Participe aux activités",
+        "Respecte les engagements du parcours pour bénéficier de l'accompagnement et, si éligible, de l'allocation."
+      ]
+    ]
+  },
+
+  // 04 — RSA JEUNE ACTIF
+  '┃rsa-jeune-actif': {
+    bonus: 'Revenu minimum sous conditions',
+    officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F286',
+    notice: "Le RSA jeune actif concerne certains jeunes de moins de 25 ans. Sauf exception, notamment pour les parents isolés, il faut justifier d'au moins 3 214 heures de travail au cours des 3 dernières années. Le montant dépend des ressources et du foyer. Les bénéficiaires sont soumis à des obligations d'accompagnement.",
+    steps: [
+      [
+        "Vérifie ton activité passée",
+        "Contrôle tes périodes travaillées et les exceptions éventuelles."
+      ],
+      [
+        "Estime tes droits",
+        "Utilise le simulateur RSA de la CAF ou de la MSA."
+      ],
+      [
+        "Dépose ta demande",
+        "Transmets les justificatifs de ressources et d'activité nécessaires."
+      ],
+      [
+        "Respecte ton accompagnement",
+        "Effectue tes déclarations et participe aux actions prévues par ton contrat d'engagement."
+      ]
+    ]
+  },
+
+  // 05 — AIDES AU LOGEMENT
+  '┃aides-logement': {
+    bonus: 'Réduction du loyer selon les ressources',
+    officialUrl: 'https://www.caf.fr/',
+    notice: "Les aides personnelles au logement comprennent l'APL, l'ALF et l'ALS. Elles ne sont pas cumulables entre elles. Leur attribution et leur montant dépendent notamment du logement, des ressources et de la composition du foyer. Certaines conditions particulières s'appliquent aux étudiants.",
+    steps: [
+      [
+        "Vérifie ton logement",
+        "Contrôle les conditions liées à ta location et à ta résidence."
+      ],
+      [
+        "Simule ton aide",
+        "Utilise le simulateur logement de la CAF ou de la MSA."
+      ],
+      [
+        "Dépose ta demande",
+        "Renseigne ton bail, ton loyer et tes ressources."
+      ],
+      [
+        "Suis ton dossier",
+        "Consulte les versements et déclare tout changement de situation."
+      ]
+    ]
+  },
+
+  // 06 — AIDES ÉTUDIANTES
+  '┃aides-étudiantes': {
+    bonus: 'Bourses et aides selon le profil',
+    officialUrl: 'https://www.etudiant.gouv.fr/',
+    notice: "Les étudiants peuvent accéder, selon leur situation, aux bourses sur critères sociaux, aides spécifiques, logements CROUS et autres dispositifs. Les conditions, montants et calendriers varient selon l'aide. Le Dossier social étudiant est notamment utilisé pour demander une bourse et un logement CROUS.",
+    steps: [
+      [
+        "Identifie les aides disponibles",
+        "Consulte les dispositifs proposés par le CROUS et les organismes compétents."
+      ],
+      [
+        "Vérifie les critères",
+        "Prends en compte tes ressources, ton cursus et ta situation familiale."
+      ],
+      [
+        "Constitue ton dossier",
+        "Complète ton Dossier social étudiant lorsque celui-ci est requis."
+      ],
+      [
+        "Suis tes demandes",
+        "Consulte les notifications et fournis les justificatifs complémentaires."
+      ]
+    ]
+  },
+
+  // 07 — MOBILI-JEUNE
+  '┃aide-mobili-jeune': {
+    bonus: "Jusqu'à 100 € / mois",
+    officialUrl: 'https://www.actionlogement.fr/l-aide-mobili-jeune',
+    notice: "Aide Action Logement destinée principalement aux alternants de moins de 30 ans du secteur privé non agricole, sous conditions de salaire et de logement. Montant de 10 à 100 € par mois, plafonné à 1 100 € par année de formation sur 11 mensualités. Calcul après déduction des aides au logement.",
+    steps: [
+      [
+        "Vérifie ton alternance",
+        "Contrôle ton âge, ton contrat, ton salaire et les conditions de mobilité."
+      ],
+      [
+        "Vérifie ton logement",
+        "Renseigne ton loyer et les aides au logement déjà perçues."
+      ],
+      [
+        "Dépose ta demande",
+        "Crée ton espace Action Logement et fournis les justificatifs."
+      ],
+      [
+        "Transmets tes justificatifs",
+        "Dépose tes quittances et bulletins de salaire pour obtenir les versements."
+      ]
+    ]
+  },
+
+  // 08 — FONDS D'AIDE AUX JEUNES
+  '┃fonds-aide-jeunes': {
+    bonus: 'Aide financière locale variable',
+    officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F13609',
+    notice: "Le Fonds d'aide aux jeunes (FAJ) est un dispositif départemental destiné aux jeunes de 18 à 25 ans rencontrant des difficultés d'insertion sociale ou professionnelle. Il peut contribuer à certaines dépenses essentielles selon les règles locales. Les montants et critères varient selon le département.",
+    steps: [
+      [
+        "Vérifie ton éligibilité",
+        "Renseigne-toi sur les conditions du FAJ dans ton département."
+      ],
+      [
+        "Contacte la Mission locale",
+        "Explique ta situation et les dépenses pour lesquelles tu recherches une aide."
+      ],
+      [
+        "Prépare les justificatifs",
+        "Rassemble les documents demandés pour l'étude de ton dossier."
+      ],
+      [
+        "Attends la décision",
+        "Le montant et la forme de l'aide dépendent de l'évaluation locale."
+      ]
+    ]
+  },
+
+  // 09 — SERVICE CIVIQUE
+  '┃service-civique': {
+    bonus: '619,83 € / mois',
+    officialUrl: 'https://www.service-civique.gouv.fr/',
+    notice: "Le Service Civique est un engagement volontaire d'intérêt général, généralement accessible de 16 à 25 ans et jusqu'à 30 ans en situation de handicap. Une mission dure de 6 à 12 mois. Indemnisation de base totale de 619,83 € par mois, comprenant 504,98 € versés par l'État et 114,85 € apportés par l'organisme en argent ou en nature. Majoration possible sous conditions.",
+    steps: [
+      [
+        "Recherche une mission",
+        "Consulte les missions disponibles sur le site officiel du Service Civique."
+      ],
+      [
+        "Dépose ta candidature",
+        "Choisis une mission correspondant à tes intérêts et à ta disponibilité."
+      ],
+      [
+        "Signe ton engagement",
+        "Finalise ton dossier avec l'organisme d'accueil."
+      ],
+      [
+        "Réalise ta mission",
+        "Participe aux activités prévues et perçois ton indemnisation si ton dossier est validé."
+      ]
+    ]
+  },
+
+  // 10 — AIDES À LA MOBILITÉ
+  '┃aides-mobilité': {
+    bonus: 'Transport et déplacements : aides variables',
+    officialUrl: 'https://www.1jeune1solution.gouv.fr/',
+    notice: "Plusieurs dispositifs peuvent aider à financer des déplacements liés à l'emploi, à la formation ou aux études. Les aides peuvent être proposées par France Travail, les collectivités territoriales, les établissements ou d'autres organismes. Les critères et montants varient selon la situation et le dispositif.",
+    steps: [
+      [
+        "Identifie ton besoin",
+        "Précise s'il s'agit de transport, d'un entretien, d'une formation ou d'un déménagement."
+      ],
+      [
+        "Recherche les dispositifs",
+        "Consulte 1jeune1solution, France Travail et les aides de ta région."
+      ],
+      [
+        "Vérifie les conditions",
+        "Contrôle les plafonds, les justificatifs et les délais de demande."
+      ],
+      [
+        "Dépose ton dossier",
+        "Effectue la demande auprès de l'organisme compétent avant les dépenses si nécessaire."
+      ]
+    ]
+  },
+
+  // 11 — AIDES AU PERMIS
+  '┃aides-permis': {
+    bonus: 'Prêt à taux zéro et aides locales',
+    officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F13609',
+    notice: "Le permis à 1 € par jour est un prêt à taux zéro, et non une prime gratuite, destiné sous conditions aux jeunes de 15 à 25 ans. Des aides locales et certains financements CPF peuvent également exister. Les anciennes aides nationales de 500 € pour les apprentis et de France Travail ont été supprimées en 2026.",
+    steps: [
+      [
+        "Recherche les aides disponibles",
+        "Consulte les dispositifs nationaux et ceux proposés dans ta commune ou ta région."
+      ],
+      [
+        "Vérifie ton éligibilité",
+        "Contrôle ton âge, ton projet de permis et les conditions de financement."
+      ],
+      [
+        "Choisis une auto-école",
+        "Demande un devis et vérifie les organismes partenaires du dispositif."
+      ],
+      [
+        "Constitue ton dossier",
+        "Dépose ta demande de financement auprès de l'organisme concerné."
+      ]
+    ]
+  },
+
+  // 12 — AUTRES AIDES
+  '┃autres-aides': {
+    bonus: 'Découvre les aides adaptées à ton profil',
+    officialUrl: 'https://www.1jeune1solution.gouv.fr/',
+    notice: "Cette fiche regroupe les autres dispositifs susceptibles d'aider les jeunes : emploi, formation, santé, logement, alimentation, mobilité et accompagnement social. L'éligibilité, les montants et les démarches dépendent de chaque aide. Aucun versement n'est garanti.",
+    steps: [
+      [
+        "Décris ta situation",
+        "Précise ton âge, ton statut, tes ressources et tes besoins."
+      ],
+      [
+        "Recherche tes droits",
+        "Consulte les aides disponibles sur les plateformes officielles."
+      ],
+      [
+        "Compare les conditions",
+        "Vérifie les critères, les justificatifs et les possibilités de cumul."
+      ],
+      [
+        "Effectue tes demandes",
+        "Contacte les organismes compétents et suis l'avancement de tes dossiers."
+      ]
+    ]
+  }
+
+};
+
+// Appliquer les 12 fiches aux offres existantes du catalogue.
+for (const [key, update] of Object.entries(PUBLIC_AID_UPDATES)) {
+  const offer = REFERRAL_OFFERS[key];
+
+  if (!offer) {
+    console.warn(`[AIDES] Offre introuvable : ${key}`);
+    continue;
+  }
+
+  Object.assign(offer, {
+    ...update,
+    verifiedAt: '11/11/2026',
+    draft: false,
+    referralCode: null,
+    signupUrl: null,
+    url: null
+  });
+}
+
+console.log('[AIDES] Configurations des 12 fiches chargées.');
+
+
 
 function buildReferralContainer(offer) {
   const separator = () =>
@@ -2546,16 +3108,17 @@ function buildReferralContainer(offer) {
   // QUATRE ÉTAPES
   // ==========================
 
+    let referralCodeShown = false;
+
   for (const [instruction, detail] of offer.steps) {
     let description = detail;
 
-    // Si un code est renseigné, il apparaît
-    // sous l'étape correspondante.
     if (
       offer.referralCode &&
       /code parrain/i.test(instruction)
     ) {
-      description += `\n-# Code parrain : ${offer.referralCode}`;
+      description += `\n-# Code parrain : **${offer.referralCode}**`;
+      referralCodeShown = true;
     }
 
     container
@@ -2569,6 +3132,17 @@ function buildReferralContainer(offer) {
       );
   }
 
+  if (offer.referralCode && !referralCodeShown) {
+    container
+      .addSeparatorComponents(separator())
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `**Code parrain : ${offer.referralCode}**\n` +
+          '-# Copie ce code et renseigne-le pendant ton inscription.'
+        )
+      );
+  }
+
   // ==========================
   // ASSISTANCE
   // ==========================
@@ -2578,7 +3152,11 @@ function buildReferralContainer(offer) {
     .addTextDisplayComponents(
       new TextDisplayBuilder()
         .setContent(
-          `-# Une question sur les primes ou les conditions ? Nous sommes à ta disposition.`
+          `-# ${
+  offer.category === 'aides'
+    ? 'Une question sur cette aide ou ton éligibilité ?'
+    : 'Une question sur les primes ou les conditions ?'
+} Nous sommes à ta disposition.`
         )
     );
 
@@ -2596,13 +3174,12 @@ function buildReferralContainer(offer) {
     ? 'Consulter le dispositif'
     : "Profiter de l'offre";
 
-  const mainUrl = isAid
+   const mainUrl = isAid
     ? offer.officialUrl
-    : offer.url;
+    : (offer.url || offer.signupUrl);
 
   // Parrainages dont la diffusion publique est restreinte
   const privateReferralOnly = new Set([
-    'revolut',
     'trade-republic',
     'yomoni',
     'widilo'
@@ -2800,12 +3377,22 @@ async function syncReferralPanels(guild) {
   const saved = await getConfigValue(configKey, {});
   const messageIds = { ...saved };
   const savedLinks = await getConfigValue('referralCustomLinks', {});
+  const savedCodes = await getConfigValue('referralCustomCodes', {});
 
   for (const [channelName, baseOffer] of Object.entries(REFERRAL_OFFERS)) {
-  const offer = {
-    ...baseOffer,
-    url: savedLinks[channelName] || baseOffer.url
-  };
+    
+const isAid = baseOffer.category === 'aides';
+
+const offer = {
+  ...baseOffer,
+  url: isAid
+    ? null
+    : (savedLinks[channelName] || baseOffer.url),
+  referralCode: isAid
+    ? null
+    : (savedCodes[channelName] || baseOffer.referralCode)
+};
+
     const channel = guild.channels.cache.find(
       ch => ch.name === channelName && ch.type === ChannelType.GuildText
     );
@@ -3353,33 +3940,64 @@ return container;
 const commands = [
 
   
+
 {
   name: 'parrainage',
-  description: 'Gérer les liens de parrainage',
-  default_member_permissions: PermissionFlagsBits.Administrator.toString(),
-  options: [{
-    name: 'lien',
-    description: 'Modifier le lien d’une enseigne',
-    type: 1,
-    options: [
-      {
-        name: 'enseigne',
-        description: 'Enseigne',
-        type: 3,
-        required: true,
-        choices: [
+  description: 'Gérer les liens et codes de parrainage',
+  default_member_permissions:
+    PermissionFlagsBits.Administrator.toString(),
+
+  options: [
+    {
+      name: 'lien',
+      description: 'Modifier le lien personnel d’une enseigne',
+      type: 1,
+      options: [
+        {
+          name: 'enseigne',
+          description: 'Enseigne',
+          type: 3,
+          required: true,
+          choices: [
   { name: 'BoursoBank', value: '┃boursobank' },
-  { name: 'Fortuneo', value: '┃fortuneo' }
+  { name: 'Fortuneo', value: '┃fortuneo' },
+  { name: 'Finary', value: '┃finary' },
+  { name: 'SwissBorg', value: '┃swissborg' },
+  { name: 'Joko', value: '┃joko' }
 ]
-      },
-      {
-        name: 'url',
-        description: 'Nouveau lien de parrainage',
-        type: 3,
-        required: true
-      }
-    ]
-  }]
+        },
+        {
+          name: 'url',
+          description: 'Lien personnel HTTPS',
+          type: 3,
+          required: true
+        }
+      ]
+    },
+    {
+      name: 'code',
+      description: 'Modifier le code parrain d’une enseigne',
+      type: 1,
+      options: [
+        {
+          name: 'enseigne',
+          description: 'Enseigne',
+          type: 3,
+          required: true,
+          choices: [
+            { name: 'BoursoBank', value: '┃boursobank' },
+            { name: 'Fortuneo', value: '┃fortuneo' }
+          ]
+        },
+        {
+          name: 'code',
+          description: 'Code parrain à afficher',
+          type: 3,
+          required: true
+        }
+      ]
+    }
+  ]
 },
 
 
@@ -5540,8 +6158,8 @@ if (
     });
   }
 
+  const action = interaction.options.getSubcommand(true);
   const enseigne = interaction.options.getString('enseigne', true);
-  const rawUrl = interaction.options.getString('url', true).trim();
 
   if (!REFERRAL_OFFERS[enseigne]) {
     return interaction.reply({
@@ -5549,6 +6167,33 @@ if (
       flags: MessageFlags.Ephemeral
     });
   }
+
+  if (action === 'code') {
+    const code = interaction.options.getString('code', true).trim();
+
+    if (!/^[a-zA-Z0-9_-]{2,80}$/.test(code)) {
+      return interaction.reply({
+        content: 'Code invalide : 2 à 80 caractères (lettres, chiffres, _ ou -).',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral
+    });
+
+    const codes = await getConfigValue('referralCustomCodes', {});
+    codes[enseigne] = code;
+
+    await setConfigValue('referralCustomCodes', codes);
+    await syncReferralPanels(interaction.guild);
+
+    return interaction.editReply({
+      content: `Code enregistré et panneaux synchronisés pour ${enseigne}.`
+    });
+  }
+
+  const rawUrl = interaction.options.getString('url', true).trim();
 
   let parsed;
   try {
@@ -5570,7 +6215,7 @@ const REFERRAL_ALLOWED_DOMAINS = {
   '┃wise': ['wise.com'],
   '┃la-banque-postale': ['labanquepostale.fr'],
 
-  '┃trade-republic': ['traderepublic.com'],
+  '┃trade-republic': ['traderepublic.com', 'trade.re'],
   '┃trading212': ['trading212.com'],
   '┃etoro': ['etoro.com'],
   '┃shares': ['shares.io'],
@@ -5588,7 +6233,7 @@ const REFERRAL_ALLOWED_DOMAINS = {
   '┃igraal': ['igraal.com', 'igraal.fr'],
   '┃widilo': ['widilo.fr'],
   '┃ebuyclub': ['ebuyclub.com'],
-  '┃joko': ['joko.com'],
+  '┃joko': ['hellojoko.app.link'],
   '┃rakuten': ['rakuten.com', 'rakuten.fr'],
   '┃poulpeo': ['poulpeo.com'],
   '┃shopmium': ['shopmium.com'],
