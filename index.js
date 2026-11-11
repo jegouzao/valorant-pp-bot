@@ -3348,9 +3348,7 @@ for (const [key, update] of Object.entries(PUBLIC_AID_UPDATES)) {
     console.warn(`[AIDES] Offre introuvable : ${key}`);
     continue;
   }
-if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
-  continue;
-}
+
   Object.assign(offer, {
     ...update,
     verifiedAt: '11/11/2026',
