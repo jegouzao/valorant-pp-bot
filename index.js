@@ -54,6 +54,8 @@ const {
   MessageFlags,
   SectionBuilder,
   ThumbnailBuilder,
+    AttachmentBuilder,
+
   Events,
   Partials,
 } = require('discord.js');
@@ -1801,6 +1803,7 @@ const REFERRAL_DETAILS = {
 
 for (const [category, entries] of Object.entries(REFERRAL_CATALOG)) {
   for (const [slug, title] of entries) {
+    if (REFERRAL_OFFERS[`┃${slug}`]) continue;
     const details = REFERRAL_DETAILS[slug] || {};
 
     addReferralOffer(slug, {
@@ -1934,6 +1937,9 @@ for (const [slug, details] of Object.entries(
 )) {
   const offer = REFERRAL_OFFERS[`┃${slug}`];
   if (!offer) continue;
+  if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
 
   Object.assign(offer, {
     ...details,
@@ -2095,6 +2101,9 @@ for (const [slug, details] of Object.entries(BANK_RESEARCH_UPDATES)) {
     console.warn(`Fiche bancaire introuvable : ${slug}`);
     continue;
   }
+  if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
 
   Object.assign(offer, {
     ...details,
@@ -2290,7 +2299,9 @@ for (const [slug, details] of Object.entries(
     console.warn(`Fiche investissement introuvable : ${slug}`);
     continue;
   }
-
+if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
   Object.assign(offer, {
     ...details,
     verifiedAt: '10/11/2026',
@@ -2459,7 +2470,9 @@ for (const [slug, details] of Object.entries(
     console.warn(`Fiche crypto introuvable : ${slug}`);
     continue;
   }
-
+if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
   Object.assign(offer, {
     ...details,
     verifiedAt: '10/11/2026',
@@ -2616,7 +2629,9 @@ for (const [slug, details] of Object.entries(
     console.warn(`Fiche cashback introuvable : ${slug}`);
     continue;
   }
-
+if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
   Object.assign(offer, {
     ...details,
     verifiedAt: '10/11/2026',
@@ -2778,6 +2793,9 @@ for (const [slug, details] of Object.entries(AID_RESEARCH_UPDATES)) {
     console.warn(`Fiche d’aide introuvable : ${slug}`);
     continue;
   }
+  if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
 
   Object.assign(offer, {
     ...details,
@@ -3332,7 +3350,9 @@ for (const [key, update] of Object.entries(PUBLIC_AID_UPDATES)) {
     console.warn(`[AIDES] Offre introuvable : ${key}`);
     continue;
   }
-
+if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
   Object.assign(offer, {
     ...update,
     verifiedAt: '11/11/2026',
@@ -3356,29 +3376,62 @@ Object.assign(REFERRAL_OFFERS['┃sumeria'], {
 
 
 
+const REFERRAL_LOGO_NAMES = {
+  pmu: 'pmu.png',
+  'pass-culture': 'pass-culture.png'
+};
+
+function getReferralLogo(offer) {
+  const filename =
+    REFERRAL_LOGO_NAMES[offer.slug] ||
+    `${offer.slug}.png`;
+
+  const filePath = path.join(
+    __dirname,
+    'assets',
+    'referrals',
+    filename
+  );
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  return {
+    url: `attachment://${filename}`,
+    file: new AttachmentBuilder(filePath, {
+      name: filename
+    })
+  };
+}
+
 function buildReferralContainer(offer) {
 
 
-if (offer.displayStatus === 'coming_soon' ||
-    offer.displayStatus === 'suspended') {
 
+if (
+  offer.displayStatus === 'coming_soon' ||
+  offer.displayStatus === 'suspended'
+) {
   const label = offer.displayStatus === 'suspended'
     ? 'SUSPENDU'
     : 'À VENIR';
 
+  const content = `# ┃ ${offer.title}\n-# ${label}`;
+
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR);
 
-  const content = `# ┃ ${offer.title}\n-# ${label}`;
+  const logo = getReferralLogo(offer);
 
-  if (offer.logoUrl) {
+  if (logo) {
     container.addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(content)
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(offer.logoUrl)
+          new ThumbnailBuilder().setURL(logo.url)
         )
     );
   } else {
@@ -3389,6 +3442,8 @@ if (offer.displayStatus === 'coming_soon' ||
 
   return container;
 }
+
+
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR);
@@ -3413,21 +3468,25 @@ if (offer.displayStatus === 'coming_soon' ||
 
   const header = lines.join('\n');
 
-  if (offer.logoUrl) {
-    container.addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(header)
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(offer.logoUrl)
-        )
-    );
-  } else {
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(header)
-    );
-  }
+  
+const logo = getReferralLogo(offer);
+
+if (logo) {
+  container.addSectionComponents(
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(header)
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder().setURL(logo.url)
+      )
+  );
+} else {
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(header)
+  );
+}
+
 
   // ÉTAPES COURTES
   const steps = (offer.steps || [])
@@ -3593,11 +3652,16 @@ offer.displayStatus =
 
 
     try {
-      const payload = {
-        components: [buildReferralContainer(offer)],
-        flags: MessageFlags.IsComponentsV2,
-        allowedMentions: { parse: [] }
-      };
+      
+const logo = getReferralLogo(offer);
+
+const payload = {
+  components: [buildReferralContainer(offer)],
+  files: logo ? [logo.file] : [],
+  flags: MessageFlags.IsComponentsV2,
+  allowedMentions: { parse: [] }
+};
+
 
       let message = null;
 
@@ -3608,10 +3672,14 @@ offer.displayStatus =
       }
 
       if (message && message.author.id === client.user.id) {
-        await message.edit({
-          components: payload.components,
-          allowedMentions: payload.allowedMentions
-        });
+        
+await message.edit({
+  components: payload.components,
+  files: payload.files,
+  attachments: [],
+  allowedMentions: payload.allowedMentions
+});
+
       } else {
         message = await channel.send(payload);
       }
