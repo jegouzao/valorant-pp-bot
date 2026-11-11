@@ -1414,24 +1414,28 @@ function buildSimpleContainer(content, accentColor = EMBED_COLOR) {
 
 const REFERRAL_OFFERS = {};
 
+
 function addReferralOffer(slug, data) {
   REFERRAL_OFFERS[`┃${slug}`] = {
     slug,
     title: data.title,
     category: data.category || 'banque',
     bonus: data.bonus ?? null,
-    notice: data.notice || 'Offre soumise à conditions.',
+    notice: data.notice || null,
     verifiedAt: data.verifiedAt || null,
-        logoUrl: null,
-    url: null,
-    referralCode: null,
+    logoUrl: data.logoUrl || null,
+    displayStatus: data.displayStatus || 'auto',
+    url: data.url || null,
+    referralCode: data.referralCode || null,
     signupUrl: data.signupUrl || null,
     officialUrl: data.officialUrl || null,
+    referralTermsUrl: data.referralTermsUrl || null,
     steps: data.steps || [],
     ticketId: data.ticketId || null,
     draft: data.draft ?? false
   };
 }
+
 
 // ==========================
 // PARRAINAGES BANCAIRES
@@ -1474,25 +1478,64 @@ addReferralOffer('fortuneo', {
     officialUrl: 'https://www.fortuneo.fr/parrainage',
   signupUrl: 'https://www.fortuneo.fr/compte-bancaire',
   ticketId: 'open_referral_ticket_fortuneo',
+  
+steps: [
+  [
+    'Ouvre ton premier compte Fortuneo avec Fosfo ou Gold',
+    '+80 € avec Fosfo ou +150 € avec Gold Mastercard'
+  ],
+  [
+    'Renseigne le code parrain pendant ton inscription',
+    'Code à saisir dans le formulaire de souscription'
+  ],
+  [
+    'Verse 300 € dans les 6 jours suivant l’ouverture',
+    'Versement obligatoire pour obtenir la prime'
+  ],
+  [
+    'Découvre les offres Bourse et assurance-vie',
+    'Jusqu’à 80 € en Bourse ou 120 € en assurance-vie, sous conditions ; offres non cumulables'
+  ]
+]
+
+});
+
+
+
+addReferralOffer('revolut', {
+  title: 'Revolut',
+  category: 'banque',
+  bonus: 'Jusqu’à 60 € reversés au filleul',
+  url: 'https://revolut.com/referral/?referral-code=lucaspz80!NOV1-26-AR-SAV-H2&geo-redirect',
+  notice: 'Campagne du 10/11/2026 : échéance le 17/11/2026 à 20h59 UTC. Maximum 10 parrainages récompensés. Partage 50/50 proposé par le parrain, non versé directement par Revolut.',
   steps: [
     [
-      'Ouvre ton premier compte Fortuneo avec Fosfo ou Gold',
-      '+80 € avec Fosfo ou +150 € avec Gold Mastercard'
+      'Inscris-toi avec mon lien Revolut',
+      'Crée ton compte et valide ton identité'
     ],
     [
-      'Renseigne le code parrain pendant ton inscription',
-      'Le code doit être saisi dans le parcours de souscription'
+      'Ajoute de l’argent sur ton compte',
+      'Alimente ton compte conformément aux conditions de la campagne'
     ],
     [
-      'Verse-y 300 € dans les 6 jours suivant l’ouverture',
-      'Condition nécessaire pour obtenir la prime bancaire'
+      'Commande ta carte physique',
+      'Ajoute également ta carte à Apple Pay ou Google Pay'
     ],
     [
-      'Découvre aussi les offres Bourse et assurance-vie',
-      'Jusqu’à 80 € en Bourse ou 120 € en assurance-vie, sous conditions ; offres non cumulables'
+      'Effectue 3 achats de 5 € minimum',
+      'Achats éligibles à réaliser avant la date limite'
+    ],
+    [
+      'Dépose 100 € sur ton compte épargne',
+      'Condition supplémentaire pour débloquer les 20 € de bonus épargne'
+    ],
+    [
+      'Récupère ta part de la prime',
+      '50 € reversés par le parrain, ou 60 € si le bonus épargne est obtenu'
     ]
   ]
 });
+
 
 // ==========================
 // AUTRES ENSEIGNES
@@ -1579,12 +1622,11 @@ winamax: {
   officialUrl: 'https://www.winamax.fr/',
   notice: 'Offre réservée aux nouveaux joueurs majeurs. Le filleul dispose de 30 jours après son inscription pour valider son compte et effectuer un premier dépôt d’au moins 10 €. Maximum 5 filleuls par mois.',
   steps: [
-    ['Inscription', 'Inscris-toi avec le code JEGIYZ ou le lien de parrainage.'],
-    ['Validation du compte', 'Fais vérifier ton compte Winamax dans les 30 jours suivant ton inscription.'],
-    ['Premier dépôt', 'Effectue un premier dépôt de 10 € minimum dans ce même délai de 30 jours.'],
-    ['Récompense du filleul', 'Après validation des conditions, bénéficie de 10 € de Freebets et de 10 € de bonus.'],
-    ['Limite mensuelle', 'Le parrain peut faire valider jusqu’à 5 filleuls par mois. Au-delà, les récompenses supplémentaires sont limitées et la progression est suspendue jusqu’au mois suivant.']
-  ]
+  ['Inscris-toi', 'Utilise le code JEGIYZ ou le lien personnel.'],
+  ['Valide ton compte', 'Sous 30 jours après inscription.'],
+  ['Dépose 10 € minimum', 'Sous 30 jours après inscription.'],
+  ['Reçois ton bonus', '10 € en Freebets + 10 € de bonus, sous conditions.']
+]
 },
 
 
@@ -1596,13 +1638,14 @@ betclic: {
   referralCode: 'JEGZXNG1',
   officialUrl: 'https://www.betclic.fr/',
   notice: 'Parrain et filleul : 10 € chacun en Freebets. Le filleul doit effectuer un dépôt et valider son compte avec les justificatifs obligatoires. Crédits de jeu non retirables.',
-  steps: [
-    ['Inscription', 'Utilise le code JEGZXNG1 ou le lien de parrainage Betclic.'],
-    ['Premier dépôt', 'Effectue un dépôt conformément aux conditions de l’offre.'],
-    ['Validation du compte', 'Transmets les documents obligatoires pour faire vérifier ton compte.'],
-    ['Récompenses', 'Le parrain et le filleul reçoivent chacun 10 € en Freebets lorsque les conditions sont remplies.'],
-    ['Restrictions', 'Les Freebets sont des crédits de jeu non retirables. Vérifie leur durée de validité et leurs conditions d’utilisation.']
-  ]
+  
+steps: [
+  ['Inscris-toi', 'Utilise le code JEGZXNG1 ou le lien personnel.'],
+  ['Effectue un dépôt', 'Dépôt obligatoire, minimum non confirmé.'],
+  ['Valide ton compte', 'Transmets les justificatifs demandés.'],
+  ['Reçois 10 €', '10 € en Freebets pour le filleul et 10 € pour le parrain.']
+]
+
 },
 
 
@@ -1614,28 +1657,14 @@ unibet: {
   referralCode: null,
   officialUrl: 'https://www.unibet.fr/paris-sportifs/parrainage',
   notice: "Le parrain et le filleul peuvent recevoir chacun jusqu'à 10 € en BonusBets. Le montant dépend du dépôt du filleul et l'attribution intervient après validation de son compte.",
-  steps: [
-    [
-      'Lien de parrainage',
-      'Inscris-toi sur Unibet en utilisant le lien personnel du parrain.'
-    ],
-    [
-      'Création du compte',
-      'Crée ton compte et transmets les justificatifs nécessaires à sa validation.'
-    ],
-    [
-      'Premier dépôt',
-      "Effectue un dépôt. Le montant des BonusBets dépend du montant déposé par le filleul."
-    ],
-    [
-      'Validation du compte',
-      "Le compte du filleul doit être validé avant l'attribution des récompenses."
-    ],
-    [
-      'Récompenses',
-      "Le parrain et le filleul reçoivent chacun jusqu'à 10 € en BonusBets, selon les conditions applicables."
-    ]
-  ]
+  
+steps: [
+  ['Inscris-toi', 'Utilise le lien personnel de parrainage.'],
+  ['Valide ton compte', 'Transmets les justificatifs obligatoires.'],
+  ['Effectue un dépôt', 'Le bonus dépend du montant déposé.'],
+  ['Reçois ton bonus', "Jusqu'à 10 € en BonusBets pour chacun."]
+]
+
 },
 
 
@@ -1647,36 +1676,14 @@ pmu: {
   referralCode: '266757188',
   officialUrl: 'https://www.pmu.fr/turf/static/offre-parrainage/',
   notice: 'Offre valable jusqu’au 31/12/2026 inclus. Parrain : 10 € par filleul confirmé, maximum 5 filleuls par mois. Filleul : 5 €. Tickets non retirables et non sécables. Offre non cumulable avec une autre offre de parrainage.',
-  steps: [
-    [
-      'Inscription avec le code',
-      'Ouvre ton premier compte PMU PLAY et saisis le code 266757188 dans le champ « code parrainage » lors de l’inscription.'
-    ],
-    [
-      'Premier dépôt obligatoire',
-      'Effectue un dépôt d’au moins 10 € le jour même de l’ouverture de ton compte.'
-    ],
-    [
-      'Confirmation du compte',
-      'Envoie les justificatifs nécessaires pour obtenir la confirmation définitive de ton compte PMU PLAY.'
-    ],
-    [
-      'Récompense du filleul',
-      'Reçois un ticket bonus de 5 € sous 10 jours ouvrés après confirmation définitive du compte, sous réserve des conditions de l’offre.'
-    ],
-    [
-      'Récompense du parrain',
-      'Le parrain reçoit un ticket bonus de 10 € par filleul validé, dans la limite de 5 filleuls par mois calendaire.'
-    ],
-    [
-      'Nature des récompenses',
-      'Tickets Hippique, Sport ou Tournoi selon l’univers de bienvenue choisi. Ils sont non retirables, non sécables et utilisables uniquement dans l’univers correspondant, pendant leur durée de validité.'
-    ],
-    [
-      'Restrictions',
-      'Offre non cumulable avec une autre offre de parrainage. Les joueurs exclus du programme selon les règles de jeu à risque ne sont pas éligibles.'
-    ]
-  ]
+  
+steps: [
+  ['Inscris-toi', 'Crée ton compte PMU PLAY avec le code 266757188.'],
+  ['Dépose 10 € minimum', "Le jour même de l'ouverture du compte."],
+  ['Valide ton compte', 'Transmets les justificatifs obligatoires.'],
+  ['Reçois 5 €', 'Ticket bonus attribué sous 10 jours ouvrés après confirmation du compte.']
+]
+
 },
 
 
@@ -1688,69 +1695,27 @@ betsson: {
   referralCode: null,
   officialUrl: 'https://www.betsson.fr/',
   notice: 'Le programme affiché annonce 20 € de bonus par parrainage réussi et jusqu’à 50 € de bonus. Le parrain doit valider son compte et effectuer un premier dépôt avant de pouvoir parrainer. Les conditions détaillées restent à vérifier.',
-  steps: [
-    [
-      'Activation du parrainage',
-      'Le parrain doit d’abord valider son compte Betsson et effectuer son premier dépôt.'
-    ],
-    [
-      'Invitation',
-      'Une fois le programme accessible, le parrain peut partager son lien personnel ou son QR code.'
-    ],
-    [
-      'Inscription du filleul',
-      'Le filleul doit suivre l’invitation et respecter les conditions du programme.'
-    ],
-    [
-      'Récompense annoncée',
-      'Betsson affiche 20 € de bonus par parrainage réussi. Les conditions d’attribution et le plafond annoncé de 50 € doivent être vérifiés.'
-    ],
-    [
-      'Restrictions',
-      'La récompense du filleul, le dépôt minimum et la durée de validité des bonus ne sont pas précisés sur cette capture.'
-    ]
-  ]
-},
+  
+steps: [
+  ['Crée ton compte', 'Inscris-toi sur Betsson via un lien de parrainage valide.'],
+  ['Valide ton identité', 'Transmets les justificatifs demandés.'],
+  ['Respecte les conditions', 'Effectue les actions exigées par le programme de parrainage.']
+]
 
-
-
-  olybet: {
-    title: 'OlyBet',
-    bonus: '10 € en OlyBonus pour le filleul',
-    officialUrl: 'https://www.olybet.fr/refer-a-friend',
-    notice: 'Parrain et filleul : 10 € en OlyBonus chacun après un premier dépôt de 30 € minimum.',
-    steps: [
-      ['Utilise le lien de parrainage', 'Le filleul doit être un nouveau joueur majeur résidant en France.'],
-      ['Dépose au moins 30 €', 'Le premier dépôt déclenche l’éligibilité au bonus.'],
-      ['Récupère le bonus', 'Le filleul le reçoit automatiquement ; le parrain doit l’activer dans Mes offres.'],
-      ['Respecte les restrictions', 'OlyBonus valable 7 jours, cote minimale 1,10 ; même foyer ou IP exclus.']
-    ]
-  },
-
-  feelingbet: {
-    title: 'Feelingbet',
-    bonus: null,
-    officialUrl: 'https://www.feelingbet.fr/',
-    notice: 'Conditions officielles de parrainage non confirmées. Aucun montant garanti.',
-    steps: [
-      ['Vérifie le programme actif', 'Consulte les conditions de parrainage directement auprès de Feelingbet.'],
-      ['Vérifie le code ou lien', 'Confirme sa validité et son mode d’utilisation.'],
-      ['Consulte les critères', 'Dépôt, premier pari et vérification du compte éventuels à confirmer.'],
-      ['Vérifie la récompense', 'Montant, plafonds, attribution et validité à confirmer.']
-    ]
-  }
+}
 };
+
 
 
 for (const [slug, data] of Object.entries(BOOKMAKER_OFFERS)) {
   addReferralOffer(slug, {
     ...data,
     category: 'bookmakers',
-    bonus: null,
     verifiedAt: null,
     draft: false
   });
 }
+
 
 
 const REFERRAL_DEFAULT_STEPS = {
@@ -1798,6 +1763,7 @@ const REFERRAL_DETAILS = {
     bonus: null,
     notice: 'Prime généralement réservée au parrain ; montant variable selon la campagne.',
     officialUrl: 'https://www.revolut.com/fr-FR/legal/referrals-terms/',
+    referralTermsUrl: 'https://www.revolut.com/fr-FR/legal/referrals-terms/',
     steps: [
       ['Ouvre ton premier compte Revolut', 'Inscription via une invitation éligible et vérification d’identité.'],
       ['Ajoute de l’argent sur ton compte', 'Approvisionnement selon les modalités de la campagne.'],
@@ -3389,193 +3355,166 @@ Object.assign(REFERRAL_OFFERS['┃sumeria'], {
 });
 
 
+
 function buildReferralContainer(offer) {
 
 
-  const hideBookmakerReferral =
-    offer.category === 'bookmakers' && offer.draft;
+if (offer.displayStatus === 'coming_soon' ||
+    offer.displayStatus === 'suspended') {
 
-  if (hideBookmakerReferral) {
-    offer = {
-      ...offer,
-      url: null,
-      signupUrl: null,
-      officialUrl: null,
-      referralCode: null
-    };
+  const label = offer.displayStatus === 'suspended'
+    ? 'SUSPENDU'
+    : 'À VENIR';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR);
+
+  const content = `# ┃ ${offer.title}\n-# ${label}`;
+
+  if (offer.logoUrl) {
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(content)
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(offer.logoUrl)
+        )
+    );
+  } else {
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(content)
+    );
   }
+
+  return container;
+}
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR);
 
   const separator = () =>
     new SeparatorBuilder()
       .setSpacing(SeparatorSpacingSize.Small);
 
-  // ==========================
-  // EN-TÊTE
-  // ==========================
+  const isAid = offer.category === 'aides';
 
-  const heading = offer.category === 'aides'
-  ? `# ${offer.title}`
-  : offer.bonus
-    ? `# ${offer.title} — Jusqu'à ${offer.bonus}`
-    : `# ${offer.title} — Programme et conditions`;
+  const lines = [`# ${offer.title}`];
 
+  if (offer.bonus) {
+    lines.push(`**Récompense :** ${offer.bonus}`);
+  }
 
-  const statusLine = offer.draft
-    ? '-# Brouillon — informations à vérifier'
-    : offer.verifiedAt
-      ? `-# Offre consultée le ${offer.verifiedAt}`
-      : '-# Conditions à vérifier';
+  if (offer.draft) {
+    lines.push('-# Informations non vérifiées');
+  } else if (offer.verifiedAt) {
+    lines.push(`-# Offre vérifiée le ${offer.verifiedAt}`);
+  }
 
-  const headerContent =
-    `${heading}\n` +
-    `-# ${offer.notice}\n` +
-    statusLine;
+  const header = lines.join('\n');
 
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR);
-
-  // Logo facultatif : aucune image cassée si absent.
   if (offer.logoUrl) {
     container.addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder()
-            .setContent(headerContent)
+          new TextDisplayBuilder().setContent(header)
         )
         .setThumbnailAccessory(
-          new ThumbnailBuilder()
-            .setURL(offer.logoUrl)
+          new ThumbnailBuilder().setURL(offer.logoUrl)
         )
     );
   } else {
     container.addTextDisplayComponents(
-      new TextDisplayBuilder()
-        .setContent(headerContent)
+      new TextDisplayBuilder().setContent(header)
     );
   }
 
-  // ==========================
-  // QUATRE ÉTAPES
-  // ==========================
+  // ÉTAPES COURTES
+  const steps = (offer.steps || [])
+    .filter(([title, detail]) => title || detail)
+    .map(([title, detail], index) => {
+      const instruction = String(title || '').trim();
+      const description = String(detail || '').trim();
 
-    let referralCodeShown = false;
+      return [
+        `**${index + 1}. ${instruction}**`,
+        description ? `-# ${description}` : ''
+      ].filter(Boolean).join('\n');
+    });
 
-  for (const [instruction, detail] of offer.steps) {
-    let description = detail;
+  if (steps.length) {
+    container.addSeparatorComponents(separator());
 
-    if (
-      offer.referralCode &&
-      /code parrain/i.test(instruction)
-    ) {
-      description += `\n-# Code parrain : **${offer.referralCode}**`;
-      referralCodeShown = true;
-    }
-
-    container
-      .addSeparatorComponents(separator())
-      .addTextDisplayComponents(
-        new TextDisplayBuilder()
-          .setContent(
-            `**${instruction}**\n` +
-            `-# ${description}`
-          )
-      );
-  }
-
-  if (offer.referralCode && !referralCodeShown) {
-    container
-      .addSeparatorComponents(separator())
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `**Code parrain : ${offer.referralCode}**\n` +
-          '-# Copie ce code et renseigne-le pendant ton inscription.'
-        )
-      );
-  }
-
-  // ==========================
-  // ASSISTANCE
-  // ==========================
-
-  container
-    .addSeparatorComponents(separator())
-    .addTextDisplayComponents(
-      new TextDisplayBuilder()
-        .setContent(
-          `-# ${
-  offer.category === 'aides'
-    ? 'Une question sur cette aide ou ton éligibilité ?'
-    : 'Une question sur les primes ou les conditions ?'
-} Nous sommes à ta disposition.`
-        )
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### Comment en bénéficier ?\n${steps.join('\n\n')}`
+      )
     );
+  }
 
-  // ==========================
+  // CODE PERSONNEL
+  if (!isAid && offer.referralCode) {
+    container.addSeparatorComponents(separator());
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `**Code de parrainage :** \`${offer.referralCode}\``
+      )
+    );
+  }
+
+  // INFORMATIONS COMPLÉMENTAIRES
+  if (offer.notice && !offer.draft) {
+    container.addSeparatorComponents(separator());
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `**À retenir**\n-# ${offer.notice}`
+      )
+    );
+  }
+
   // BOUTONS
-  // ==========================
-
   const buttons = [];
 
-  
-  // 1. Lien principal adapté à la catégorie
-  const isAid = offer.category === 'aides';
+  const personalUrl = !isAid
+    ? (offer.url || offer.signupUrl)
+    : null;
 
-  
-const mainLabel = isAid
-  ? 'Consulter le dispositif'
-  : offer.category === 'bookmakers'
-    ? (offer.url ? 'Lien de parrainage' : 'Consulter le site officiel')
-    : "Profiter de l'offre";
+  const mainUrl = personalUrl ||
+    (isAid ? offer.officialUrl : null);
 
-
-   const mainUrl = isAid
-  ? offer.officialUrl
-  : (offer.url || offer.signupUrl || offer.officialUrl);
-
-      // Tous les liens configurés peuvent être affichés publiquement
-    const publicMainUrl =
-    offer.category === 'bookmakers' && offer.draft
-      ? null
-      : mainUrl;
-
-  if (publicMainUrl) {
+  if (mainUrl && !offer.draft) {
     buttons.push(
       new ButtonBuilder()
-        .setLabel(mainLabel)
+        .setLabel(
+          isAid ? 'Faire ma demande' : 'Lien de parrainage'
+        )
         .setStyle(ButtonStyle.Link)
-        .setURL(publicMainUrl)
-    );
-  } else {
-    buttons.push(
-      new ButtonBuilder()
-        .setLabel(mainLabel)
-        .setStyle(ButtonStyle.Secondary)
-        .setCustomId(`referral_unavailable_${offer.slug}`)
-        .setDisabled(true)
+        .setURL(mainUrl)
     );
   }
 
-
-  // 2. Conditions officielles
-  if (offer.officialUrl) {
+  // Uniquement un règlement de parrainage identifié.
+  if (offer.referralTermsUrl) {
     buttons.push(
       new ButtonBuilder()
-        .setLabel('Conditions officielles')
+        .setLabel('Conditions du parrainage')
+        .setStyle(ButtonStyle.Link)
+        .setURL(offer.referralTermsUrl)
+    );
+  }
+
+  // Ne pas confondre site officiel et règlement.
+  if (offer.officialUrl && !offer.referralTermsUrl) {
+    buttons.push(
+      new ButtonBuilder()
+        .setLabel('Site officiel')
         .setStyle(ButtonStyle.Link)
         .setURL(offer.officialUrl)
     );
-  } else {
-    buttons.push(
-      new ButtonBuilder()
-        .setLabel('Conditions officielles')
-        .setStyle(ButtonStyle.Secondary)
-        .setCustomId('referral_conditions_unavailable')
-        .setDisabled(true)
-    );
   }
 
-
-  // 3. Assistance : disponible pour toutes les fiches
   buttons.push(
     new ButtonBuilder()
       .setLabel("Besoin d'aide ?")
@@ -3583,133 +3522,11 @@ const mainLabel = isAid
       .setCustomId(`open_referral_ticket_${offer.slug}`)
   );
 
-
   container.addActionRowComponents(
-    new ActionRowBuilder()
-      .addComponents(...buttons)
+    new ActionRowBuilder().addComponents(...buttons)
   );
 
   return container;
-}
-
-
-
-const crypto = require('node:crypto');
-
-const REFERRAL_OFFICIAL_PAGES = {
-  '┃boursobank':
-    'https://www.boursobank.com/bon-plan/parrainage-boursobank',
-  '┃fortuneo':
-    'https://www.fortuneo.fr/parrainage'
-};
-
-let referralCheckRunning = false;
-
-async function checkReferralOfficialPages() {
-  if (referralCheckRunning) return;
-  referralCheckRunning = true;
-
-  try {
-    const saved = await getConfigValue(
-      'referralOfficialPageHashes',
-      {}
-    );
-    const hashes = { ...saved };
-
-    for (const [name, url] of Object.entries(
-      REFERRAL_OFFICIAL_PAGES
-    )) {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(
-          () => controller.abort(),
-          15000
-        );
-
-        let response;
-        try {
-          response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-              'User-Agent': 'Mozilla/5.0'
-            }
-          });
-        } finally {
-          clearTimeout(timeout);
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const html = await response.text();
-
-        // Retirer les éléments les plus volatils.
-        const content = html
-          .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-          .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-          .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/&nbsp;|&#160;/gi, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        if (content.length < 300) {
-          throw new Error('Contenu insuffisant ou page protégée');
-        }
-
-        const hash = crypto
-          .createHash('sha256')
-          .update(content)
-          .digest('hex');
-
-        if (!hashes[name]) {
-          hashes[name] = hash;
-          console.log(`📋 Référence enregistrée : ${name}`);
-        } else if (hashes[name] !== hash) {
-          // On conserve le nouvel état pour éviter
-          // une notification identique chaque jour.
-          hashes[name] = hash;
-
-          const owner = await client.users
-            .fetch(BOT_OWNER_ID)
-            .catch(() => null);
-
-          if (owner) {
-            await owner.send(
-              `🔎 **Parrainage : changement détecté**\n\n` +
-              `Enseigne : **${name}**\n` +
-              `La page publique officielle a été modifiée.\n` +
-              `Vérifie si les primes ou conditions ont changé :\n${url}\n\n` +
-              `Aucun montant n'a été modifié automatiquement.`
-            ).catch(err => {
-              console.warn(
-                'Notification parrainage impossible :',
-                err.message
-              );
-            });
-          }
-
-          console.log(`🔔 Changement détecté : ${name}`);
-        } else {
-          console.log(`✅ Page inchangée : ${name}`);
-        }
-
-        await setConfigValue(
-          'referralOfficialPageHashes',
-          hashes
-        );
-      } catch (err) {
-        console.warn(
-          `⚠️ Surveillance ${name} : ${err.message}`
-        );
-      }
-    }
-  } catch (err) {
-    console.error('❌ Surveillance parrainages :', err);
-  } finally {
-    referralCheckRunning = false;
-  }
 }
 
 
@@ -3737,6 +3554,23 @@ const offer = {
     ? null
     : (savedCodes[channelName] || baseOffer.referralCode)
 };
+
+
+const hasPersonalOffer = Boolean(
+  offer.url || offer.referralCode
+);
+
+offer.displayStatus =
+  baseOffer.displayStatus === 'suspended'
+    ? 'suspended'
+    : baseOffer.displayStatus === 'coming_soon'
+      ? 'coming_soon'
+      : baseOffer.displayStatus === 'available'
+        ? 'available'
+        : !isAid && !hasPersonalOffer
+          ? 'coming_soon'
+          : 'available';
+
 
     const channel = guild.channels.cache.find(
       ch => ch.name === channelName && ch.type === ChannelType.GuildText
@@ -6961,9 +6795,7 @@ const REFERRAL_ALLOWED_DOMAINS = {
   '┃betclic': ['betclic.fr', 'betclic.onelink.me'],
   '┃unibet': ['unibet.fr'],
   '┃pmu': ['pmu.fr'],
-  '┃betsson': ['betsson.fr'],
-  '┃olybet': ['olybet.fr'],
-  '┃feelingbet': ['feelingbet.fr']
+  '┃betsson': ['betsson.fr']
 
 };
 
