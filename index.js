@@ -1568,84 +1568,100 @@ const REFERRAL_CATALOG = {
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
 
+
 const BOOKMAKER_OFFERS = {
   winamax: {
     title: 'Winamax',
-    notice: 'Les avantages et plafonds du parrainage dépendent de la campagne active. Vérifie les conditions affichées sur ton compte Winamax.',
+    bonus: null,
+    officialUrl: 'https://www.winamax.fr/',
+    notice: 'Conditions du parrainage Winamax à confirmer auprès de l’opérateur.',
     steps: [
-      ['Vérifie ton invitation', 'Consulte ton espace Winamax pour connaître les avantages réellement proposés.'],
-      ['Vérifie ton éligibilité', 'Le programme peut être réservé aux nouveaux clients remplissant les conditions de l’opérateur.'],
-      ['Consulte les conditions de dépôt', 'Vérifie le montant éventuel du premier dépôt et les actions nécessaires.'],
-      ['Vérifie la récompense', 'Consulte sa nature, sa durée de validité et les éventuelles restrictions de mise.']
+      ['Programme de parrainage', 'Vérifie la disponibilité et les récompenses dans ton compte Winamax.'],
+      ['Inscription', 'Utilise uniquement un lien ou code de parrainage valide et autorisé.'],
+      ['Conditions de validation', 'Consulte les éventuels dépôts, vérifications et opérations requis.'],
+      ['Restrictions', 'Vérifie les plafonds, exclusions et conditions de validité des récompenses.']
     ]
   },
 
   betclic: {
     title: 'Betclic',
-    notice: 'Le parrainage Betclic peut attribuer des freebets. Le montant et les critères doivent être confirmés dans les conditions de la campagne active.',
+    bonus: '10 € en freebets pour le filleul',
+    officialUrl: 'https://dam.begmedia.com/account/terms-and-conditions/BetclicFr/Fr/TermsAndConditions.html',
+    notice: 'Parrain : 10 € en freebets. Filleul : 10 € en freebets supplémentaires, sous conditions.',
     steps: [
-      ['Utilise une invitation admissible', 'Vérifie que le lien ou le code correspond au programme actuellement proposé.'],
-      ['Ouvre et vérifie ton compte', 'L’identité et l’éligibilité du nouveau client doivent être validées.'],
-      ['Consulte les conditions de dépôt', 'Vérifie le dépôt minimum et les éventuels défis à activer.'],
-      ['Consulte les freebets', 'Vérifie leur attribution, leur expiration et les restrictions applicables.']
+      ['Saisis le code parrain à l’inscription', 'Le code doit être renseigné pendant la création du compte.'],
+      ['Valide ton compte', 'Justificatifs d’identité et d’adresse requis.'],
+      ['Effectue un premier dépôt de 10 € minimum', 'Active également la mission Défi Bienvenue dans la rubrique Défis.'],
+      ['Reçois les freebets', '10 € chacun sous conditions ; maximum 5 filleuls récompensés par an pour le parrain.']
     ]
   },
 
   unibet: {
     title: 'Unibet',
-    notice: 'Les campagnes de parrainage Unibet peuvent être temporaires. Aucune récompense actuelle n’est garantie par cette fiche.',
+    bonus: null,
+    officialUrl: 'https://www.unibet.fr/paris-sportifs/parrainage',
+    notice: 'Dernière campagne détaillée retrouvée : jusqu’à 15 € chacun, expirée le 12 octobre 2026.',
     steps: [
-      ['Vérifie la campagne active', 'Consulte les offres disponibles dans ton espace Unibet.'],
-      ['Vérifie le parrainage', 'Confirme les modalités d’invitation et l’éligibilité du nouveau client.'],
-      ['Consulte les délais', 'Vérifie les conditions de validation du compte et les éventuelles échéances.'],
-      ['Vérifie les avantages', 'Montant, type de bonus, plafonds et durée de validité dépendent de la campagne.']
+      ['Consulte la campagne actuelle', 'Vérifie qu’une nouvelle offre a remplacé celle expirée le 12 octobre 2026.'],
+      ['Utilise le lien personnel', 'Les modalités d’inscription dépendent de la campagne en vigueur.'],
+      ['Vérifie les conditions', 'Dépôt minimum, confirmation du compte et délais doivent être vérifiés.'],
+      ['Consulte les bonus', 'Montants, plafonds annuels et validité à confirmer avant toute participation.']
     ]
   },
 
   pmu: {
-    title: 'PMU',
-    notice: 'Le programme PMU+ peut proposer des bonus au parrain et au filleul. Vérifie les conditions et la date de fin de la campagne.',
+    title: 'PMU+',
+    bonus: '5 € en bonus pour le filleul',
+    officialUrl: 'https://www.pmu.fr/point-de-vente/cote-courses/parrainage-pmu-jusqua-50-de-prime-pour-vous-promo/',
+    notice: 'Parrain : 10 € par filleul, maximum 50 € par mois. Filleul : 5 € en bonus. Offre annoncée jusqu’au 31/12/2026.',
     steps: [
-      ['Consulte le programme PMU+', 'Vérifie que le parrainage est toujours proposé au moment de l’inscription.'],
-      ['Ouvre un compte éligible', 'Respecte les conditions de première inscription et de vérification.'],
-      ['Vérifie le premier dépôt', 'Le montant et le délai requis dépendent des conditions de la campagne.'],
-      ['Consulte les bonus', 'Vérifie les montants, les plafonds de filleuls et les conditions d’utilisation.']
+      ['Saisis le code parrain', 'Renseigne-le pendant la première ouverture de ton compte PMU+.'],
+      ['Dépose au moins 10 €', 'Le dépôt doit être effectué le jour de l’ouverture du compte.'],
+      ['Confirme ton compte sous 30 jours', 'Les justificatifs doivent être validés par PMU+.'],
+      ['Reçois ton bonus', '5 € pour le filleul, 10 € pour le parrain ; crédit sous 10 jours ouvrés après validation.']
     ]
   },
 
   betsson: {
     title: 'Betsson',
-    notice: 'Les récompenses de parrainage peuvent être attribuées sous forme de Betboost, avec des conditions de dépôt et des plafonds.',
+    bonus: '10 € en Betboost pour le filleul',
+    officialUrl: 'https://support.betsson.fr/hc/fr/articles/18557239751954-Programme-de-Parrainage-Invitez-vos-amis-et-b%C3%A9n%C3%A9ficiez-de-10-de-Betboost-chacun',
+    notice: 'Parrain et filleul : 10 € en Betboost chacun. Maximum 50 € pour le parrain sur 30 jours glissants.',
     steps: [
-      ['Vérifie le programme Betsson', 'Consulte les conditions du parrainage dans ton espace joueur.'],
-      ['Ouvre et valide ton compte', 'Le nouveau client doit satisfaire aux critères d’identité et d’éligibilité.'],
-      ['Vérifie le dépôt requis', 'Consulte le seuil et les délais applicables à la campagne.'],
-      ['Consulte les Betboost', 'Vérifie leur valeur, leur fonctionnement et le plafond de filleuls récompensés.']
+      ['Utilise le lien ou QR code personnel', 'Le parrain doit avoir un compte vérifié et avoir déposé au moins 10 €.'],
+      ['Ouvre ton compte', 'Inscription via l’invitation du parrain.'],
+      ['Dépose au moins 10 €', 'Valide ton identité et ton domicile.'],
+      ['Reçois les Betboost', '10 € chacun ; maximum 5 filleuls récompensés sur 30 jours glissants.']
     ]
   },
 
   olybet: {
     title: 'OlyBet',
-    notice: 'Le programme OlyBet peut proposer des OlyBonus soumis à un dépôt minimum, une durée de validité et des restrictions.',
+    bonus: '10 € en OlyBonus pour le filleul',
+    officialUrl: 'https://www.olybet.fr/refer-a-friend',
+    notice: 'Parrain et filleul : 10 € en OlyBonus chacun après un premier dépôt de 30 € minimum.',
     steps: [
-      ['Consulte le programme OlyBet', 'Vérifie les modalités du parrainage disponibles en France.'],
-      ['Vérifie ton éligibilité', 'Le nouveau compte doit respecter les critères de l’opérateur.'],
-      ['Consulte le dépôt minimum', 'Vérifie le montant requis et les conditions de validation.'],
-      ['Vérifie les OlyBonus', 'Consulte leur durée de validité, les cotes admissibles et les restrictions.']
+      ['Utilise le lien de parrainage', 'Le filleul doit être un nouveau joueur majeur résidant en France.'],
+      ['Dépose au moins 30 €', 'Le premier dépôt déclenche l’éligibilité au bonus.'],
+      ['Récupère le bonus', 'Le filleul le reçoit automatiquement ; le parrain doit l’activer dans Mes offres.'],
+      ['Respecte les restrictions', 'OlyBonus valable 7 jours, cote minimale 1,10 ; même foyer ou IP exclus.']
     ]
   },
 
   feelingbet: {
     title: 'Feelingbet',
-    notice: 'Les modalités actuelles d’un éventuel programme de parrainage Feelingbet ne sont pas confirmées.',
+    bonus: null,
+    officialUrl: 'https://www.feelingbet.fr/',
+    notice: 'Conditions officielles de parrainage non confirmées. Aucun montant garanti.',
     steps: [
-      ['Vérifie la disponibilité', 'Consulte Feelingbet pour confirmer l’existence d’un programme actif.'],
-      ['Vérifie les invitations', 'Confirme les modalités de parrainage éventuellement proposées.'],
-      ['Consulte les conditions', 'Vérifie les critères d’éligibilité et les opérations éventuellement requises.'],
-      ['Vérifie les récompenses', 'Aucun montant, bonus ou avantage n’est confirmé pour cette fiche.']
+      ['Vérifie le programme actif', 'Consulte les conditions de parrainage directement auprès de Feelingbet.'],
+      ['Vérifie le code ou lien', 'Confirme sa validité et son mode d’utilisation.'],
+      ['Consulte les critères', 'Dépôt, premier pari et vérification du compte éventuels à confirmer.'],
+      ['Vérifie la récompense', 'Montant, plafonds, attribution et validité à confirmer.']
     ]
   }
 };
+
 
 for (const [slug, data] of Object.entries(BOOKMAKER_OFFERS)) {
   addReferralOffer(slug, {
@@ -3425,9 +3441,13 @@ function buildReferralContainer(offer) {
   // 1. Lien principal adapté à la catégorie
   const isAid = offer.category === 'aides';
 
-  const mainLabel = isAid
-    ? 'Consulter le dispositif'
+  
+const mainLabel = isAid
+  ? 'Consulter le dispositif'
+  : offer.category === 'bookmakers'
+    ? (offer.url ? 'Lien de parrainage' : 'Consulter le site officiel')
     : "Profiter de l'offre";
+
 
    const mainUrl = isAid
   ? offer.officialUrl
@@ -3631,7 +3651,6 @@ const isAid = baseOffer.category === 'aides';
 const offer = {
   ...baseOffer,
   draft: baseOffer.draft,
-
   url: isAid
     ? null
     : (savedLinks[channelName] || baseOffer.url),
