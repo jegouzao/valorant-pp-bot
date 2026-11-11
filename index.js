@@ -3939,18 +3939,12 @@ const commands = [
       type: 1,
       options: [
         {
-          name: 'enseigne',
-          description: 'Enseigne',
-          type: 3,
-          required: true,
-choices: [
-  { name: 'BoursoBank', value: '┃boursobank' },
-  { name: 'Fortuneo', value: '┃fortuneo' },
-  { name: 'Finary', value: '┃finary' },
-  { name: 'SwissBorg', value: '┃swissborg' },
-  { name: 'Joko', value: '┃joko' }
-]
-        },
+  name: 'enseigne',
+  description: 'Rechercher une enseigne parmi les 48 fiches',
+  type: 3,
+  required: true,
+  autocomplete: true
+},
         {
           name: 'url',
           description: 'Lien personnel HTTPS',
@@ -3965,15 +3959,12 @@ choices: [
       type: 1,
       options: [
         {
-          name: 'enseigne',
-          description: 'Enseigne',
-          type: 3,
-          required: true,
-          choices: [
-            { name: 'BoursoBank', value: '┃boursobank' },
-            { name: 'Fortuneo', value: '┃fortuneo' }
-          ]
-        },
+  name: 'enseigne',
+  description: 'Rechercher une enseigne parmi les 48 fiches',
+  type: 3,
+  required: true,
+  autocomplete: true
+},
         {
           name: 'code',
           description: 'Code parrain à afficher',
@@ -6122,6 +6113,45 @@ function buildPPCreateModal() {
 // ===== Interaction Handler =====
 client.on('interactionCreate', async (interaction) => {
   try {
+
+
+    // Autocomplétion de toutes les enseignes de parrainage
+    if (
+      interaction.isAutocomplete() &&
+      interaction.commandName === 'parrainage'
+    ) {
+      const focused = interaction.options.getFocused(true);
+
+      if (focused.name !== 'enseigne') {
+        return interaction.respond([]);
+      }
+
+      const search = String(focused.value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      const results = Object.entries(REFERRAL_OFFERS)
+        .filter(([key, offer]) => {
+          const label = `${offer.title} ${offer.slug} ${offer.category}`
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+          return label.includes(search);
+        })
+        .sort((a, b) =>
+          a[1].title.localeCompare(b[1].title, 'fr')
+        )
+        .slice(0, 25)
+        .map(([key, offer]) => ({
+          name: offer.title.slice(0, 100),
+          value: key
+        }));
+
+      return interaction.respond(results);
+    }
+
 
 
 
