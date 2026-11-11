@@ -1606,44 +1606,82 @@ betclic: {
 },
 
 
-  unibet: {
-    title: 'Unibet',
-    bonus: null,
-    officialUrl: 'https://www.unibet.fr/paris-sportifs/parrainage',
-    notice: 'Dernière campagne détaillée retrouvée : jusqu’à 15 € chacun, expirée le 12 octobre 2026.',
-    steps: [
-      ['Consulte la campagne actuelle', 'Vérifie qu’une nouvelle offre a remplacé celle expirée le 12 octobre 2026.'],
-      ['Utilise le lien personnel', 'Les modalités d’inscription dépendent de la campagne en vigueur.'],
-      ['Vérifie les conditions', 'Dépôt minimum, confirmation du compte et délais doivent être vérifiés.'],
-      ['Consulte les bonus', 'Montants, plafonds annuels et validité à confirmer avant toute participation.']
+  
+unibet: {
+  title: 'Unibet',
+  bonus: "Jusqu'à 10 € en BonusBets pour le filleul",
+  url: 'https://www.unibet.fr/inscription/?campaign=271026&parrain=69BD0125CCEBC6A',
+  referralCode: null,
+  officialUrl: 'https://www.unibet.fr/paris-sportifs/parrainage',
+  notice: "Le parrain et le filleul peuvent recevoir chacun jusqu'à 10 € en BonusBets. Le montant dépend du dépôt du filleul et l'attribution intervient après validation de son compte.",
+  steps: [
+    [
+      'Lien de parrainage',
+      'Inscris-toi sur Unibet en utilisant le lien personnel du parrain.'
+    ],
+    [
+      'Création du compte',
+      'Crée ton compte et transmets les justificatifs nécessaires à sa validation.'
+    ],
+    [
+      'Premier dépôt',
+      "Effectue un dépôt. Le montant des BonusBets dépend du montant déposé par le filleul."
+    ],
+    [
+      'Validation du compte',
+      "Le compte du filleul doit être validé avant l'attribution des récompenses."
+    ],
+    [
+      'Récompenses',
+      "Le parrain et le filleul reçoivent chacun jusqu'à 10 € en BonusBets, selon les conditions applicables."
     ]
-  },
+  ]
+},
 
-  pmu: {
-    title: 'PMU+',
-    bonus: '5 € en bonus pour le filleul',
-    officialUrl: 'https://www.pmu.fr/point-de-vente/cote-courses/parrainage-pmu-jusqua-50-de-prime-pour-vous-promo/',
-    notice: 'Parrain : 10 € par filleul, maximum 50 € par mois. Filleul : 5 € en bonus. Offre annoncée jusqu’au 31/12/2026.',
-    steps: [
-      ['Saisis le code parrain', 'Renseigne-le pendant la première ouverture de ton compte PMU+.'],
-      ['Dépose au moins 10 €', 'Le dépôt doit être effectué le jour de l’ouverture du compte.'],
-      ['Confirme ton compte sous 30 jours', 'Les justificatifs doivent être validés par PMU+.'],
-      ['Reçois ton bonus', '5 € pour le filleul, 10 € pour le parrain ; crédit sous 10 jours ouvrés après validation.']
+
+  
+pmu: {
+  title: 'PMU PLAY',
+  bonus: '5 € en ticket bonus pour le filleul',
+  url: 'https://www.pmu.fr/turf/static/offre-parrainage/?codeParrainage=266757188',
+  referralCode: '266757188',
+  officialUrl: 'https://www.pmu.fr/turf/static/offre-parrainage/',
+  notice: 'Offre valable jusqu’au 31/12/2026 inclus. Parrain : 10 € par filleul confirmé, maximum 5 filleuls par mois. Filleul : 5 €. Tickets non retirables et non sécables. Offre non cumulable avec une autre offre de parrainage.',
+  steps: [
+    [
+      'Inscription avec le code',
+      'Ouvre ton premier compte PMU PLAY et saisis le code 266757188 dans le champ « code parrainage » lors de l’inscription.'
+    ],
+    [
+      'Premier dépôt obligatoire',
+      'Effectue un dépôt d’au moins 10 € le jour même de l’ouverture de ton compte.'
+    ],
+    [
+      'Confirmation du compte',
+      'Envoie les justificatifs nécessaires pour obtenir la confirmation définitive de ton compte PMU PLAY.'
+    ],
+    [
+      'Récompense du filleul',
+      'Reçois un ticket bonus de 5 € sous 10 jours ouvrés après confirmation définitive du compte, sous réserve des conditions de l’offre.'
+    ],
+    [
+      'Récompense du parrain',
+      'Le parrain reçoit un ticket bonus de 10 € par filleul validé, dans la limite de 5 filleuls par mois calendaire.'
+    ],
+    [
+      'Nature des récompenses',
+      'Tickets Hippique, Sport ou Tournoi selon l’univers de bienvenue choisi. Ils sont non retirables, non sécables et utilisables uniquement dans l’univers correspondant, pendant leur durée de validité.'
+    ],
+    [
+      'Restrictions',
+      'Offre non cumulable avec une autre offre de parrainage. Les joueurs exclus du programme selon les règles de jeu à risque ne sont pas éligibles.'
     ]
-  },
+  ]
+},
+
 
   betsson: {
-    title: 'Betsson',
-    bonus: '10 € en Betboost pour le filleul',
-    officialUrl: 'https://support.betsson.fr/hc/fr/articles/18557239751954-Programme-de-Parrainage-Invitez-vos-amis-et-b%C3%A9n%C3%A9ficiez-de-10-de-Betboost-chacun',
-    notice: 'Parrain et filleul : 10 € en Betboost chacun. Maximum 50 € pour le parrain sur 30 jours glissants.',
-    steps: [
-      ['Utilise le lien ou QR code personnel', 'Le parrain doit avoir un compte vérifié et avoir déposé au moins 10 €.'],
-      ['Ouvre ton compte', 'Inscription via l’invitation du parrain.'],
-      ['Dépose au moins 10 €', 'Valide ton identité et ton domicile.'],
-      ['Reçois les Betboost', '10 € chacun ; maximum 5 filleuls récompensés sur 30 jours glissants.']
-    ]
-  },
+
 
   olybet: {
     title: 'OlyBet',
