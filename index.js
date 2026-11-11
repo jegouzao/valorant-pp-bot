@@ -980,6 +980,25 @@ let gamesData = { games: [] };
 
 
 
+let pointsOperationQueue = Promise.resolve();
+
+async function withPointsLock(operation) {
+  const previous = pointsOperationQueue;
+
+  let release;
+  pointsOperationQueue = new Promise(resolve => {
+    release = resolve;
+  });
+
+  await previous;
+
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+}
+
 
 
 async function getPlayerPoints(userId) {
@@ -1013,28 +1032,37 @@ async function getPlayerPoints(userId) {
   };
 }
 
+
 async function setPlayerPoints(userId, data) {
-  await Points.updateOne(
-    { userId },
-    {
-      $set: {
-        rr: data.rr ?? 0,
-        games: data.games ?? 0,
-        wins: data.wins ?? 0,
-        timeouts: data.timeouts ?? 0
-      }
-    },
-    { upsert: true }
-  );
+  return withPointsLock(async () => {
+    await Points.updateOne(
+      { userId },
+      {
+        $set: {
+          rr: data.rr ?? 0,
+          games: data.games ?? 0,
+          wins: data.wins ?? 0,
+          timeouts: data.timeouts ?? 0
+        }
+      },
+      { upsert: true }
+    );
+  });
 }
 
+
+
 async function incrementPlayerTimeouts(userId) {
-  await Points.updateOne(
-    { userId },
-    { $inc: { timeouts: 1 } },
-    { upsert: true }
-  );
+  return withPointsLock(async () => {
+    await Points.updateOne(
+      { userId },
+      { $inc: { timeouts: 1 } },
+      { upsert: true }
+    );
+  });
 }
+
+
 
 
 async function incrementPlayerStats(userId, rrDelta, isWinner) {
@@ -1043,26 +1071,133 @@ async function incrementPlayerStats(userId, rrDelta, isWinner) {
       `Variation RR invalide pour ${userId} : ${rrDelta}`
     );
   }
-  await Points.updateOne(
-    { userId },
-    {
-      $inc: {
-        rr: rrDelta,
-        games: 1,
-        wins: isWinner ? 1 : 0
-      }
-    },
-    { upsert: true }
-  );
 
+  return withPointsLock(async () => {
+    await Points.updateOne(
+      { userId },
+      {
+        $inc: {
+          rr: rrDelta,
+          games: 1,
+          wins: isWinner ? 1 : 0
+        }
+      },
+      { upsert: true }
+    );
 
-
-  // Empêche les RR négatifs
-  await Points.updateOne(
-    { userId, rr: { $lt: 0 } },
-    { $set: { rr: 0 } }
-  );
+    await Points.updateOne(
+      { userId, rr: { $lt: 0 } },
+      { $set: { rr: 0 } }
+    );
+  });
 }
+
+
+
+async function applyMatchPoints(gameId, updates) {
+  if (!gameId) {
+    throw new Error('Identifiant de partie manquant');
+  }
+
+  if (!Array.isArray(updates) || updates.length === 0) {
+    throw new Error('Aucune statistique à attribuer');
+  }
+
+  const ids = updates.map(u => u.userId);
+
+  if (new Set(ids).size !== ids.length) {
+    throw new Error('Joueur présent plusieurs fois');
+  }
+
+  for (const update of updates) {
+    if (!update.userId || !Number.isFinite(update.delta)) {
+      throw new Error('Attribution RR invalide');
+    }
+  }
+
+  
+
+  return withPointsLock(async () => {
+    const key = `matchPointsApplied_${gameId}`;
+
+    // Une partie déjà comptabilisée ne doit pas être
+    // bloquée simplement parce que le mois a changé.
+    if (await Config.exists({ key })) return false;
+
+    // Empêcher l'attribution de RR sur l'ancien mois.
+    const leaderboardData = await getConfigValue(
+      'leaderboardData',
+      null
+    );
+
+    const currentMonth = getParisMonthKey();
+
+    if (leaderboardData?.monthKey !== currentMonth) {
+      throw new Error(
+        `RR non attribués pour ${gameId} : classement ` +
+        `${leaderboardData?.monthKey || 'non initialisé'}, ` +
+        `mois actuel ${currentMonth}. Rotation nécessaire.`
+      );
+    }
+
+    const session = await mongoose.startSession();
+    let alreadyApplied = false;
+
+
+
+    try {
+      await session.withTransaction(async () => {
+        alreadyApplied = false;
+
+        const existing = await Config.findOne({ key })
+          .session(session);
+
+        if (existing) {
+          alreadyApplied = true;
+          return;
+        }
+
+        for (const { userId, delta, isWinner } of updates) {
+          await Points.updateOne(
+            { userId },
+            {
+              $inc: {
+                rr: delta,
+                games: 1,
+                wins: isWinner ? 1 : 0
+              }
+            },
+            { upsert: true, session }
+          );
+
+          await Points.updateOne(
+            { userId, rr: { $lt: 0 } },
+            { $set: { rr: 0 } },
+            { session }
+          );
+        }
+
+        await Config.create(
+          [{
+            key,
+            value: {
+              gameId,
+              appliedAt: new Date().toISOString(),
+              players: ids
+            }
+          }],
+          { session }
+        );
+      });
+
+      return !alreadyApplied;
+    } finally {
+      await session.endSession();
+    }
+  });
+}
+
+
 
 
 async function getAllPoints() {
@@ -4914,6 +5049,14 @@ try {
       `⚠️ Clôture mensuelle en attente : ` +
       `${pendingClosure.monthKey} → ${pendingClosure.currentMonth}`
     );
+
+await announceMonthlyWinners(
+  guild,
+  pendingClosure.monthKey
+);
+
+await checkMonthlyLeaderboardRollover(guild);
+
   }
 } catch (err) {
   console.error(
@@ -5034,8 +5177,20 @@ setInterval(async () => {
   monthlyCheckRunning = true;
 
   try {
-    await announceMonthlyWinners(guild);
-    await checkMonthlyLeaderboardRollover(guild);
+    
+const pendingClosure = await getPendingMonthlyClosure();
+
+if (pendingClosure) {
+  await announceMonthlyWinners(
+    guild,
+    pendingClosure.monthKey
+  );
+} else {
+  await announceMonthlyWinners(guild);
+}
+
+await checkMonthlyLeaderboardRollover(guild);
+
   } catch (err) {
     console.error('❌ Erreur vérification mensuelle :', err);
   } finally {
@@ -5094,46 +5249,70 @@ return idA.localeCompare(idB);
     });
 }
 
+
+async function getMonthlyRolloverState(monthKey) {
+  return await getConfigValue(
+    `leaderboardRollover_${monthKey}`,
+    null
+  );
+}
+
+async function saveMonthlyRolloverState(monthKey, state) {
+  const key = `leaderboardRollover_${monthKey}`;
+
+  await Config.updateOne(
+    { key },
+    {
+      $set: {
+        value: {
+          ...state,
+          monthKey,
+          updatedAt: new Date().toISOString()
+        }
+      }
+    },
+    { upsert: true }
+  );
+}
+
 let leaderboardRolloverRunning = false;
 
 async function checkMonthlyLeaderboardRollover(guild) {
   if (leaderboardRolloverRunning) return;
-
   leaderboardRolloverRunning = true;
 
   try {
     const monthKey = getParisMonthKey();
-
     const data = await getConfigValue('leaderboardData', {});
 
-    if (!data.channelId || !data.messageId) return;
+    if (!data?.channelId || !data?.messageId) return;
 
-    // Migration : associer le classement existant
-    // au mois courant sans créer de doublon.
     if (!data.monthKey) {
       await setConfigValue('leaderboardData', {
         ...data,
         monthKey
       });
 
-      console.log(`📅 Leaderboard existant associé à ${monthKey}`);
+      console.log(`📅 Leaderboard associé à ${monthKey}`);
       return;
     }
 
     if (data.monthKey === monthKey) return;
 
-    // Ne jamais réinitialiser les résultats avant
-    // l'enregistrement des gagnants du mois précédent.
-    const winnersMonth =
-      await getConfigValue(
-        'monthlyWinnersLastAnnouncement',
-        null
-      );
+    if (data.monthKey > monthKey) {
+      throw new Error('Mois du leaderboard situé dans le futur');
+    }
 
-    if (winnersMonth !== data.monthKey) {
+    const sourceMonth = data.monthKey;
+
+    const winnersMonth = await getConfigValue(
+      'monthlyWinnersLastAnnouncement',
+      null
+    );
+
+    if (winnersMonth !== sourceMonth) {
       console.warn(
-        `⚠️ Passage à ${monthKey} suspendu : ` +
-        `résultats de ${data.monthKey} non annoncés.`
+        `⚠️ Rotation suspendue : gagnants de ${sourceMonth} non annoncés`
       );
       return;
     }
@@ -5142,95 +5321,278 @@ async function checkMonthlyLeaderboardRollover(guild) {
       guild.channels.cache.get(data.channelId) ||
       await guild.channels.fetch(data.channelId).catch(() => null);
 
-    if (!channel?.isTextBased()) return;
-
-    // Sauvegarde des statistiques avant réinitialisation
-    const backupKey = `leaderboardBackup_${data.monthKey}`;
-
-    const existingBackup = await Config.findOne({
-      key: backupKey
-    });
-
-    if (!existingBackup) {
-      const playersBackup = await Points.find({}).lean();
-
-      await setConfigValue(backupKey, {
-        monthKey: data.monthKey,
-        createdAt: new Date().toISOString(),
-        players: playersBackup.map(player => ({
-          userId: player.userId,
-          rr: player.rr || 0,
-          games: player.games || 0,
-          wins: player.wins || 0,
-          timeouts: player.timeouts || 0
-        }))
-      });
-
-      console.log(
-        `💾 Sauvegarde du leaderboard ${data.monthKey} effectuée`
-      );
+    if (!channel?.isTextBased() || !channel.messages?.fetch) {
+      throw new Error('Salon leaderboard inaccessible');
     }
-    const verifiedBackup = await getConfigValue(backupKey);
+
+    const backupKey = `leaderboardBackup_${sourceMonth}`;
+    const marker = `rotation:${guild.id}:${sourceMonth}:${monthKey}`;
+    const stateKey = `leaderboardRollover_${sourceMonth}`;
+
+    let state = await getMonthlyRolloverState(sourceMonth);
 
     if (
-      !verifiedBackup ||
-      verifiedBackup.monthKey !== data.monthKey ||
-      !Array.isArray(verifiedBackup.players)
+      state &&
+      (
+        state.targetMonth !== monthKey ||
+        (state.marker && state.marker !== marker)
+      )
     ) {
-      throw new Error(
-        `Sauvegarde mensuelle ${data.monthKey} invalide : rotation annulée`
-      );
+      throw new Error('Rotation déjà préparée pour une autre destination');
     }
 
-    // Le nouveau classement est publié.
-    const container = buildLeaderboardContainer({
-      sorted: [],
-      totalInvitesPerMember: {},
-      guildMembersCache: guild.members.cache,
-      playerCount: 0
-    });
+    if (state?.status === 'manual_review') {
+      throw new Error('Rotation bloquée : vérification manuelle nécessaire');
+    }
 
-    const msg = await channel.send({
-      components: [container],
-      files: [{
-        attachment: path.join(
-          __dirname,
-          'assets',
-          'images',
-          'leaderboard-icon.png'
-        ),
-        name: 'leaderboard-icon.png'
-      }],
-      flags: MessageFlags.IsComponentsV2
-    });
+    
+await withPointsLock(async () => {
+
+  // 1. Sauvegarde des statistiques avant réinitialisation.
+  const playersBackup = await Points.find({}).lean();
 
 
-    // Réinitialisation des statistiques mensuelles.
-await Points.updateMany({}, {
-  $set: {
-    rr: 0,
-    games: 0,
-    wins: 0,
-    timeouts: 0
+    await Config.updateOne(
+      { key: backupKey },
+      {
+        $setOnInsert: {
+          key: backupKey,
+          value: {
+            monthKey: sourceMonth,
+            createdAt: new Date().toISOString(),
+            players: playersBackup.map(p => ({
+              userId: p.userId,
+              rr: p.rr || 0,
+              games: p.games || 0,
+              wins: p.wins || 0,
+              timeouts: p.timeouts || 0
+            }))
+          }
+        }
+      },
+      { upsert: true }
+    );
+
+    const backup = await getConfigValue(backupKey);
+
+    if (
+      !backup ||
+      backup.monthKey !== sourceMonth ||
+      !Array.isArray(backup.players)
+    ) {
+      throw new Error('Sauvegarde mensuelle invalide');
+    }
+
+
+const normalizePlayers = players =>
+  players
+    .map(p => ({
+      userId: String(p.userId),
+      rr: p.rr ?? 0,
+      games: p.games ?? 0,
+      wins: p.wins ?? 0,
+      timeouts: p.timeouts ?? 0
+    }))
+    .sort((a, b) => a.userId.localeCompare(b.userId));
+
+const savedPlayers = normalizePlayers(backup.players);
+const currentPlayers = normalizePlayers(playersBackup);
+
+if (JSON.stringify(savedPlayers) !== JSON.stringify(currentPlayers)) {
+  await saveMonthlyRolloverState(sourceMonth, {
+    ...(state || {}),
+    status: 'manual_review',
+    targetMonth: monthKey,
+    backupKey,
+    marker,
+    reason: 'backup_mismatch'
+  });
+
+  throw new Error(
+    `Rotation ${sourceMonth} suspendue : ` +
+    'sauvegarde différente des statistiques actuelles.'
+  );
+}
+
+console.log(
+  `✅ Sauvegarde ${sourceMonth} vérifiée : ` +
+  `${savedPlayers.length} joueurs`
+);
+
+
+
+
+
+    // 2. Journal de rotation.
+    if (!state) {
+      state = {
+        status: 'pending',
+        targetMonth: monthKey,
+        backupKey,
+        previousMessageId: data.messageId,
+        marker,
+        channelId: channel.id
+      };
+
+      await saveMonthlyRolloverState(sourceMonth, state);
+    }
+
+    // 3. Retrouver le message Discord en cas de reprise.
+    let msg = null;
+
+    if (state.messageId) {
+      msg = await channel.messages.fetch(state.messageId)
+        .catch(() => null);
+
+      if (!msg) {
+        throw new Error(
+          'Message de rotation enregistré mais introuvable'
+        );
+      }
+    } else {
+      const history = await channel.messages.fetch({
+        limit: 100
+      });
+
+      msg = history.find(m =>
+        m.author?.id === client.user.id &&
+        JSON.stringify(m.components || []).includes(marker)
+      ) || null;
+
+      if (!msg && state.status !== 'pending') {
+        throw new Error(
+          'Publication Discord incertaine : vérification manuelle requise'
+        );
+      }
+
+      if (!msg) {
+        state = {
+          ...state,
+          status: 'sending'
+        };
+
+        await saveMonthlyRolloverState(sourceMonth, state);
+
+        const container = buildLeaderboardContainer({
+          sorted: [],
+          totalInvitesPerMember: {},
+          guildMembersCache: guild.members.cache,
+          playerCount: 0
+        });
+
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(`-# ${marker}`)
+        );
+
+        msg = await channel.send({
+          components: [container],
+          files: [{
+            attachment: path.join(
+              __dirname,
+              'assets',
+              'images',
+              'leaderboard-icon.png'
+            ),
+            name: 'leaderboard-icon.png'
+          }],
+          flags: MessageFlags.IsComponentsV2
+        });
+      }
+
+      state = {
+        ...state,
+        status: 'published',
+        messageId: msg.id
+      };
+
+      await saveMonthlyRolloverState(sourceMonth, state);
+    }
+
+    
+// 4. Transaction MongoDB : remise à zéro + nouveau mois.
+
+const session = await mongoose.startSession();
+
+
+  try {
+    await session.withTransaction(async () => {
+
+        const configDoc = await Config.findOne({
+          key: 'leaderboardData'
+        }).session(session);
+
+        if (
+          !configDoc ||
+          configDoc.value?.monthKey !== sourceMonth ||
+          configDoc.value?.messageId !== data.messageId
+        ) {
+          throw new Error(
+            'Leaderboard modifié pendant la rotation'
+          );
+        }
+
+        await Points.updateMany(
+          {},
+          {
+            $set: {
+              rr: 0,
+              games: 0,
+              wins: 0,
+              timeouts: 0
+            }
+          },
+          { session }
+        );
+
+        configDoc.value = {
+          channelId: channel.id,
+          messageId: msg.id,
+          monthKey
+        };
+
+        configDoc.markModified('value');
+
+        await configDoc.save({ session });
+
+        await Config.updateOne(
+          { key: stateKey },
+          {
+            $set: {
+              value: {
+                ...state,
+                status: 'completed',
+                messageId: msg.id,
+                updatedAt: new Date().toISOString(),
+                monthKey: sourceMonth
+              }
+            }
+          },
+          { session }
+        );
+      });
+    
+  } finally {
+    await session.endSession();
   }
 });
 
-    await setConfigValue('leaderboardData', {
-      channelId: channel.id,
-      messageId: msg.id,
-      monthKey
-    });
+await updateleaderboardEmbed();
 
-    await updateleaderboardEmbed();
 
-    console.log(`✅ Nouveau leaderboard publié : ${monthKey}`);
+    console.log(
+      `✅ Rotation ${sourceMonth} → ${monthKey} terminée`
+    );
 
   } catch (err) {
-    console.error('❌ Erreur renouvellement leaderboard :', err);
+    console.error(
+      '❌ Rotation mensuelle suspendue :',
+      err
+    );
   } finally {
     leaderboardRolloverRunning = false;
   }
 }
+
 
 async function updateleaderboardEmbed() {
   try {
@@ -7745,6 +8107,7 @@ await member.voice.setChannel(vc);
 });
 
       try {
+        const result = await withPointsLock(async () => {
         const backupKey = `manualResetBackup_${Date.now()}`;
 
 const playersBackup = await Points.find({}).lean();
@@ -7787,12 +8150,17 @@ console.log(`💾 Sauvegarde du reset : ${backupKey}`);
 const leaderboardData =
   await getConfigValue('leaderboardData', {});
 
+
 await setConfigValue('leaderboardData', {
   ...leaderboardData,
   monthKey: getParisMonthKey()
 });
 
+return result;
+});
+
 await updateleaderboardEmbed();
+
 
         return simpleEditReply(
   interaction,
@@ -8968,10 +9336,7 @@ for (const channelId of [game.attVC, game.defVC, game.waitingVC]) {
   }
 }
 
-            if (game.manageMessageId) {
-              const inGameMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
-              if (inGameMsg?.deletable) await inGameMsg.delete().catch(() => {});
-            }
+   
 
 if (interaction.customId === 'cancel_game') {
   // Annulation toujours possible, même en mode test avec un seul joueur.
@@ -9006,7 +9371,13 @@ if (interaction.customId === 'cancel_game') {
   );
 
   await deleteGame(game.id);
-  await setConfigValue(`ppTest_${game.id}`, false);
+
+if (game.manageMessageId) {
+  const manageMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
+  if (manageMsg?.deletable) await manageMsg.delete().catch(() => {});
+}
+
+await setConfigValue(`ppTest_${game.id}`, false);
   await interaction.followUp({
     content: '✅ Partie annulée. Les salons vides ont été supprimés.',
     flags: MessageFlags.Ephemeral
@@ -9015,13 +9386,16 @@ if (interaction.customId === 'cancel_game') {
 }
 
             const winningSide = interaction.customId === 'attack_win' ? 'attack' : 'defense';
-            const matchRR = {};
+
+const matchRR = {};
+const pointsUpdates = [];
 
 for (const playerId of allPlayers) {
   if (isTestGame) {
     matchRR[playerId] = 0;
     continue;
   }
+
   const member =
     interaction.guild.members.cache.get(playerId) ||
     await interaction.guild.members.fetch(playerId).catch(() => null);
@@ -9032,10 +9406,29 @@ for (const playerId of allPlayers) {
 
   const delta = getPlayerRRDelta(member, isWinner);
 
-  await incrementPlayerStats(playerId, delta, isWinner);
+  pointsUpdates.push({
+    userId: playerId,
+    delta,
+    isWinner
+  });
 
   matchRR[playerId] = delta;
 }
+
+// Une seule opération collective pour tous les joueurs.
+if (!isTestGame) {
+  const pointsApplied = await applyMatchPoints(
+    game.id,
+    pointsUpdates
+  );
+
+  if (!pointsApplied) {
+    console.warn(
+      `⚠️ RR déjà attribués pour la partie ${game.id}`
+    );
+  }
+}
+
 
 if (!isTestGame) await updateleaderboardEmbed().catch(err =>
   console.error('Erreur update leaderboard après partie :', err)
@@ -9143,6 +9536,14 @@ const finishedMessage = await interaction.channel.send({
   }],
   flags: MessageFlags.IsComponentsV2
 });
+
+// Supprimer le panneau de gestion uniquement après
+// la publication réussie du résultat Discord.
+if (game.manageMessageId) {
+  const manageMsg = await interaction.channel.messages.fetch(game.manageMessageId).catch(() => null);
+  if (manageMsg?.deletable) await manageMsg.delete().catch(() => {});
+}
+
 gamesData.games = gamesData.games.filter(
   g => g.id !== game.id
 );
@@ -9642,23 +10043,43 @@ return simpleEditReply(
   );
 }
 
-const currentStats = await getPlayerPoints(userId);
 
-      if (type === 'add') {
-        currentStats.rr += amount;
-      } else if (type === 'remove') {
-        currentStats.rr -= amount;
-        if (currentStats.rr < 0) currentStats.rr = 0;
+const newRR = await withPointsLock(async () => {
+  const currentStats = await getPlayerPoints(userId);
+
+  if (type === 'add') {
+    currentStats.rr += amount;
+  } else if (type === 'remove') {
+    currentStats.rr = Math.max(0, currentStats.rr - amount);
+  } else {
+    throw new Error('Type de modification RR invalide');
+  }
+
+  // Écriture directe : ne pas appeler setPlayerPoints()
+  // car cette fonction possède déjà son propre verrou.
+  await Points.updateOne(
+    { userId },
+    {
+      $set: {
+        rr: currentStats.rr,
+        games: currentStats.games,
+        wins: currentStats.wins,
+        timeouts: currentStats.timeouts
       }
+    },
+    { upsert: true }
+  );
 
-      await setPlayerPoints(userId, currentStats);
+  return currentStats.rr;
+});
+
       await updateleaderboardEmbed();
 
       const actionText = type === 'add' ? 'ajouté' : 'retiré';
 
 return simpleEditReply(
   interaction,
-  `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${currentStats.rr} ʀʀ**`
+  `✅ ${amount} ʀʀ ${actionText} pour <@${userId}>. Nouveau total : **${newRR} ʀʀ**`
 );
 }
 
