@@ -3178,19 +3178,8 @@ function buildReferralContainer(offer) {
     ? offer.officialUrl
     : (offer.url || offer.signupUrl);
 
-  // Parrainages dont la diffusion publique est restreinte
-  const privateReferralOnly = new Set([
-    'trade-republic',
-    'yomoni',
-    'widilo'
-  ]);
-
-  const canShowPublicLink =
-    isAid || !privateReferralOnly.has(offer.slug);
-
-  const publicMainUrl = canShowPublicLink
-    ? mainUrl
-    : null;
+      // Tous les liens configurés peuvent être affichés publiquement
+  const publicMainUrl = mainUrl;
 
   if (publicMainUrl) {
     buttons.push(
@@ -3202,11 +3191,7 @@ function buildReferralContainer(offer) {
   } else {
     buttons.push(
       new ButtonBuilder()
-        .setLabel(
-          !canShowPublicLink
-            ? 'Lien disponible sur demande'
-            : mainLabel
-        )
+        .setLabel(mainLabel)
         .setStyle(ButtonStyle.Secondary)
         .setCustomId(`referral_unavailable_${offer.slug}`)
         .setDisabled(true)
@@ -3958,7 +3943,7 @@ const commands = [
           description: 'Enseigne',
           type: 3,
           required: true,
-          choices: [
+choices: [
   { name: 'BoursoBank', value: '┃boursobank' },
   { name: 'Fortuneo', value: '┃fortuneo' },
   { name: 'Finary', value: '┃finary' },
