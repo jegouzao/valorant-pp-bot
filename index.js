@@ -1738,7 +1738,7 @@ const BANK_RESEARCH_UPDATES = {
   'distingo-bank': {
     bonus: null,
     notice: 'Aucune prime de parrainage active confirmée à ce stade.',
-    officialUrl: null,
+    officialUrl: 'https://distingobank.fr/livret-epargne/',
     steps: [
       ['Vérifie l’existence d’une campagne Distingo', 'Aucun montant actuel n’a pu être confirmé.'],
       ['Consulte les produits d’épargne proposés', 'Les offres promotionnelles ne constituent pas nécessairement du parrainage.'],
@@ -1762,7 +1762,7 @@ const BANK_RESEARCH_UPDATES = {
   sumeria: {
     bonus: null,
     notice: 'Aucun montant de parrainage actif confirmé à ce stade.',
-    officialUrl: null,
+    officialUrl: 'https://sumeria.eu/fondamentaux/conditions-generales/conditions-generales-de-vente-des-offres-sumeria/',
     steps: [
       ['Vérifie les offres proposées dans Sumeria', 'Une campagne personnelle peut différer des offres publiques.'],
       ['Consulte les conditions d’éligibilité', 'Vérifie le type de compte et les éventuelles restrictions.'],
@@ -3053,6 +3053,14 @@ for (const [key, update] of Object.entries(PUBLIC_AID_UPDATES)) {
 console.log('[AIDES] Configurations des 12 fiches chargées.');
 
 
+Object.assign(REFERRAL_OFFERS['┃distingo-bank'], {
+  signupUrl: 'https://distingobank.fr/ouvrir-livret-epargne/'
+});
+
+Object.assign(REFERRAL_OFFERS['┃sumeria'], {
+  signupUrl: 'https://sumeria.eu/'
+});
+
 
 function buildReferralContainer(offer) {
   const separator = () =>
@@ -3175,8 +3183,8 @@ function buildReferralContainer(offer) {
     : "Profiter de l'offre";
 
    const mainUrl = isAid
-    ? offer.officialUrl
-    : (offer.url || offer.signupUrl);
+  ? offer.officialUrl
+  : (offer.url || offer.signupUrl || offer.officialUrl);
 
       // Tous les liens configurés peuvent être affichés publiquement
   const publicMainUrl = mainUrl;
