@@ -3961,33 +3961,35 @@ const commands = [
         }
       ]
     },
+    
     {
       name: 'code',
       description: 'Modifier le code parrain d’une enseigne',
       type: 1,
       options: [
         {
-  name: 'enseigne',
-  description: 'Rechercher une enseigne parmi les 48 fiches',
-  type: 3,
-  required: true,
-  autocomplete: true
-},
+          name: 'enseigne',
+          description: 'Rechercher une enseigne parmi les 48 fiches',
+          type: 3,
+          required: true,
+          autocomplete: true
+        },
         {
           name: 'code',
           description: 'Code parrain à afficher',
           type: 3,
           required: true
-        },
-        {
-  name: 'audit',
-  description: 'Auditer les 48 fiches et leurs liens',
-  type: 1
-}
+        }
       ]
+    },
+    {
+      name: 'audit',
+      description: 'Auditer les 48 fiches et leurs liens',
+      type: 1
     }
   ]
 },
+
 
 
   {
