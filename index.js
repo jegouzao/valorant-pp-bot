@@ -3978,7 +3978,12 @@ const commands = [
           description: 'Code parrain à afficher',
           type: 3,
           required: true
-        }
+        },
+        {
+  name: 'audit',
+  description: 'Auditer les 48 fiches et leurs liens',
+  type: 1
+}
       ]
     }
   ]
@@ -6181,8 +6186,102 @@ if (
     });
   }
 
-  const action = interaction.options.getSubcommand(true);
-  const enseigne = interaction.options.getString('enseigne', true);
+  
+const action = interaction.options.getSubcommand(true);
+
+if (action === 'audit') {
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const savedLinks = await getConfigValue('referralCustomLinks', {});
+  const savedCodes = await getConfigValue('referralCustomCodes', {});
+
+  const stats = {
+    total: 0,
+    liensPerso: 0,
+    codes: 0,
+    inscriptions: 0,
+    officiels: 0,
+    boutonsGrises: 0,
+    conditionsManquantes: 0
+  };
+
+  const problems = [];
+  const fallbacks = [];
+
+  for (const [key, offer] of Object.entries(REFERRAL_OFFERS)) {
+    stats.total++;
+
+    const isAid = offer.category === 'aides';
+    const personalUrl = isAid ? null : (savedLinks[key] || offer.url);
+    const code = isAid ? null : (savedCodes[key] || offer.referralCode);
+
+    if (personalUrl) stats.liensPerso++;
+    if (code) stats.codes++;
+
+    if (!isAid && !personalUrl && offer.signupUrl) {
+      stats.inscriptions++;
+    }
+
+    if (offer.officialUrl) stats.officiels++;
+
+    const mainUrl = isAid
+      ? offer.officialUrl
+      : (personalUrl || offer.signupUrl || offer.officialUrl);
+
+    if (!mainUrl) {
+      stats.boutonsGrises++;
+      problems.push(`🔴 ${offer.title} : bouton principal désactivé`);
+    } else if (!isAid && !personalUrl && !offer.signupUrl) {
+      fallbacks.push(`🟡 ${offer.title} : utilise la page officielle`);
+    }
+
+    if (!offer.officialUrl) {
+      stats.conditionsManquantes++;
+      problems.push(`🔴 ${offer.title} : conditions officielles absentes`);
+    }
+  }
+
+  const lines = [
+    '## 🔎 AUDIT DES PARRAINAGES',
+    '',
+    `**Fiches analysées :** ${stats.total}`,
+    `**Liens personnels :** ${stats.liensPerso}`,
+    `**Codes parrain :** ${stats.codes}`,
+    `**Liens d'inscription de secours :** ${stats.inscriptions}`,
+    `**Liens officiels :** ${stats.officiels}`,
+    `**Boutons principaux désactivés :** ${stats.boutonsGrises}`,
+    `**Conditions officielles manquantes :** ${stats.conditionsManquantes}`,
+    '',
+    '### ❌ Problèmes détectés',
+    problems.length ? problems.join('\n') : 'Aucun problème détecté.',
+    '',
+    '### ⚠️ Liens de secours',
+    fallbacks.length ? fallbacks.join('\n') : 'Aucun.',
+    '',
+    '-# Audit en lecture seule : aucune donnée modifiée.'
+  ];
+
+  const report = lines.join('\n');
+
+  if (report.length <= 1900) {
+    return interaction.editReply({ content: report });
+  }
+
+  const attachment = Buffer.from(report, 'utf8');
+
+  return interaction.editReply({
+    content: '📋 Rapport complet de l’audit :',
+    files: [{
+      attachment,
+      name: 'audit-parrainages.txt'
+    }]
+  });
+}
+
+const enseigne = interaction.options.getString('enseigne', true);
+
 
   if (!REFERRAL_OFFERS[enseigne]) {
     return interaction.reply({
