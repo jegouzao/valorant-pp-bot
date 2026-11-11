@@ -1937,9 +1937,7 @@ for (const [slug, details] of Object.entries(
 )) {
   const offer = REFERRAL_OFFERS[`┃${slug}`];
   if (!offer) continue;
-  if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
-  continue;
-}
+
 
   Object.assign(offer, {
     ...details,
@@ -3409,39 +3407,47 @@ function buildReferralContainer(offer) {
 
 
 
+
 if (
   offer.displayStatus === 'coming_soon' ||
   offer.displayStatus === 'suspended'
 ) {
   const label = offer.displayStatus === 'suspended'
-    ? 'SUSPENDU'
-    : 'À VENIR';
-
-  const content = `# ┃ ${offer.title}\n-# ${label}`;
+    ? 'Offre temporairement suspendue'
+    : 'Bientôt disponible';
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR);
 
   const logo = getReferralLogo(offer);
 
+  const title = new TextDisplayBuilder()
+    .setContent(`# ${offer.title}`);
+
   if (logo) {
     container.addSectionComponents(
       new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(content)
-        )
+        .addTextDisplayComponents(title)
         .setThumbnailAccessory(
           new ThumbnailBuilder().setURL(logo.url)
         )
     );
   } else {
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(content)
-    );
+    container.addTextDisplayComponents(title);
   }
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Small)
+  );
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(`-# ${label}`)
+  );
 
   return container;
 }
+
 
 
 
@@ -3489,26 +3495,30 @@ if (logo) {
 
 
   // ÉTAPES COURTES
+    // ÉTAPES — présentation avec séparateurs
   const steps = (offer.steps || [])
-    .filter(([title, detail]) => title || detail)
-    .map(([title, detail], index) => {
-      const instruction = String(title || '').trim();
-      const description = String(detail || '').trim();
-
-      return [
-        `**${index + 1}. ${instruction}**`,
-        description ? `-# ${description}` : ''
-      ].filter(Boolean).join('\n');
-    });
+    .filter(([title, detail]) => title || detail);
 
   if (steps.length) {
     container.addSeparatorComponents(separator());
 
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### Comment en bénéficier ?\n${steps.join('\n\n')}`
-      )
-    );
+    steps.forEach(([title, detail], index) => {
+      const instruction = String(title || '').trim();
+      const description = String(detail || '').trim();
+
+      const content = [
+        `**${index + 1}. ${instruction}**`,
+        description ? `-# ${description}` : ''
+      ].filter(Boolean).join('\n');
+
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(content)
+      );
+
+      if (index < steps.length - 1) {
+        container.addSeparatorComponents(separator());
+      }
+    });
   }
 
   // CODE PERSONNEL
