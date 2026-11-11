@@ -1567,31 +1567,96 @@ const REFERRAL_CATALOG = {
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
-const BOOKMAKER_ENTRIES = [
-  ['winamax', 'Winamax'],
-  ['betclic', 'Betclic'],
-  ['unibet', 'Unibet'],
-  ['pmu', 'PMU'],
-  ['betsson', 'Betsson'],
-  ['olybet', 'OlyBet'],
-  ['feelingbet', 'Feelingbet']
-];
 
-for (const [slug, title] of BOOKMAKER_ENTRIES) {
+const BOOKMAKER_OFFERS = {
+  winamax: {
+    title: 'Winamax',
+    notice: 'Les avantages et plafonds du parrainage dépendent de la campagne active. Vérifie les conditions affichées sur ton compte Winamax.',
+    steps: [
+      ['Vérifie ton invitation', 'Consulte ton espace Winamax pour connaître les avantages réellement proposés.'],
+      ['Vérifie ton éligibilité', 'Le programme peut être réservé aux nouveaux clients remplissant les conditions de l’opérateur.'],
+      ['Consulte les conditions de dépôt', 'Vérifie le montant éventuel du premier dépôt et les actions nécessaires.'],
+      ['Vérifie la récompense', 'Consulte sa nature, sa durée de validité et les éventuelles restrictions de mise.']
+    ]
+  },
+
+  betclic: {
+    title: 'Betclic',
+    notice: 'Le parrainage Betclic peut attribuer des freebets. Le montant et les critères doivent être confirmés dans les conditions de la campagne active.',
+    steps: [
+      ['Utilise une invitation admissible', 'Vérifie que le lien ou le code correspond au programme actuellement proposé.'],
+      ['Ouvre et vérifie ton compte', 'L’identité et l’éligibilité du nouveau client doivent être validées.'],
+      ['Consulte les conditions de dépôt', 'Vérifie le dépôt minimum et les éventuels défis à activer.'],
+      ['Consulte les freebets', 'Vérifie leur attribution, leur expiration et les restrictions applicables.']
+    ]
+  },
+
+  unibet: {
+    title: 'Unibet',
+    notice: 'Les campagnes de parrainage Unibet peuvent être temporaires. Aucune récompense actuelle n’est garantie par cette fiche.',
+    steps: [
+      ['Vérifie la campagne active', 'Consulte les offres disponibles dans ton espace Unibet.'],
+      ['Vérifie le parrainage', 'Confirme les modalités d’invitation et l’éligibilité du nouveau client.'],
+      ['Consulte les délais', 'Vérifie les conditions de validation du compte et les éventuelles échéances.'],
+      ['Vérifie les avantages', 'Montant, type de bonus, plafonds et durée de validité dépendent de la campagne.']
+    ]
+  },
+
+  pmu: {
+    title: 'PMU',
+    notice: 'Le programme PMU+ peut proposer des bonus au parrain et au filleul. Vérifie les conditions et la date de fin de la campagne.',
+    steps: [
+      ['Consulte le programme PMU+', 'Vérifie que le parrainage est toujours proposé au moment de l’inscription.'],
+      ['Ouvre un compte éligible', 'Respecte les conditions de première inscription et de vérification.'],
+      ['Vérifie le premier dépôt', 'Le montant et le délai requis dépendent des conditions de la campagne.'],
+      ['Consulte les bonus', 'Vérifie les montants, les plafonds de filleuls et les conditions d’utilisation.']
+    ]
+  },
+
+  betsson: {
+    title: 'Betsson',
+    notice: 'Les récompenses de parrainage peuvent être attribuées sous forme de Betboost, avec des conditions de dépôt et des plafonds.',
+    steps: [
+      ['Vérifie le programme Betsson', 'Consulte les conditions du parrainage dans ton espace joueur.'],
+      ['Ouvre et valide ton compte', 'Le nouveau client doit satisfaire aux critères d’identité et d’éligibilité.'],
+      ['Vérifie le dépôt requis', 'Consulte le seuil et les délais applicables à la campagne.'],
+      ['Consulte les Betboost', 'Vérifie leur valeur, leur fonctionnement et le plafond de filleuls récompensés.']
+    ]
+  },
+
+  olybet: {
+    title: 'OlyBet',
+    notice: 'Le programme OlyBet peut proposer des OlyBonus soumis à un dépôt minimum, une durée de validité et des restrictions.',
+    steps: [
+      ['Consulte le programme OlyBet', 'Vérifie les modalités du parrainage disponibles en France.'],
+      ['Vérifie ton éligibilité', 'Le nouveau compte doit respecter les critères de l’opérateur.'],
+      ['Consulte le dépôt minimum', 'Vérifie le montant requis et les conditions de validation.'],
+      ['Vérifie les OlyBonus', 'Consulte leur durée de validité, les cotes admissibles et les restrictions.']
+    ]
+  },
+
+  feelingbet: {
+    title: 'Feelingbet',
+    notice: 'Les modalités actuelles d’un éventuel programme de parrainage Feelingbet ne sont pas confirmées.',
+    steps: [
+      ['Vérifie la disponibilité', 'Consulte Feelingbet pour confirmer l’existence d’un programme actif.'],
+      ['Vérifie les invitations', 'Confirme les modalités de parrainage éventuellement proposées.'],
+      ['Consulte les conditions', 'Vérifie les critères d’éligibilité et les opérations éventuellement requises.'],
+      ['Vérifie les récompenses', 'Aucun montant, bonus ou avantage n’est confirmé pour cette fiche.']
+    ]
+  }
+};
+
+for (const [slug, data] of Object.entries(BOOKMAKER_OFFERS)) {
   addReferralOffer(slug, {
-    title,
+    ...data,
     category: 'bookmakers',
     bonus: null,
-    notice: 'Réservé aux majeurs. Jeux d’argent : risques de pertes et de dépendance. Conditions du programme à confirmer.',
-    steps: [
-      ['Disponibilité du programme', 'Consulte les conditions en vigueur auprès de l’opérateur.'],
-      ['Éligibilité', 'Réservé aux personnes majeures ; des restrictions supplémentaires peuvent s’appliquer.'],
-      ['Conditions du parrainage', 'Montant, dépôt éventuel et délais dépendent de l’offre applicable.'],
-      ['Précautions', 'Ne joue pas pour obtenir une récompense ; les jeux d’argent peuvent entraîner des pertes.']
-    ],
+    verifiedAt: null,
     draft: false
   });
 }
+
 
 const REFERRAL_DEFAULT_STEPS = {
   banque: [
