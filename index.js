@@ -5297,11 +5297,6 @@ if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
     console.error(`${colors.red}❌ Erreur lors de la création automatique:${colors.reset}`, error);
   }
 await syncReferralPanels(guild);
-await checkReferralOfficialPages();
-
-setInterval(() => {
-  checkReferralOfficialPages().catch(console.error);
-}, 24 * 60 * 60 * 1000);
 await updateleaderboardEmbed();
 
 console.log(
