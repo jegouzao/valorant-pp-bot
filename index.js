@@ -1608,7 +1608,216 @@ const REFERRAL_CATALOG = {
 
 
 
+// ============================================================
+// SURVEILLANCE DES ANNONCES — CONFIGURATION
+// ============================================================
 
+const WATCH_CATEGORY_ID = '1569389053852520658';
+
+const WATCH_CONFIG = {
+  maxSearchesPerMember: 5,
+  checkIntervalMs: 60 * 1000,
+  initialResultsLimit: 10,
+  defaultMentions: false,
+
+  platforms: {
+    vinted: {
+      name: 'Vinted',
+      emojiName: 'vinted'
+    },
+    leboncoin: {
+      name: 'Leboncoin',
+      emojiName: 'leboncoin'
+    },
+    ebay: {
+      name: 'eBay',
+      emojiName: 'ebay'
+    }
+  }
+};
+
+// Récupération automatique des emojis personnalisés du serveur
+function getWatchEmoji(guild, platform) {
+  const config = WATCH_CONFIG.platforms[platform];
+  if (!config) return '';
+
+  const emoji = guild.emojis.cache.find(
+    e => e.name?.toLowerCase() === config.emojiName
+  );
+
+  return emoji ? emoji.toString() : '';
+}
+
+// Titre des containers Components V2
+function getWatchTitle(guild, platform, title) {
+  const emoji = getWatchEmoji(guild, platform);
+
+  return `## ${emoji ? `${emoji} ` : ''}${title}`;
+}
+
+
+// ============================================================
+// SURVEILLANCE DES ANNONCES — CONFIGURATION ET MONGODB
+// ============================================================
+
+const WATCH_CATEGORY_ID = '1569389053852520658';
+
+const WATCH_CONFIG = {
+  maxSearchesPerMember: 5,
+  checkIntervalMs: 60_000,
+  initialResultsLimit: 10,
+  defaultMentions: false,
+  platforms: {
+    vinted: { name: 'Vinted', emojiName: 'vinted' },
+    leboncoin: { name: 'Leboncoin', emojiName: 'leboncoin' },
+    ebay: { name: 'eBay', emojiName: 'ebay' }
+  }
+};
+
+const watchSearchSchema = new mongoose.Schema({
+  guildId: { type: String, required: true },
+  userId: { type: String, required: true },
+  channelId: { type: String, required: true, unique: true },
+  platform: {
+    type: String,
+    enum: ['vinted', 'leboncoin', 'ebay'],
+    required: true
+  },
+  keywords: { type: String, required: true },
+  excludedKeywords: { type: String, default: '' },
+  minPrice: { type: Number, default: null },
+  maxPrice: { type: Number, default: null },
+  brand: { type: String, default: '' },
+  condition: { type: String, default: '' },
+  category: { type: String, default: '' },
+  size: { type: String, default: '' },
+  shippingOnly: { type: Boolean, default: false },
+  mentions: { type: Boolean, default: false },
+  paused: { type: Boolean, default: false },
+  seenListingIds: { type: [String], default: [] },
+  managementMessageId: { type: String, default: null }
+}, { timestamps: true });
+
+watchSearchSchema.index({ guildId: 1, userId: 1 });
+
+const WatchSearch = mongoose.models.WatchSearch ||
+  mongoose.model('WatchSearch', watchSearchSchema);
+
+function getWatchEmoji(guild, platform) {
+  const config = WATCH_CONFIG.platforms[platform];
+  if (!config) return '';
+
+  const emoji = guild.emojis.cache.find(
+    e => e.name?.toLowerCase() === config.emojiName
+  );
+
+  return emoji?.toString() || '';
+}
+
+function getWatchTitle(guild, platform, title) {
+  const emoji = getWatchEmoji(guild, platform);
+  return `## ${emoji ? `${emoji} ` : ''}${title}`;
+}
+
+function buildWatchMainPanel(guild, count) {
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        '## SURVEILLANCE DES ANNONCES\n' +
+        '-# Vinted · Leboncoin · eBay\n\n' +
+        'Crée tes recherches et retrouve les annonces ' +
+        'dans des salons privés.\n\n' +
+        `**Recherches utilisées : ${count}/5**\n` +
+        '-# Une recherche = une plateforme et un salon privé.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('watch_create')
+          .setLabel('Créer une recherche')
+          .setStyle(ButtonStyle.Success)
+          .setDisabled(count >= 5),
+
+        new ButtonBuilder()
+          .setCustomId('watch_list')
+          .setLabel('Mes recherches')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+
+  return container;
+}
+
+function buildWatchManagementPanel(guild, search) {
+  const platformName =
+    WATCH_CONFIG.platforms[search.platform].name;
+
+  const emoji = getWatchEmoji(guild, search.platform);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `${getWatchTitle(guild, search.platform, 'SURVEILLANCE — ' + platformName.toUpperCase())}\n` +
+        `-# Recherche de <@${search.userId}>\n\n` +
+        `**Mots-clés :** ${search.keywords}\n` +
+        `**Exclusions :** ${search.excludedKeywords || 'Aucune'}\n` +
+        `**Prix :** ${search.minPrice ?? 'Libre'} € — ${search.maxPrice ?? 'Libre'} €\n` +
+        `**Mentions :** ${search.mentions ? 'Activées' : 'Désactivées'}\n` +
+        `**Statut :** ${search.paused ? 'Suspendue' : 'Active'}\n\n` +
+        '-# Surveillance automatique en attente de connexion à la plateforme.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`watch_pause_${search._id}`)
+          .setLabel(search.paused ? 'Reprendre' : 'Suspendre')
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+          .setCustomId(`watch_mentions_${search._id}`)
+          .setLabel(search.mentions ? 'Désactiver les mentions' : 'Activer les mentions')
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+          .setCustomId(`watch_delete_${search._id}`)
+          .setLabel('Supprimer')
+          .setStyle(ButtonStyle.Danger)
+      )
+    );
+
+  return container;
+}
+
+async function updateWatchManagementPanel(guild, search) {
+  const channel = await guild.channels
+    .fetch(search.channelId)
+    .catch(() => null);
+
+  if (!channel?.isTextBased() || !search.managementMessageId) {
+    return;
+  }
+
+  const message = await channel.messages
+    .fetch(search.managementMessageId)
+    .catch(() => null);
+
+  if (!message) return;
+
+  await message.edit({
+    components: [buildWatchManagementPanel(guild, search)],
+    flags: MessageFlags.IsComponentsV2
+  });
+}
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
@@ -4538,6 +4747,10 @@ const commands = [
     }
   ]
 },
+  {
+    name: 'surveillance',
+    description: 'Créer et gérer mes recherches d’annonces'
+  },
   { name: 'pp', description: 'Créer une partie personnalisée' },
   { name: 'leaderboard', description: 'Afficher le leaderboard', default_member_permissions: PermissionFlagsBits.Administrator.toString() },
   { name: 'manage', description: 'Gérer les données', default_member_permissions: PermissionFlagsBits.Administrator.toString(), options: [{ name: 'joueur', description: 'Joueur', type: 6, required: true }] },
@@ -6844,6 +7057,482 @@ client.on('interactionCreate', async (interaction) => {
   try {
 
 
+// ============================================================
+// SURVEILLANCE — INTERACTIONS DISCORD
+// ============================================================
+
+if (interaction.inGuild()) {
+
+  // Commande principale
+  if (
+    interaction.isChatInputCommand() &&
+    interaction.commandName === 'surveillance'
+  ) {
+    const count = await WatchSearch.countDocuments({
+      guildId: interaction.guildId,
+      userId: interaction.user.id
+    });
+
+    return interaction.reply({
+      components: [
+        buildWatchMainPanel(interaction.guild, count)
+      ],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+  }
+
+  // Sélection de la plateforme
+  if (
+    interaction.isButton() &&
+    interaction.customId === 'watch_create'
+  ) {
+    const count = await WatchSearch.countDocuments({
+      guildId: interaction.guildId,
+      userId: interaction.user.id
+    });
+
+    if (count >= WATCH_CONFIG.maxSearchesPerMember) {
+      return interaction.reply({
+        content: 'Tu as déjà 5 recherches. Supprime une recherche pour en créer une autre.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const container = new ContainerBuilder()
+      .setAccentColor(EMBED_COLOR)
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          '## CRÉER UNE RECHERCHE\n' +
+          'Sélectionne la plateforme à surveiller.'
+        )
+      )
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          ...Object.entries(WATCH_CONFIG.platforms).map(
+            ([key, platform]) => {
+              const button = new ButtonBuilder()
+                .setCustomId(`watch_platform_${key}`)
+                .setLabel(platform.name)
+                .setStyle(ButtonStyle.Secondary);
+
+              const emoji = interaction.guild.emojis.cache.find(
+                e => e.name?.toLowerCase() === platform.emojiName
+              );
+
+              if (emoji) button.setEmoji(emoji.id);
+              return button;
+            }
+          )
+        )
+      );
+
+    return interaction.reply({
+      components: [container],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2
+    });
+  }
+
+  // Formulaire de création
+  if (
+    interaction.isButton() &&
+    interaction.customId.startsWith('watch_platform_')
+  ) {
+    const platform = interaction.customId.replace(
+      'watch_platform_', ''
+    );
+
+    if (!WATCH_CONFIG.platforms[platform]) return;
+
+    const modal = new ModalBuilder()
+      .setCustomId(`watch_modal_${platform}`)
+      .setTitle(`Recherche ${WATCH_CONFIG.platforms[platform].name}`);
+
+    const fields = [
+      {
+        id: 'keywords',
+        label: 'Mots-clés',
+        placeholder: 'iPhone 15 Pro',
+        required: true
+      },
+      {
+        id: 'excluded',
+        label: 'Mots-clés à exclure',
+        placeholder: 'cassé, HS, pièces',
+        required: false
+      },
+      {
+        id: 'minprice',
+        label: 'Prix minimum en euros',
+        placeholder: '100',
+        required: false
+      },
+      {
+        id: 'maxprice',
+        label: 'Prix maximum en euros',
+        placeholder: '500',
+        required: false
+      }
+    ];
+
+    for (const field of fields) {
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId(field.id)
+            .setLabel(field.label)
+            .setPlaceholder(field.placeholder)
+            .setStyle(TextInputStyle.Short)
+            .setRequired(field.required)
+            .setMaxLength(100)
+        )
+      );
+    }
+
+    return interaction.showModal(modal);
+  }
+
+  // Validation du formulaire et création du salon
+  if (
+    interaction.isModalSubmit() &&
+    interaction.customId.startsWith('watch_modal_')
+  ) {
+    const platform = interaction.customId.replace(
+      'watch_modal_', ''
+    );
+
+    if (!WATCH_CONFIG.platforms[platform]) return;
+
+    const keywords = interaction.fields
+      .getTextInputValue('keywords').trim();
+
+    const excludedKeywords = interaction.fields
+      .getTextInputValue('excluded').trim();
+
+    const minRaw = interaction.fields
+      .getTextInputValue('minprice').trim();
+
+    const maxRaw = interaction.fields
+      .getTextInputValue('maxprice').trim();
+
+    const validPrice = value =>
+      value === '' || /^\d+([.,]\d{1,2})?$/.test(value);
+
+    if (
+      !keywords ||
+      !validPrice(minRaw) ||
+      !validPrice(maxRaw)
+    ) {
+      return interaction.reply({
+        content: 'Mots-clés ou prix invalides. Utilise des montants positifs.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const minPrice = minRaw
+      ? Number(minRaw.replace(',', '.'))
+      : null;
+
+    const maxPrice = maxRaw
+      ? Number(maxRaw.replace(',', '.'))
+      : null;
+
+    if (
+      minPrice !== null &&
+      maxPrice !== null &&
+      minPrice > maxPrice
+    ) {
+      return interaction.reply({
+        content: 'Le prix minimum ne peut pas dépasser le prix maximum.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral
+    });
+
+    const count = await WatchSearch.countDocuments({
+      guildId: interaction.guildId,
+      userId: interaction.user.id
+    });
+
+    if (count >= 5) {
+      return interaction.editReply(
+        'Tu as atteint la limite de 5 recherches.'
+      );
+    }
+
+    const guild = interaction.guild;
+    const category = await guild.channels
+      .fetch(WATCH_CATEGORY_ID)
+      .catch(() => null);
+
+    if (
+      !category ||
+      category.type !== ChannelType.GuildCategory
+    ) {
+      return interaction.editReply(
+        'Catégorie de surveillance introuvable.'
+      );
+    }
+
+    const safeName = keywords
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 35) || 'recherche';
+
+    const channel = await guild.channels.create({
+      name: `${platform}-${safeName}`,
+      type: ChannelType.GuildText,
+      parent: WATCH_CATEGORY_ID,
+      permissionOverwrites: [
+        {
+          id: guild.roles.everyone.id,
+          deny: [PermissionFlagsBits.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.ReadMessageHistory
+          ]
+        },
+        {
+          id: client.user.id,
+          allow: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.EmbedLinks
+          ]
+        }
+      ],
+      reason: `Recherche privée de ${interaction.user.id}`
+    });
+
+    let search;
+
+    try {
+      search = await WatchSearch.create({
+        guildId: guild.id,
+        userId: interaction.user.id,
+        channelId: channel.id,
+        platform,
+        keywords,
+        excludedKeywords,
+        minPrice,
+        maxPrice,
+        mentions: false
+      });
+
+      const message = await channel.send({
+        components: [
+          buildWatchManagementPanel(guild, search)
+        ],
+        flags: MessageFlags.IsComponentsV2
+      });
+
+      search.managementMessageId = message.id;
+      await search.save();
+
+    } catch (error) {
+      await channel.delete().catch(() => {});
+      throw error;
+    }
+
+    return interaction.editReply(
+      `Recherche créée : ${channel}\n` +
+      'La surveillance des annonces sera activée après intégration du connecteur.'
+    );
+  }
+
+  // Liste des recherches
+  if (
+    interaction.isButton() &&
+    interaction.customId === 'watch_list'
+  ) {
+    const searches = await WatchSearch.find({
+      guildId: interaction.guildId,
+      userId: interaction.user.id
+    }).sort({ createdAt: -1 }).lean();
+
+    const lines = searches.map(search => {
+      const emoji = getWatchEmoji(
+        interaction.guild, search.platform
+      );
+
+      return (
+        `${emoji} <#${search.channelId}> — ` +
+        `${search.paused ? 'Suspendue' : 'Active'}`
+      );
+    });
+
+    return interaction.reply({
+      content: lines.length
+        ? `**Mes recherches (${lines.length}/5)**\n\n${lines.join('\n')}`
+        : 'Tu ne possèdes aucune recherche.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  // Gestion d'une recherche existante
+  if (
+    interaction.isButton() &&
+    /^watch_(pause|mentions|delete)_/.test(interaction.customId)
+  ) {
+    const match = interaction.customId.match(
+      /^watch_(pause|mentions|delete)_([a-f0-9]{24})$/
+    );
+
+    if (!match) return;
+
+    const [, action, searchId] = match;
+
+    const search = await WatchSearch.findById(searchId);
+
+    if (
+      !search ||
+      search.guildId !== interaction.guildId ||
+      search.channelId !== interaction.channelId
+    ) {
+      return interaction.reply({
+        content: 'Recherche introuvable.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (
+      search.userId !== interaction.user.id &&
+      !interaction.memberPermissions?.has(
+        PermissionFlagsBits.Administrator
+      )
+    ) {
+      return interaction.reply({
+        content: 'Cette recherche ne t’appartient pas.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (action === 'delete') {
+      const confirmation = new ContainerBuilder()
+        .setAccentColor(0xB63B3B)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            getWatchTitle(
+              interaction.guild,
+              search.platform,
+              'SUPPRIMER LA RECHERCHE ?'
+            ) +
+            '\nCette action supprimera également le salon privé.'
+          )
+        )
+        .addActionRowComponents(
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`watch_confirm_${search._id}`)
+              .setLabel('Confirmer la suppression')
+              .setStyle(ButtonStyle.Danger)
+          )
+        );
+
+      return interaction.reply({
+        components: [confirmation],
+        flags:
+          MessageFlags.Ephemeral |
+          MessageFlags.IsComponentsV2
+      });
+    }
+
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral
+    });
+
+    if (action === 'pause') {
+      search.paused = !search.paused;
+    }
+
+    if (action === 'mentions') {
+      search.mentions = !search.mentions;
+    }
+
+    await search.save();
+    await updateWatchManagementPanel(
+      interaction.guild, search
+    );
+
+    return interaction.editReply(
+      'Paramètres de la recherche mis à jour.'
+    );
+  }
+
+  // Suppression confirmée
+  if (
+    interaction.isButton() &&
+    interaction.customId.startsWith('watch_confirm_')
+  ) {
+    const searchId = interaction.customId.replace(
+      'watch_confirm_', ''
+    );
+
+    if (!/^[a-f0-9]{24}$/.test(searchId)) return;
+
+    const search = await WatchSearch.findById(searchId);
+
+    if (
+      !search ||
+      search.guildId !== interaction.guildId ||
+      search.channelId !== interaction.channelId
+    ) {
+      return interaction.reply({
+        content: 'Recherche introuvable.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (
+      search.userId !== interaction.user.id &&
+      !interaction.memberPermissions?.has(
+        PermissionFlagsBits.Administrator
+      )
+    ) {
+      return interaction.reply({
+        content: 'Action non autorisée.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral
+    });
+
+    const channel = await interaction.guild.channels
+      .fetch(search.channelId)
+      .catch(() => null);
+
+    await WatchSearch.deleteOne({ _id: search._id });
+
+    if (channel) {
+      await channel.delete(
+        'Recherche de surveillance supprimée'
+      ).catch(console.error);
+    }
+
+    return interaction.editReply(
+      'Recherche supprimée. Une place est maintenant disponible.'
+    );
+  }
+}
+
+
+
     // Autocomplétion de toutes les enseignes de parrainage
     if (
       interaction.isAutocomplete() &&
@@ -8126,8 +8815,50 @@ if (!isBotOwner && !isAdministrator) {
     return interaction.editReply('❌ Salon introuvable.');
   }
 
-  await ch.delete().catch(() => {});
+  
+  const configFile = path.join(__dirname, 'data', 'config.json');
+
+  let moderationCategoryId = null;
+
+  if (fs.existsSync(configFile)) {
+    const config = JSON.parse(
+      fs.readFileSync(configFile, 'utf8')
+    );
+    moderationCategoryId = config.ticketCategoryId;
+  }
+
+  const referralCategoryId = '1569390219063463986';
+
+  const isReferralTicket =
+    ch.parentId === referralCategoryId &&
+    ch.name.startsWith('┃') &&
+    ch.topic?.includes(`Membre : ${ticketOwnerId}`);
+
+  const isModerationTicket =
+    ch.parentId === moderationCategoryId &&
+    ch.name.startsWith('┃ticket-') &&
+    ch.permissionOverwrites.cache.has(ticketOwnerId);
+
+  if (!isReferralTicket && !isModerationTicket) {
+    return interaction.editReply({
+      content: '❌ Ce salon ne correspond pas à un ticket valide.'
+    });
+  }
+
+  try {
+    await ch.delete(
+      `Ticket clôturé par ${interaction.user.username}`
+    );
+  } catch (error) {
+    console.error('❌ Erreur clôture ticket :', error);
+
+    return interaction.editReply({
+      content: '❌ Impossible de clôturer ce ticket.'
+    });
+  }
+
   return;
+
 }
 
 
