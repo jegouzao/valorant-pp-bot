@@ -2366,6 +2366,31 @@ const indicators = {
 };
 
 
+const sampleLinks = [
+  ...new Set(
+    [...html.matchAll(
+      /href=["']([^"']*\/items\/\d+[^"']*)["']/gi
+    )]
+      .map(match => match[1].replace(/&amp;/g, '&'))
+      .map(link => {
+        try {
+          const itemUrl = new URL(link, response.url);
+          if (!['vinted.fr', 'www.vinted.fr',
+                 'vinted.com', 'www.vinted.com']
+                .includes(itemUrl.hostname)) {
+            return null;
+          }
+          return itemUrl.origin + itemUrl.pathname;
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean)
+  )
+].slice(0, 3);
+
+
+
     const title =
       html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
       ?.replace(/\s+/g, ' ')
@@ -2373,6 +2398,7 @@ const indicators = {
 
     return {
       indicators,
+      sampleLinks,
       success: response.ok,
       status: response.status,
       durationMs: Date.now() - startedAt,
@@ -8453,6 +8479,15 @@ if (
 `**Liens d'annonces :** ${network.indicators?.itemLinks ?? 0}`,
 `**Identifiants détectés :** ${network.indicators?.itemIds ?? 0}`,
 `**Tableaux d'annonces :** ${network.indicators?.itemObjects ?? 0}`,
+
+'',
+'### 🔗 EXEMPLES D’ANNONCES',
+...(network.sampleLinks?.length
+  ? network.sampleLinks.map(
+      (link, index) => `${index + 1}. ${link}`
+    )
+  : ['Aucun lien exploitable détecté']),
+
 
       ...(network.error
         ? [`**Erreur :** ${network.error}`]
