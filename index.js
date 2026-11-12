@@ -2058,12 +2058,24 @@ function parseEbaySearchFilters(searchUrl) {
 
   const params = url.searchParams;
 
-  const supported = new Set([
-    '_nkw', '_udlo', '_udhi', '_sop',
-    '_ipg', '_pgn', 'rt', 'mkcid',
-    'mkrid', 'siteid', 'campid',
-    'customid', 'toolid'
-  ]);
+  
+const category = params.get('_sacat');
+
+if (category && category !== '0') {
+  throw new Error(
+    'Les recherches limitées à une catégorie eBay ' +
+    'ne sont pas encore prises en charge.'
+  );
+}
+
+const supported = new Set([
+  '_nkw', '_udlo', '_udhi', '_sop',
+  '_ipg', '_pgn', 'rt', 'mkcid',
+  'mkrid', 'siteid', 'campid',
+  'customid', 'toolid',
+  '_sacat', '_from'
+]);
+
 
   const unsupported = [...new Set(
     [...params.keys()].filter(key => !supported.has(key))
