@@ -1621,7 +1621,7 @@ winamax: {
   bonus: '20 €',
   url: 'https://www.winamax.fr/parrain?code=JEGIYZ',
   referralCode: 'JEGIYZ',
-  officialUrl: 'https://www.winamax.fr/',
+  officialUrl: 'https://www.winamax.fr/parrainage',
   notice: 'Offre réservée aux nouveaux joueurs majeurs. Le filleul dispose de 30 jours après son inscription pour valider son compte et effectuer un premier dépôt d’au moins 10 €. Maximum 5 filleuls par mois.',
   steps: [
   ['Inscris-toi', 'Utilise le code JEGIYZ ou le lien personnel.'],
@@ -1638,7 +1638,7 @@ betclic: {
   bonus: '10 € en Freebets pour le filleul',
   url: 'https://betclic.onelink.me/2887093520/6c3132b8?af_sub5=JEGZXNG1',
   referralCode: 'JEGZXNG1',
-  officialUrl: 'https://www.betclic.fr/',
+  officialUrl: 'https://www.betclic.fr/scp-parrainage',
   notice: 'Parrain et filleul : 10 € chacun en Freebets. Le filleul doit effectuer un dépôt et valider son compte avec les justificatifs obligatoires. Crédits de jeu non retirables.',
   
 steps: [
@@ -3725,14 +3725,16 @@ function buildReferralContainer(offer) {
     );
   }
 
-  if (offer.officialUrl && !offer.referralTermsUrl) {
-    buttons.push(
-      new ButtonBuilder()
-        .setLabel('Site officiel')
-        .setStyle(ButtonStyle.Link)
-        .setURL(offer.officialUrl)
-    );
-  }
+  
+if (!isAid && offer.officialUrl && !offer.referralTermsUrl) {
+  buttons.push(
+    new ButtonBuilder()
+      .setLabel('Conditions générales')
+      .setStyle(ButtonStyle.Link)
+      .setURL(offer.officialUrl)
+  );
+}
+
 
   buttons.push(
     new ButtonBuilder()
@@ -8018,44 +8020,41 @@ if (
       ]
     });
 
-    const subject = offer.category === 'aides'
-      ? `le dispositif ${offer.title}`
-      : `l'offre ${offer.title}`;
+    
+const enseigneEmoji = getReferralEmoji(guild, offer);
 
-    const container = new ContainerBuilder()
-      .setAccentColor(EMBED_COLOR)
-      .addSectionComponents(
-        new SectionBuilder()
-          .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-              `## TICKET ${offer.title.toUpperCase()}\n` +
-              `-# Ouvert par <@${member.id}>\n\n` +
-              `Bienvenue ! Pose ta question concernant ` +
-              `${subject}.\n` +
-              `L'équipe te répondra ici.`
-            )
-          )
-          .setThumbnailAccessory(
-            new ThumbnailBuilder().setURL(
-              member.displayAvatarURL({
-                extension: 'png',
-                size: 256
-              })
-            )
-          )
-      )
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-          .setSpacing(SeparatorSpacingSize.Small)
-      )
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`close_ticket_${member.id}`)
-            .setLabel('Clôturer la discussion')
-            .setStyle(ButtonStyle.Secondary)
+const container = new ContainerBuilder()
+  .setAccentColor(EMBED_COLOR)
+  .addSectionComponents(
+    new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `# ${enseigneEmoji}TICKET ${offer.title}\n` +
+          `-# Ouvert par <@${member.id}>`
         )
-      );
+      )
+      .setThumbnailAccessory(
+        new ThumbnailBuilder().setURL(
+          member.displayAvatarURL({
+            extension: 'png',
+            size: 256
+          })
+        )
+      )
+  )
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+      .setSpacing(SeparatorSpacingSize.Small)
+  )
+  .addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`close_ticket_${member.id}`)
+        .setLabel('Clôturer la discussion')
+        .setStyle(ButtonStyle.Secondary)
+    )
+  );
+
 
     await ticketChannel.send({
       components: [container],
