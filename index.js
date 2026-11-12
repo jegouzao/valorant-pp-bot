@@ -1639,7 +1639,9 @@ const watchSearchSchema = new mongoose.Schema({
     enum: ['vinted', 'leboncoin', 'ebay'],
     required: true
   },
-  keywords: { type: String, required: true },
+  keywords: { type: String, default: '' },
+searchUrl: { type: String, default: '' },
+customName: { type: String, default: '' },
   excludedKeywords: { type: String, default: '' },
   minPrice: { type: Number, default: null },
   maxPrice: { type: Number, default: null },
@@ -1659,6 +1661,66 @@ watchSearchSchema.index({ guildId: 1, userId: 1 });
 const WatchSearch = mongoose.models.WatchSearch ||
   mongoose.model('WatchSearch', watchSearchSchema);
 
+
+function validateWatchSearchUrl(platform, rawUrl) {
+  let url;
+
+  try {
+    url = new URL(rawUrl.trim());
+  } catch {
+    throw new Error('Le lien de recherche est invalide.');
+  }
+
+  if (url.protocol !== 'https:') {
+    throw new Error('Le lien doit commencer par https://');
+  }
+
+  if (url.username || url.password) {
+    throw new Error('Ce type de lien n’est pas accepté.');
+  }
+
+  const hostname = url.hostname.toLowerCase();
+
+  const allowedDomains = {
+    vinted: ['vinted.fr', 'vinted.com'],
+    leboncoin: ['leboncoin.fr'],
+    ebay: ['ebay.fr', 'ebay.com']
+  };
+
+  const validDomain = allowedDomains[platform]?.some(
+    domain =>
+      hostname === domain ||
+      hostname === `www.${domain}`
+  );
+
+  if (!validDomain) {
+    throw new Error(
+      'Ce lien ne correspond pas à la plateforme sélectionnée.'
+    );
+  }
+
+  if (url.toString().length > 3000) {
+    throw new Error('Le lien est trop long.');
+  }
+
+  // Retirer uniquement le fragment, inutile pour la recherche.
+  url.hash = '';
+
+  return url.toString();
+}
+
+function watchSafeChannelName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 50);
+}
+
+
 function getWatchEmoji(guild, platform) {
   const config = WATCH_CONFIG.platforms[platform];
   if (!config) return '';
@@ -1672,42 +1734,63 @@ function getWatchEmoji(guild, platform) {
 
 function getWatchTitle(guild, platform, title) {
   const emoji = getWatchEmoji(guild, platform);
-  return `## ${emoji ? `${emoji} ` : ''}${title}`;
+  return `# ${emoji ? `${emoji} ` : ''}${title}`;
 }
 
-function buildWatchMainPanel(guild, count) {
-  const container = new ContainerBuilder()
+
+function buildWatchMainPanel(guild, count = 0) {
+  const vinted = getWatchEmoji(guild, 'vinted');
+  const leboncoin = getWatchEmoji(guild, 'leboncoin');
+  const ebay = getWatchEmoji(guild, 'ebay');
+
+  const platformButton = (platform, label) => {
+    const button = new ButtonBuilder()
+      .setCustomId(`watch_platform_${platform}`)
+      .setLabel(label)
+      .setStyle(ButtonStyle.Secondary);
+
+    const emoji = guild.emojis.cache.find(
+      e => e.name?.toLowerCase() ===
+        WATCH_CONFIG.platforms[platform].emojiName
+    );
+
+    if (emoji) {
+      button.setEmoji({
+        id: emoji.id,
+        name: emoji.name,
+        animated: emoji.animated
+      });
+    }
+
+    return button;
+  };
+
+  return new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        '## SURVEILLANCE DES ANNONCES\n' +
-        '-# Vinted · Leboncoin · eBay\n\n' +
-        'Crée tes recherches et retrouve les annonces ' +
-        'dans des salons privés.\n\n' +
-       '**Jusqu’à 5 recherches par membre**\n' +
-'-# Une recherche = une plateforme et un salon privé.\n' +
-'-# Tes recherches sont personnelles et invisibles aux autres membres.'
+        `# ${[vinted, leboncoin, ebay].filter(Boolean).join(' ')} SURVEILLANCE DES ANNONCES\n` +
+        '-# Configure tes filtres sur la plateforme, trie du plus récent au plus ancien, puis colle ton lien de recherche.\n' +
+'-# Jusqu’à 5 recherches personnelles, chacune dans un salon privé.'
       )
     )
-    .addSeparatorComponents(
-      new SeparatorBuilder()
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        platformButton('vinted', 'Vinted'),
+        platformButton('leboncoin', 'Leboncoin'),
+        platformButton('ebay', 'eBay')
+      )
     )
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId('watch_create')
-          .setLabel('Créer une recherche')
-          .setStyle(ButtonStyle.Success),
-
-        new ButtonBuilder()
           .setCustomId('watch_list')
           .setLabel('Mes recherches')
-          .setStyle(ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Primary)
       )
     );
-
-  return container;
 }
+
 
 
 async function publishWatchPublicPanel(guild) {
@@ -1751,24 +1834,35 @@ async function publishWatchPublicPanel(guild) {
 }
 
 
+
 function buildWatchManagementPanel(guild, search) {
   const platformName =
     WATCH_CONFIG.platforms[search.platform].name;
 
-  const emoji = getWatchEmoji(guild, search.platform);
+  const legacy = !search.searchUrl;
 
-  const container = new ContainerBuilder()
+  const details = legacy
+    ? `**Ancienne recherche :** ${search.keywords || 'Sans nom'}\n` +
+      '-# Cette recherche utilise encore les anciens filtres.'
+    : `**Nom :** ${search.customName || 'Recherche sans nom'}\n` +
+      `**Recherche :** [Ouvrir sur ${platformName}](${search.searchUrl})\n` +
+      '**Tri demandé :** Du plus récent au plus ancien';
+
+  return new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `${getWatchTitle(guild, search.platform, 'SURVEILLANCE — ' + platformName.toUpperCase())}\n` +
+        getWatchTitle(
+          guild,
+          search.platform,
+          `SURVEILLANCE — ${platformName.toUpperCase()}`
+        ) +
+        '\n' +
         `-# Recherche de <@${search.userId}>\n\n` +
-        `**Mots-clés :** ${search.keywords}\n` +
-        `**Exclusions :** ${search.excludedKeywords || 'Aucune'}\n` +
-        `**Prix :** ${search.minPrice ?? 'Libre'} € — ${search.maxPrice ?? 'Libre'} €\n` +
+        `${details}\n` +
         `**Mentions :** ${search.mentions ? 'Activées' : 'Désactivées'}\n` +
         `**Statut :** ${search.paused ? 'Suspendue' : 'Active'}\n\n` +
-        '-# Surveillance automatique en attente de connexion à la plateforme.'
+        '-# Récupération automatique en attente de connexion à la plateforme.'
       )
     )
     .addSeparatorComponents(
@@ -1783,7 +1877,11 @@ function buildWatchManagementPanel(guild, search) {
 
         new ButtonBuilder()
           .setCustomId(`watch_mentions_${search._id}`)
-          .setLabel(search.mentions ? 'Désactiver les mentions' : 'Activer les mentions')
+          .setLabel(
+            search.mentions
+              ? 'Désactiver les mentions'
+              : 'Activer les mentions'
+          )
           .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
@@ -1792,9 +1890,8 @@ function buildWatchManagementPanel(guild, search) {
           .setStyle(ButtonStyle.Danger)
       )
     );
-
-  return container;
 }
+
 
 async function updateWatchManagementPanel(guild, search) {
   const channel = await guild.channels
@@ -7113,7 +7210,7 @@ if (
       .setAccentColor(EMBED_COLOR)
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          '## CRÉER UNE RECHERCHE\n' +
+          '# CRÉER UNE RECHERCHE\n' +
           'Sélectionne la plateforme à surveiller.'
         )
       )
@@ -7145,64 +7242,63 @@ if (
     });
   }
 
-  // Formulaire de création
-  if (
-    interaction.isButton() &&
-    interaction.customId.startsWith('watch_platform_')
-  ) {
-    const platform = interaction.customId.replace(
-      'watch_platform_', ''
+
+// ============================================================
+// SURVEILLANCE — FORMULAIRE URL + NOM PERSONNALISÉ
+// ============================================================
+
+if (
+  interaction.isButton() &&
+  interaction.customId.startsWith('watch_platform_')
+) {
+  const platform = interaction.customId.replace(
+    'watch_platform_', ''
+  );
+
+  if (!WATCH_CONFIG.platforms[platform]) return;
+
+  const count = await WatchSearch.countDocuments({
+    guildId: interaction.guildId,
+    userId: interaction.user.id
+  });
+
+  if (count >= WATCH_CONFIG.maxSearchesPerMember) {
+    return interaction.reply({
+      content: 'Tu as atteint la limite de 5 recherches.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`watch_modal_${platform}`)
+    .setTitle(
+      `Recherche ${WATCH_CONFIG.platforms[platform].name}`
     );
 
-    if (!WATCH_CONFIG.platforms[platform]) return;
+  const urlInput = new TextInputBuilder()
+    .setCustomId('search_url')
+    .setLabel('URL (tri : plus récent en premier)')
+    .setPlaceholder('Colle le lien de ta recherche')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(3000);
 
-    const modal = new ModalBuilder()
-      .setCustomId(`watch_modal_${platform}`)
-      .setTitle(`Recherche ${WATCH_CONFIG.platforms[platform].name}`);
+  const nameInput = new TextInputBuilder()
+    .setCustomId('custom_name')
+    .setLabel('Nom personnalisé du salon')
+    .setPlaceholder('Ex. vestes-carhartt')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(50);
 
-    const fields = [
-      {
-        id: 'keywords',
-        label: 'Mots-clés',
-        placeholder: 'iPhone 15 Pro',
-        required: true
-      },
-      {
-        id: 'excluded',
-        label: 'Mots-clés à exclure',
-        placeholder: 'cassé, HS, pièces',
-        required: false
-      },
-      {
-        id: 'minprice',
-        label: 'Prix minimum en euros',
-        placeholder: '100',
-        required: false
-      },
-      {
-        id: 'maxprice',
-        label: 'Prix maximum en euros',
-        placeholder: '500',
-        required: false
-      }
-    ];
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(urlInput),
+    new ActionRowBuilder().addComponents(nameInput)
+  );
 
-    for (const field of fields) {
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId(field.id)
-            .setLabel(field.label)
-            .setPlaceholder(field.placeholder)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(field.required)
-            .setMaxLength(100)
-        )
-      );
-    }
+  return interaction.showModal(modal);
+}
 
-    return interaction.showModal(modal);
-  }
 
   // Validation du formulaire et création du salon
   if (
@@ -7363,6 +7459,10 @@ if (
     );
   }
 
+
+
+
+
   // Liste des recherches
   if (
     interaction.isButton() &&
@@ -7442,7 +7542,7 @@ if (action === 'delete') {
           'CONFIRMATION DE SUPPRESSION'
         ) +
         '\n\n' +
-        `**Recherche :** ${search.keywords}\n\n` +
+        `**Recherche :** ${search.customName || search.keywords || 'Sans nom'}\n\n` +
         'Es-tu sûr de vouloir supprimer cette recherche ?\n' +
         '-# Le salon privé et ses messages seront définitivement supprimés.'
       )
