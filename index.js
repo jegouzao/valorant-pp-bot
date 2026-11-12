@@ -1934,10 +1934,18 @@ new ButtonBuilder()
   .setLabel('Supprimer')
   .setStyle(ButtonStyle.Danger),
 
+
 new ButtonBuilder()
   .setCustomId(`watch_test_${search._id}`)
   .setLabel('Tester une annonce')
+  .setStyle(ButtonStyle.Secondary),
+
+new ButtonBuilder()
+  .setCustomId(`watch_preview_${search._id}`)
+  .setLabel('Aperçu du design')
+  .setEmoji('🎨')
   .setStyle(ButtonStyle.Secondary)
+
 
   
       )
@@ -3146,17 +3154,18 @@ if (attempts >= 10) {
 }
 
 
+
 function buildWatchListingCard(guild, platform, listing) {
   const platformName =
     WATCH_CONFIG.platforms[platform]?.name || platform;
 
   const emoji = getWatchEmoji(guild, platform);
 
-  const clean = value =>
+  const clean = (value, max = 200) =>
     String(value ?? '')
       .replace(/@/g, '@\u200b')
       .replace(/([\\`*_~|>[\]()])/g, '\\$1')
-      .slice(0, 300);
+      .slice(0, max);
 
   const price = Number.isFinite(listing.price)
     ? new Intl.NumberFormat('fr-FR', {
@@ -3165,48 +3174,86 @@ function buildWatchListingCard(guild, platform, listing) {
       }).format(listing.price)
     : 'Prix non renseigné';
 
-  const title = clean(listing.title);
+  const title = clean(listing.title || 'Annonce sans titre', 180);
+
+  const details = [];
+
+  if (listing.brand) {
+    details.push(clean(listing.brand, 60));
+  }
+
+  if (listing.size) {
+    details.push(`Taille ${clean(listing.size, 30)}`);
+  }
+
+  if (listing.condition) {
+    details.push(clean(listing.condition, 60));
+  }
+
   const location = listing.location
-    ? clean(listing.location)
-    : 'Non renseignée';
+    ? clean(listing.location, 100)
+    : null;
+
+  const header =
+    `### ${emoji ? emoji + ' ' : ''}${platformName.toUpperCase()}` +
+    ` · NOUVELLE ANNONCE`;
+
+  const info = [
+    `**${title}**`,
+    '',
+    `## ${price}`,
+    ...(details.length
+      ? ['', `-# ${details.join(' · ')}`]
+      : []),
+    ...(location
+      ? [`-# 📍 ${location}`]
+      : [])
+  ].join('\n');
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## ${emoji ? emoji + ' ' : ''}${title}\n` +
-        `-# ${platformName} · Nouvelle annonce`
-      )
+      new TextDisplayBuilder().setContent(header)
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
     );
+
+  let validImageUrl = null;
 
   if (listing.imageUrl) {
     try {
-      const imageUrl = new URL(listing.imageUrl);
+      const parsed = new URL(listing.imageUrl);
 
       if (
-        imageUrl.protocol === 'https:' &&
-        !imageUrl.username &&
-        !imageUrl.password
+        parsed.protocol === 'https:' &&
+        !parsed.username &&
+        !parsed.password
       ) {
-        container.addMediaGalleryComponents(
-          new MediaGalleryBuilder().addItems(
-            new MediaGalleryItemBuilder()
-              .setURL(imageUrl.toString())
-          )
-        );
+        validImageUrl = parsed.toString();
       }
     } catch {
-      // Image invalide : afficher la fiche sans photo.
+      // URL invalide : fiche sans miniature.
     }
   }
 
+  if (validImageUrl) {
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(info)
+        )
+        .setThumbnailAccessory(
+          new ThumbnailBuilder().setURL(validImageUrl)
+        )
+    );
+  } else {
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(info)
+    );
+  }
+
   container
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `**Prix :** ${price}\n` +
-        `**Localisation :** ${location}`
-      )
-    )
     .addSeparatorComponents(
       new SeparatorBuilder()
     )
@@ -3214,6 +3261,7 @@ function buildWatchListingCard(guild, platform, listing) {
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setLabel("Voir l'annonce")
+          .setEmoji('🔗')
           .setStyle(ButtonStyle.Link)
           .setURL(listing.url)
       )
@@ -3221,6 +3269,7 @@ function buildWatchListingCard(guild, platform, listing) {
 
   return container;
 }
+
 
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
@@ -8472,6 +8521,98 @@ client.on('interactionCreate', async (interaction) => {
 // ============================================================
 
 
+// ============================================================
+// SURVEILLANCE — APERÇU DU DESIGN COMPACT
+// ============================================================
+
+if (
+  interaction.isButton() &&
+  /^watch_preview_[a-f0-9]{24}$/.test(interaction.customId)
+) {
+  if (!interaction.inGuild()) return;
+
+  const searchId = interaction.customId.replace(
+    'watch_preview_', ''
+  );
+
+  const search = await WatchSearch.findById(searchId);
+
+  if (
+    !search ||
+    search.guildId !== interaction.guildId ||
+    search.channelId !== interaction.channelId
+  ) {
+    return interaction.reply({
+      content: 'Recherche introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (
+    search.userId !== interaction.user.id &&
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return interaction.reply({
+      content: 'Cette recherche ne t’appartient pas.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  try {
+    
+const previewImages = {
+  vinted: 'https://placehold.co/300x400/png?text=Vinted',
+  leboncoin: 'https://placehold.co/300x400/png?text=Leboncoin',
+  ebay: 'https://placehold.co/300x400/png?text=eBay'
+};
+
+const listing = {
+  id: 'watch-design-preview',
+  title: 'Manteau vintage — Aperçu de la fiche',
+  url: search.searchUrl ||
+    `https://${search.platform === 'ebay'
+      ? 'www.ebay.fr'
+      : search.platform === 'leboncoin'
+        ? 'www.leboncoin.fr'
+        : 'www.vinted.fr'}`,
+  price: 45,
+  imageUrl: previewImages[search.platform] || null,
+  brand: 'Vintage',
+  size: 'M',
+  condition: 'Très bon état',
+  location: 'Paris, France'
+};
+
+
+    const card = buildWatchListingCard(
+      interaction.guild,
+      search.platform,
+      listing
+    );
+
+    return interaction.reply({
+      components: [card],
+      flags:
+        MessageFlags.Ephemeral |
+        MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] }
+    });
+
+  } catch (error) {
+    console.error(
+      '[SURVEILLANCE] Erreur aperçu design :',
+      error
+    );
+
+    return interaction.reply({
+      content: 'Impossible de générer l’aperçu.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+}
+
 
 // ============================================================
 // SURVEILLANCE — TEST D'UNE ANNONCE FICTIVE
@@ -8599,8 +8740,10 @@ if (
     ].join('\n');
 
     
+
 return interaction.editReply({
   content: report.slice(0, 1900),
+  flags: MessageFlags.SuppressEmbeds,
   allowedMentions: { parse: [] }
 });
 

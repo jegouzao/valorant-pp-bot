@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/JEGOUZ/VALOPP/issues"
   },
-  "homepage": "https://github.com/JEGOUZ/VALOPP#readme"
+  "homepage": "https://github.com/JEGOUZ/VALOPP#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
