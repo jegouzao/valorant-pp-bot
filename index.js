@@ -1608,52 +1608,6 @@ const REFERRAL_CATALOG = {
 
 
 
-// ============================================================
-// SURVEILLANCE DES ANNONCES — CONFIGURATION
-// ============================================================
-
-const WATCH_CATEGORY_ID = '1569389053852520658';
-
-const WATCH_CONFIG = {
-  maxSearchesPerMember: 5,
-  checkIntervalMs: 60 * 1000,
-  initialResultsLimit: 10,
-  defaultMentions: false,
-
-  platforms: {
-    vinted: {
-      name: 'Vinted',
-      emojiName: 'vinted'
-    },
-    leboncoin: {
-      name: 'Leboncoin',
-      emojiName: 'leboncoin'
-    },
-    ebay: {
-      name: 'eBay',
-      emojiName: 'ebay'
-    }
-  }
-};
-
-// Récupération automatique des emojis personnalisés du serveur
-function getWatchEmoji(guild, platform) {
-  const config = WATCH_CONFIG.platforms[platform];
-  if (!config) return '';
-
-  const emoji = guild.emojis.cache.find(
-    e => e.name?.toLowerCase() === config.emojiName
-  );
-
-  return emoji ? emoji.toString() : '';
-}
-
-// Titre des containers Components V2
-function getWatchTitle(guild, platform, title) {
-  const emoji = getWatchEmoji(guild, platform);
-
-  return `## ${emoji ? `${emoji} ` : ''}${title}`;
-}
 
 
 // ============================================================
