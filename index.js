@@ -1615,6 +1615,8 @@ const REFERRAL_CATALOG = {
 // ============================================================
 
 const WATCH_CATEGORY_ID = '1569389053852520658';
+const WATCH_PANEL_CHANNEL_ID = '1569389930713714858';
+const WATCH_PANEL_CONFIG_KEY = 'watchPublicPanel';
 
 const WATCH_CONFIG = {
   maxSearchesPerMember: 5,
@@ -1682,8 +1684,9 @@ function buildWatchMainPanel(guild, count) {
         '-# Vinted · Leboncoin · eBay\n\n' +
         'Crée tes recherches et retrouve les annonces ' +
         'dans des salons privés.\n\n' +
-        `**Recherches utilisées : ${count}/5**\n` +
-        '-# Une recherche = une plateforme et un salon privé.'
+       '**Jusqu’à 5 recherches par membre**\n' +
+'-# Une recherche = une plateforme et un salon privé.\n' +
+'-# Tes recherches sont personnelles et invisibles aux autres membres.'
       )
     )
     .addSeparatorComponents(
@@ -1694,8 +1697,7 @@ function buildWatchMainPanel(guild, count) {
         new ButtonBuilder()
           .setCustomId('watch_create')
           .setLabel('Créer une recherche')
-          .setStyle(ButtonStyle.Success)
-          .setDisabled(count >= 5),
+          .setStyle(ButtonStyle.Success),
 
         new ButtonBuilder()
           .setCustomId('watch_list')
@@ -1706,6 +1708,48 @@ function buildWatchMainPanel(guild, count) {
 
   return container;
 }
+
+
+async function publishWatchPublicPanel(guild) {
+  const channel = await guild.channels
+    .fetch(WATCH_PANEL_CHANNEL_ID)
+    .catch(() => null);
+
+  if (!channel || !channel.isTextBased()) {
+    throw new Error('Salon du panneau de surveillance introuvable.');
+  }
+
+  const configKey = `${WATCH_PANEL_CONFIG_KEY}_${guild.id}`;
+  const saved = await getConfigValue(configKey, null);
+
+  const payload = {
+    components: [buildWatchMainPanel(guild, 0)],
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] }
+  };
+
+  // Actualiser le panneau existant, sans doublon.
+  if (saved?.messageId) {
+    const existing = await channel.messages
+      .fetch(saved.messageId)
+      .catch(() => null);
+
+    if (existing && existing.author.id === client.user.id) {
+      await existing.edit(payload);
+      return existing;
+    }
+  }
+
+  const message = await channel.send(payload);
+
+  await setConfigValue(configKey, {
+    channelId: channel.id,
+    messageId: message.id
+  });
+
+  return message;
+}
+
 
 function buildWatchManagementPanel(guild, search) {
   const platformName =
@@ -7018,24 +7062,35 @@ client.on('interactionCreate', async (interaction) => {
 if (interaction.inGuild()) {
 
   // Commande principale
+  
+if (
+  interaction.isChatInputCommand() &&
+  interaction.commandName === 'surveillance'
+) {
   if (
-    interaction.isChatInputCommand() &&
-    interaction.commandName === 'surveillance'
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
   ) {
-    const count = await WatchSearch.countDocuments({
-      guildId: interaction.guildId,
-      userId: interaction.user.id
-    });
-
     return interaction.reply({
-      components: [
-        buildWatchMainPanel(interaction.guild, count)
-      ],
-      flags:
-        MessageFlags.Ephemeral |
-        MessageFlags.IsComponentsV2
+      content: 'Seuls les administrateurs peuvent publier ou actualiser le panneau de surveillance.',
+      flags: MessageFlags.Ephemeral
     });
   }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  const message = await publishWatchPublicPanel(
+    interaction.guild
+  );
+
+  return interaction.editReply(
+    `Panneau public de surveillance installé ou actualisé : ${message.url}`
+  );
+}
+
 
   // Sélection de la plateforme
   if (
@@ -7375,35 +7430,48 @@ if (interaction.inGuild()) {
       });
     }
 
-    if (action === 'delete') {
-      const confirmation = new ContainerBuilder()
-        .setAccentColor(0xB63B3B)
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            getWatchTitle(
-              interaction.guild,
-              search.platform,
-              'SUPPRIMER LA RECHERCHE ?'
-            ) +
-            '\nCette action supprimera également le salon privé.'
-          )
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`watch_confirm_${search._id}`)
-              .setLabel('Confirmer la suppression')
-              .setStyle(ButtonStyle.Danger)
-          )
-        );
+    
+if (action === 'delete') {
+  const confirmation = new ContainerBuilder()
+    .setAccentColor(0xB63B3B)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        getWatchTitle(
+          interaction.guild,
+          search.platform,
+          'CONFIRMATION DE SUPPRESSION'
+        ) +
+        '\n\n' +
+        `**Recherche :** ${search.keywords}\n\n` +
+        'Es-tu sûr de vouloir supprimer cette recherche ?\n' +
+        '-# Le salon privé et ses messages seront définitivement supprimés.'
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`watch_confirm_${search._id}`)
+          .setLabel('Confirmer')
+          .setStyle(ButtonStyle.Danger),
 
-      return interaction.reply({
-        components: [confirmation],
-        flags:
-          MessageFlags.Ephemeral |
-          MessageFlags.IsComponentsV2
-      });
-    }
+        new ButtonBuilder()
+          .setCustomId('watch_cancel_delete')
+          .setLabel('Annuler')
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+
+  return interaction.reply({
+    components: [confirmation],
+    flags:
+      MessageFlags.Ephemeral |
+      MessageFlags.IsComponentsV2
+  });
+}
+
 
     await interaction.deferReply({
       flags: MessageFlags.Ephemeral
@@ -7426,6 +7494,18 @@ if (interaction.inGuild()) {
       'Paramètres de la recherche mis à jour.'
     );
   }
+
+  if (
+  interaction.isButton() &&
+  interaction.customId === 'watch_cancel_delete'
+) {
+  return interaction.update({
+    components: [
+      buildSimpleContainer('Suppression annulée.')
+    ],
+    flags: MessageFlags.IsComponentsV2
+  });
+}
 
   // Suppression confirmée
   if (
