@@ -1665,6 +1665,55 @@ const WatchSearch = mongoose.models.WatchSearch ||
   mongoose.model('WatchSearch', watchSearchSchema);
 
 
+const watchNotificationSchema = new mongoose.Schema({
+  searchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'WatchSearch',
+    required: true
+  },
+  listingKey: { type: String, required: true },
+  platform: { type: String, required: true },
+  guildId: { type: String, required: true },
+  channelId: { type: String, required: true },
+  userId: { type: String, required: true },
+
+  listing: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
+
+  initial: { type: Boolean, default: false },
+
+  status: {
+    type: String,
+    enum: ['pending', 'sending', 'sent'],
+    default: 'pending'
+  },
+
+  attempts: { type: Number, default: 0 },
+  nextAttemptAt: { type: Date, default: Date.now },
+  lockedUntil: { type: Date, default: null },
+  messageId: { type: String, default: null },
+  sentAt: { type: Date, default: null },
+  lastError: { type: String, default: '' }
+}, { timestamps: true });
+
+watchNotificationSchema.index(
+  { searchId: 1, listingKey: 1 },
+  { unique: true }
+);
+
+watchNotificationSchema.index({
+  status: 1,
+  nextAttemptAt: 1
+});
+
+const WatchNotification =
+  mongoose.models.WatchNotification ||
+  mongoose.model('WatchNotification', watchNotificationSchema);
+
+
+
 function validateWatchSearchUrl(platform, rawUrl) {
   let url;
 
@@ -1839,7 +1888,10 @@ function buildWatchManagementPanel(guild, search) {
       `**Recherche :** [Ouvrir sur ${platformName}](${search.searchUrl})\n` +
       '**Tri demandé :** Du plus récent au plus ancien';
 
-  return new ContainerBuilder()
+
+
+
+const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -1875,12 +1927,36 @@ function buildWatchManagementPanel(guild, search) {
           )
           .setStyle(ButtonStyle.Secondary),
 
-        new ButtonBuilder()
-          .setCustomId(`watch_delete_${search._id}`)
-          .setLabel('Supprimer')
-          .setStyle(ButtonStyle.Danger)
+        
+new ButtonBuilder()
+  .setCustomId(`watch_delete_${search._id}`)
+  .setLabel('Supprimer')
+  .setStyle(ButtonStyle.Danger),
+
+new ButtonBuilder()
+  .setCustomId(`watch_test_${search._id}`)
+  .setLabel('Tester une annonce')
+  .setStyle(ButtonStyle.Secondary)
+
+  
       )
+      
     );
+
+if (search.platform === 'ebay') {
+  container.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`watch_ebay_api_${search._id}`)
+        .setLabel('Diagnostic API eBay')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('🔍')
+    )
+  );
+}
+
+return container;
+
 }
 
 
@@ -1910,6 +1986,231 @@ async function updateWatchManagementPanel(guild, search) {
  // ============================================================
  // SURVEILLANCE — MOTEUR AUTOMATIQUE
  // ============================================================
+
+
+
+let ebayAccessToken = null;
+let ebayTokenExpiresAt = 0;
+
+async function getEbayAccessToken() {
+  if (
+    ebayAccessToken &&
+    Date.now() < ebayTokenExpiresAt
+  ) {
+    return ebayAccessToken;
+  }
+
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      'Identifiants API eBay manquants dans .env.'
+    );
+  }
+
+  const credentials = Buffer.from(
+    `${clientId}:${clientSecret}`
+  ).toString('base64');
+
+  const response = await fetch(
+    'https://api.ebay.com/identity/v1/oauth2/token',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        scope:
+          'https://api.ebay.com/oauth/api_scope'
+      }),
+      signal: AbortSignal.timeout(15000)
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Authentification eBay : HTTP ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  if (!data.access_token) {
+    throw new Error('Jeton eBay absent.');
+  }
+
+  ebayAccessToken = data.access_token;
+  ebayTokenExpiresAt =
+    Date.now() +
+    Math.max(0, data.expires_in - 60) * 1000;
+
+  return ebayAccessToken;
+}
+
+
+function parseEbaySearchFilters(searchUrl) {
+  const url = new URL(
+    validateWatchSearchUrl('ebay', searchUrl)
+  );
+
+  const params = url.searchParams;
+
+  const supported = new Set([
+    '_nkw', '_udlo', '_udhi', '_sop',
+    '_ipg', '_pgn', 'rt', 'mkcid',
+    'mkrid', 'siteid', 'campid',
+    'customid', 'toolid'
+  ]);
+
+  const unsupported = [...new Set(
+    [...params.keys()].filter(key => !supported.has(key))
+  )];
+
+  if (unsupported.length) {
+    throw new Error(
+      'Filtres eBay non pris en charge : ' +
+      unsupported.join(', ')
+    );
+  }
+
+  const keywords = (params.get('_nkw') || '').trim();
+
+  if (!keywords) {
+    throw new Error(
+      'Mots-clés eBay introuvables dans le lien.'
+    );
+  }
+
+  const readPrice = key => {
+    const raw = params.get(key);
+
+    if (raw == null || raw === '') return null;
+
+    const value = Number(raw.replace(',', '.'));
+
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`Prix eBay invalide : ${key}`);
+    }
+
+    return value;
+  };
+
+  const minPrice = readPrice('_udlo');
+  const maxPrice = readPrice('_udhi');
+
+  if (
+    minPrice !== null &&
+    maxPrice !== null &&
+    minPrice > maxPrice
+  ) {
+    throw new Error(
+      'Le prix minimum dépasse le prix maximum.'
+    );
+  }
+
+  // _sop=10 correspond au tri par annonces récentes.
+  const sort = params.get('_sop');
+
+  if (sort && sort !== '10') {
+    throw new Error(
+      'Trie la recherche eBay par annonces récentes.'
+    );
+  }
+
+  return {
+    keywords,
+    minPrice,
+    maxPrice
+  };
+}
+
+
+
+
+async function fetchEbayListings(searchUrl) {
+  const filters = parseEbaySearchFilters(searchUrl);
+  const token = await getEbayAccessToken();
+
+  const apiUrl = new URL(
+    'https://api.ebay.com/buy/browse/v1/item_summary/search'
+  );
+
+  apiUrl.searchParams.set('q', filters.keywords);
+  apiUrl.searchParams.set('limit', '50');
+  apiUrl.searchParams.set('sort', 'newlyListed');
+
+  const apiFilters = [];
+
+  if (
+    filters.minPrice !== null ||
+    filters.maxPrice !== null
+  ) {
+    const min = filters.minPrice ?? 0;
+    const max = filters.maxPrice ?? '';
+
+    apiFilters.push(`price:[${min}..${max}]`);
+    apiFilters.push('priceCurrency:EUR');
+  }
+
+  if (apiFilters.length) {
+    apiUrl.searchParams.set(
+      'filter',
+      apiFilters.join(',')
+    );
+  }
+
+  const response = await fetch(apiUrl, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_FR',
+      'Accept-Language': 'fr-FR',
+      Accept: 'application/json'
+    },
+    signal: AbortSignal.timeout(15000)
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+
+    throw new Error(
+      `API eBay HTTP ${response.status} : ` +
+      details.slice(0, 300)
+    );
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data.itemSummaries)) {
+    return [];
+  }
+
+  return data.itemSummaries
+    .filter(item =>
+      item.itemId &&
+      item.title &&
+      item.itemWebUrl
+    )
+    .map(item => ({
+      id: String(item.itemId),
+      title: item.title,
+      url: item.itemWebUrl,
+      price:
+        item.price?.currency === 'EUR'
+          ? Number(item.price.value)
+          : null,
+      imageUrl: item.image?.imageUrl || null,
+      location: [
+        item.itemLocation?.city,
+        item.itemLocation?.country
+      ].filter(Boolean).join(', '),
+      publishedAt: item.itemCreationDate || null
+    }));
+}
+
+
 
 const WATCH_CONNECTORS = {
   leboncoin: null,
@@ -1969,6 +2270,38 @@ function normalizeWatchListing(platform, raw) {
   };
 }
 
+
+async function watchQueueListing(search, listing, initial = false) {
+  const listingKey = watchListingKey(
+    search.platform,
+    listing
+  );
+
+  await WatchNotification.updateOne(
+    {
+      searchId: search._id,
+      listingKey
+    },
+    {
+      $setOnInsert: {
+        searchId: search._id,
+        listingKey,
+        platform: search.platform,
+        guildId: search.guildId,
+        channelId: search.channelId,
+        userId: search.userId,
+        listing,
+        initial,
+        status: 'pending',
+        attempts: 0,
+        nextAttemptAt: new Date()
+      }
+    },
+    { upsert: true }
+  );
+}
+
+
 // Le moteur appelle uniquement des connecteurs configurés.
 // Aucun accès non autorisé aux plateformes n'est effectué.
 async function watchScanSearch(search) {
@@ -2003,41 +2336,63 @@ async function watchScanSearch(search) {
       ).values()
     ];
 
-    // Le connecteur doit fournir des annonces triées
-    // de la plus récente à la plus ancienne.
-    const selected = search.initialScanDone
-      ? unique
-      : unique.slice(0, WATCH_CONFIG.initialResultsLimit);
 
-    const seen = new Set(search.seenListingIds || []);
+    const isInitialScan = !search.initialScanDone;
 
-    // Premier passage : enregistrer les annonces présentes.
-    // Les notifications seront ajoutées à l'étape suivante.
-    if (!search.initialScanDone) {
-      for (const item of unique) {
-        seen.add(watchListingKey(search.platform, item));
-      }
+    // Lors du premier passage, on affiche au maximum
+    // 10 annonces, mais on mémorise toutes celles récupérées.
+    const selected = isInitialScan
+      ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
+      : unique;
 
-      search.initialScanDone = true;
-    } else {
-      for (const item of selected) {
-        const listingKey = watchListingKey(
-          search.platform,
-          item
+    for (const listing of selected) {
+      await watchQueueListing(
+        search,
+        listing,
+        isInitialScan
+      );
+    }
+
+    // Les anciennes annonces non affichées au premier
+    // passage sont aussi mémorisées pour éviter
+    // de les notifier au scan suivant.
+    if (isInitialScan) {
+      for (const listing of unique.slice(
+        WATCH_CONFIG.initialResultsLimit
+      )) {
+        await WatchNotification.updateOne(
+          {
+            searchId: search._id,
+            listingKey: watchListingKey(
+              search.platform,
+              listing
+            )
+          },
+          {
+            $setOnInsert: {
+              searchId: search._id,
+              listingKey: watchListingKey(
+                search.platform,
+                listing
+              ),
+              platform: search.platform,
+              guildId: search.guildId,
+              channelId: search.channelId,
+              userId: search.userId,
+              listing,
+              initial: true,
+              status: 'sent',
+              sentAt: new Date()
+            }
+          },
+          { upsert: true }
         );
-
-        if (seen.has(listingKey)) continue;
-
-        // Réservation de l'identifiant pour éviter
-        // une notification en double.
-        seen.add(listingKey);
-
-        // FUTUR : envoyer la fiche Components V2.
       }
     }
 
-    // Limite de stockage pour éviter une croissance illimitée.
-    search.seenListingIds = [...seen].slice(-5000);
+    search.initialScanDone = true;
+    search.seenListingIds = [];
+
     search.lastCheckedAt = new Date();
     search.lastScanError = '';
 
@@ -2103,16 +2458,273 @@ function startWatchScheduler() {
     `${WATCH_CONFIG.checkIntervalMs / 1000}s`
   );
 
-  const run = () => {
-    watchScanAll().catch(error => {
-      console.error('[SURVEILLANCE] Scheduler :', error);
-    });
+
+  const run = async () => {
+    try {
+      await watchScanAll();
+      await watchDeliverPending();
+    } catch (error) {
+      console.error(
+        '[SURVEILLANCE] Scheduler :',
+        error
+      );
+    }
   };
+
 
   run();
 
   setInterval(run, WATCH_CONFIG.checkIntervalMs);
 }
+
+
+let watchDeliveryRunning = false;
+
+async function watchDeliverPending() {
+  if (watchDeliveryRunning) return;
+
+  watchDeliveryRunning = true;
+
+  try {
+    const now = new Date();
+
+    // Réinitialiser les envois interrompus.
+    await WatchNotification.updateMany(
+      {
+        status: 'sending',
+        lockedUntil: { $lte: now }
+      },
+      {
+        $set: {
+          status: 'pending',
+          lockedUntil: null
+        }
+      }
+    );
+
+    for (let i = 0; i < 20; i++) {
+      const notification =
+        await WatchNotification.findOneAndUpdate(
+          {
+            status: 'pending',
+            nextAttemptAt: { $lte: new Date() }
+          },
+          {
+            $set: {
+              status: 'sending',
+              lockedUntil: new Date(
+                Date.now() + 120_000
+              )
+            }
+          },
+          {
+            sort: { createdAt: 1 },
+            new: true
+          }
+        );
+
+      if (!notification) break;
+
+      try {
+        const search = await WatchSearch.findById(
+          notification.searchId
+        );
+
+        if (!search) {
+          await WatchNotification.deleteOne({
+            _id: notification._id
+          });
+          continue;
+        }
+
+        if (search.paused) {
+          await WatchNotification.updateOne(
+            { _id: notification._id },
+            {
+              $set: {
+                status: 'pending',
+                lockedUntil: null,
+                nextAttemptAt: new Date(
+                  Date.now() + 60_000
+                )
+              }
+            }
+          );
+          continue;
+        }
+
+        const guild = await client.guilds.fetch(
+          notification.guildId
+        );
+
+        const channel = await guild.channels.fetch(
+          notification.channelId
+        );
+
+        if (!channel?.isTextBased()) {
+          throw new Error('Salon privé introuvable.');
+        }
+
+        const mention =
+          !notification.initial && search.mentions
+            ? `<@${search.userId}>`
+            : '';
+
+        
+        const components = [];
+
+        if (mention) {
+          components.push(
+            new TextDisplayBuilder().setContent(mention)
+          );
+        }
+
+        components.push(
+          buildWatchListingCard(
+            guild,
+            notification.platform,
+            notification.listing
+          )
+        );
+
+        const message = await channel.send({
+          components,
+          flags: MessageFlags.IsComponentsV2,
+          allowedMentions: mention
+            ? { users: [search.userId] }
+            : { parse: [] }
+        });
+
+
+        await WatchNotification.updateOne(
+          { _id: notification._id },
+          {
+            $set: {
+              status: 'sent',
+              messageId: message.id,
+              sentAt: new Date(),
+              lockedUntil: null,
+              lastError: ''
+            }
+          }
+        );
+
+      } catch (error) {
+        const attempts = notification.attempts + 1;
+
+        const delay = Math.min(
+          60 * 60 * 1000,
+          30_000 * Math.pow(2, Math.min(attempts - 1, 7))
+        );
+
+        await WatchNotification.updateOne(
+          { _id: notification._id },
+          {
+            $set: {
+              status: 'pending',
+              attempts,
+              lockedUntil: null,
+              nextAttemptAt: new Date(
+                Date.now() + delay
+              ),
+              lastError: String(error.message).slice(0, 500)
+            }
+          }
+        );
+
+        console.error(
+          '[SURVEILLANCE] Envoi échoué :',
+          error
+        );
+      }
+    }
+  } catch (error) {
+    console.error(
+      '[SURVEILLANCE] File de notifications :',
+      error
+    );
+  } finally {
+    watchDeliveryRunning = false;
+  }
+}
+
+
+function buildWatchListingCard(guild, platform, listing) {
+  const platformName =
+    WATCH_CONFIG.platforms[platform]?.name || platform;
+
+  const emoji = getWatchEmoji(guild, platform);
+
+  const clean = value =>
+    String(value ?? '')
+      .replace(/@/g, '@\u200b')
+      .replace(/([\\`*_~|>[\]()])/g, '\\$1')
+      .slice(0, 300);
+
+  const price = Number.isFinite(listing.price)
+    ? new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR'
+      }).format(listing.price)
+    : 'Prix non renseigné';
+
+  const title = clean(listing.title);
+  const location = listing.location
+    ? clean(listing.location)
+    : 'Non renseignée';
+
+  const container = new ContainerBuilder()
+    .setAccentColor(EMBED_COLOR)
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${emoji ? emoji + ' ' : ''}${title}\n` +
+        `-# ${platformName} · Nouvelle annonce`
+      )
+    );
+
+  if (listing.imageUrl) {
+    try {
+      const imageUrl = new URL(listing.imageUrl);
+
+      if (
+        imageUrl.protocol === 'https:' &&
+        !imageUrl.username &&
+        !imageUrl.password
+      ) {
+        container.addMediaGalleryComponents(
+          new MediaGalleryBuilder().addItems(
+            new MediaGalleryItemBuilder()
+              .setURL(imageUrl.toString())
+          )
+        );
+      }
+    } catch {
+      // Image invalide : afficher la fiche sans photo.
+    }
+  }
+
+  container
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `**Prix :** ${price}\n` +
+        `**Localisation :** ${location}`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("Voir l'annonce")
+          .setStyle(ButtonStyle.Link)
+          .setURL(listing.url)
+      )
+    );
+
+  return container;
+}
+
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
@@ -7358,6 +7970,259 @@ client.on('interactionCreate', async (interaction) => {
 // SURVEILLANCE — INTERACTIONS DISCORD
 // ============================================================
 
+
+
+// ============================================================
+// SURVEILLANCE — TEST D'UNE ANNONCE FICTIVE
+// ============================================================
+
+
+
+// ============================================================
+// SURVEILLANCE — DIAGNOSTIC API EBAY
+// ============================================================
+
+if (
+  interaction.isButton() &&
+  /^watch_ebay_api_[a-f0-9]{24}$/.test(interaction.customId)
+) {
+  if (
+    !interaction.inGuild() ||
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return interaction.reply({
+      content: 'Diagnostic réservé aux administrateurs.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const searchId = interaction.customId.replace(
+    'watch_ebay_api_', ''
+  );
+
+  const search = await WatchSearch.findOne({
+    _id: searchId,
+    guildId: interaction.guildId,
+    channelId: interaction.channelId,
+    platform: 'ebay'
+  });
+
+  if (!search) {
+    return interaction.reply({
+      content: 'Recherche eBay introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const startedAt = Date.now();
+
+    const filters = parseEbaySearchFilters(
+      search.searchUrl
+    );
+
+    const listings = await fetchEbayListings(
+      search.searchUrl
+    );
+
+    const duration = Date.now() - startedAt;
+
+    // Valider le format avec le normaliseur du moteur.
+    const normalized = listings.map(item =>
+      normalizeWatchListing('ebay', item)
+    );
+
+    const unique = new Map(
+      normalized.map(item => [
+        watchListingKey('ebay', item),
+        item
+      ])
+    );
+
+    const items = [...unique.values()];
+
+    const priceRange = [
+      filters.minPrice ?? 'aucun',
+      filters.maxPrice ?? 'aucun'
+    ].join(' € → ') + ' €';
+
+    const preview = items.slice(0, 3).map(
+      (item, index) => {
+        const price = item.price == null
+          ? 'Non renseigné'
+          : `${item.price} €`;
+
+        return (
+          `**${index + 1}. ${item.title.slice(0, 100)}**\n` +
+          `Prix : ${price}\n` +
+          `Identifiant : \`${item.id}\`\n` +
+          `${item.url}`
+        );
+      }
+    ).join('\n\n');
+
+    const report = [
+      '## 🔍 DIAGNOSTIC API EBAY',
+      '',
+      '**Connexion :** réussie',
+      `**Durée :** ${duration} ms`,
+      `**Annonces récupérées :** ${listings.length}`,
+      `**Annonces uniques :** ${items.length}`,
+      `**Mots-clés :** ${filters.keywords}`,
+      `**Fourchette de prix :** ${priceRange}`,
+      '',
+      '**Aperçu des 3 premières annonces :**',
+      preview || 'Aucune annonce trouvée.',
+      '',
+      'Aucune annonce envoyée dans le salon.'
+    ].join('\n');
+
+    await interaction.editReply({
+      content: report.slice(0, 1900),
+      allowedMentions: { parse: [] }
+    });
+
+  } catch (error) {
+    console.error(
+      '[SURVEILLANCE] Diagnostic eBay :',
+      error
+    );
+
+    await interaction.editReply({
+      content:
+        '❌ **Diagnostic eBay échoué**\n' +
+        `\`\`\`${String(error.message).slice(0, 1400)}\`\`\``
+    });
+
+  }
+}
+
+// ============================================================
+// SURVEILLANCE — TEST D'UNE ANNONCE FICTIVE
+// ============================================================
+
+if (
+  interaction.isButton() &&
+  /^watch_test_[a-f0-9]{24}$/.test(interaction.customId)
+) {
+  if (!interaction.inGuild()) return;
+
+  const searchId = interaction.customId.replace(
+    'watch_test_', ''
+  );
+
+  const search = await WatchSearch.findById(searchId);
+
+  if (
+    !search ||
+    search.guildId !== interaction.guildId ||
+    search.channelId !== interaction.channelId
+  ) {
+    return interaction.reply({
+      content: 'Recherche introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (
+    search.userId !== interaction.user.id &&
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return interaction.reply({
+      content: 'Cette recherche ne t’appartient pas.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (search.paused) {
+    return interaction.reply({
+      content: 'Reprends la surveillance avant de lancer le test.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (!search.searchUrl) {
+    return interaction.reply({
+      content: 'Cette recherche ne possède pas de lien valide.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    // Identifiant fixe : deux clics ne doivent pas
+    // créer deux notifications identiques.
+    const listing = {
+      id: 'watch-test-annonce-v1',
+      title: 'ANNONCE FICTIVE — Test de surveillance',
+      url: search.searchUrl,
+      price: 45,
+      imageUrl: null,
+      location: 'Paris, France',
+      publishedAt: new Date().toISOString()
+    };
+
+    await watchQueueListing(search, listing, true);
+
+    // Déclencher immédiatement le traitement
+    // sans attendre le prochain passage automatique.
+    await watchDeliverPending();
+
+    const notification = await WatchNotification.findOne({
+      searchId: search._id,
+      listingKey: watchListingKey(
+        search.platform,
+        listing
+      )
+    });
+
+    if (notification?.status === 'sent') {
+      return interaction.editReply(
+        '✅ Annonce fictive envoyée dans ce salon.\n' +
+        `Message Discord : ${notification.messageId}\n\n` +
+        'Clique à nouveau pour vérifier que le système ' +
+        'ne crée pas de doublon.'
+      );
+    }
+
+    if (notification?.status === 'sending') {
+      return interaction.editReply(
+        '⏳ Notification en cours de traitement. ' +
+        'Vérifie le salon dans quelques instants.'
+      );
+    }
+
+    return interaction.editReply(
+      '⚠️ Notification enregistrée mais pas encore envoyée.\n' +
+      `Statut : ${notification?.status || 'introuvable'}\n` +
+      `Erreur : ${notification?.lastError || 'aucune'}\n\n` +
+      'Consulte les logs du bot.'
+    );
+
+  } catch (error) {
+    console.error(
+      '[SURVEILLANCE] Erreur du test :',
+      error
+    );
+
+    return interaction.editReply(
+      '❌ Le test a échoué : ' + error.message
+    );
+  }
+}
+
+
 if (interaction.inGuild()) {
 
   // Commande principale
@@ -7849,6 +8714,10 @@ if (action === 'delete') {
     const channel = await interaction.guild.channels
       .fetch(search.channelId)
       .catch(() => null);
+
+      await WatchNotification.deleteMany({
+  searchId: search._id
+});
 
     await WatchSearch.deleteOne({ _id: search._id });
 
