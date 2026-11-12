@@ -1617,8 +1617,8 @@ const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 const BOOKMAKER_OFFERS = {
   
 winamax: {
-  title: 'Winamax — Wina Squad',
-  bonus: '20 € pour le filleul : 10 € de Freebets + 10 € de bonus',
+  title: 'Winamax',
+  bonus: '20 €',
   url: 'https://www.winamax.fr/parrain?code=JEGIYZ',
   referralCode: 'JEGIYZ',
   officialUrl: 'https://www.winamax.fr/',
@@ -1986,17 +1986,19 @@ const BANK_RESEARCH_UPDATES = {
     ]
   },
 
-  'hello-bank': {
-    bonus: null,
-    notice: 'Dernier règlement retrouvé expiré le 09/11/2026 ; montants historiques non garantis pour une nouvelle inscription.',
-    officialUrl: 'https://www.hellobank.fr/fr/parrainage/reglement-parrainage/',
-    steps: [
-      ['Vérifie qu’une campagne est ouverte', 'Le règlement retrouvé prévoyait 80 € pour Hello One ou Hello Prime.'],
-      ['Ouvre ton premier compte depuis l’invitation', 'La demande doit respecter les dates de la campagne et les critères d’éligibilité.'],
-      ['Vérifie les conditions Hello Prime', 'Un bonus de 50 € était lié à 5 paiements ou retraits par mois pendant 12 mois.'],
-      ['Distingue les avantages complémentaires', 'Les offres de mobilité bancaire peuvent être des bons d’achat et non une prime en espèces.']
-    ]
-  },
+  
+'hello-bank': {
+  bonus: '130 €',
+  notice: "Offre de parrainage Hello bank! : 80 € pour une première ouverture de compte éligible. Avec Hello Prime, 50 € supplémentaires sous réserve d'effectuer au moins 5 paiements ou retraits par mois pendant les 12 premiers mois entiers. Un avantage distinct de 200 € en bon d'achat peut être proposé pour la mobilité bancaire Hello Start+, selon les conditions de la campagne. Offre non garantie hors période de validité.",
+  officialUrl: 'https://www.hellobank.fr/fr/parrainage/reglement-parrainage/',
+  steps: [
+    ['Reçois une invitation Hello bank!', 'Utilise le lien ou le QR code transmis par ton parrain.'],
+    ['Ouvre ton premier compte éligible', '80 € de prime après validation définitive de l’ouverture.'],
+    ['Choisis Hello Prime pour obtenir le complément', '50 € supplémentaires après 12 mois de conditions d’utilisation de la carte.'],
+    ['Vérifie les avantages de mobilité bancaire', 'Un bon d’achat de 200 € peut être proposé séparément via Hello Start+, sous conditions.']
+  ]
+},
+
 
   monabanq: {
     bonus: '280 €',
@@ -2034,22 +2036,23 @@ const BANK_RESEARCH_UPDATES = {
     ]
   },
 
-  'distingo-bank': {
-    bonus: null,
-    notice: 'Aucune prime de parrainage active confirmée à ce stade.',
-    officialUrl: 'https://distingobank.fr/livret-epargne/',
-    steps: [
-      ['Vérifie l’existence d’une campagne Distingo', 'Aucun montant actuel n’a pu être confirmé.'],
-      ['Consulte les produits d’épargne proposés', 'Les offres promotionnelles ne constituent pas nécessairement du parrainage.'],
-      ['Vérifie les conditions d’ouverture', 'Identité, résidence et dépôt minimum éventuel.'],
-      ['Consulte les conditions avant toute souscription', 'Ne considère pas une ancienne promotion comme encore disponible.']
-    ]
-  },
+'distingo-bank': {
+  bonus: '80 €',
+  notice: "Parrainage valable jusqu'au 30/11/2026 : demande du filleul avant 16h, code transmis avant 15h. Premier versement reçu au plus tard le 11/12/2026. Le filleul doit maintenir au moins 10 000 € d'encours pendant les 3 mois suivant l'ouverture. Prime de 80 € versée sous 7 jours après cette période, si le livret reste ouvert. Réservé aux nouveaux clients majeurs fiscalement domiciliés en France.",
+  officialUrl: 'https://distingobank.fr/conditions-des-offres/',
+  steps: [
+    ['Obtiens un code de parrainage DISTINGO', 'Utilise le code personnel transmis par un client existant.'],
+    ['Ouvre ton premier Livret DISTINGO', 'Demande en ligne avant le 30 novembre 2026 à 16h.'],
+    ['Maintiens au moins 10 000 € pendant 3 mois', 'Encours cumulé du livret et des éventuels comptes à terme.'],
+    ['Reçois ta prime de 80 €', 'Versement sous 7 jours après les 3 mois, sous réserve du respect des conditions.']
+  ]
+},
 
   nickel: {
     bonus: null,
-    notice: 'Campagne de février-mars 2026 terminée ; aucune nouvelle prime active confirmée.',
-    officialUrl: 'https://nickel.eu/fr/magazine/le-parrainage-nickel-est-de-retour',
+displayStatus: 'suspended',
+notice: "Aucune campagne de parrainage active confirmée au 12/11/2026. La dernière campagne officielle retrouvée s'est terminée le 02/03/2026. Les anciennes primes ne sont plus garanties.",
+officialUrl: 'https://nickel.eu/fr/magazine/le-parrainage-nickel-est-de-retour',
     steps: [
       ['Vérifie si Nickel a relancé le parrainage', 'La campagne à 5 € par parrainage s’est terminée le 02/03/2026.'],
       ['Récupère ton code si une campagne est ouverte', 'Les codes peuvent être accessibles dans l’application ou par e-mail.'],
@@ -2060,8 +2063,8 @@ const BANK_RESEARCH_UPDATES = {
 
   sumeria: {
     bonus: null,
-    notice: 'Aucun montant de parrainage actif confirmé à ce stade.',
-    officialUrl: 'https://sumeria.eu/fondamentaux/conditions-generales/conditions-generales-de-vente-des-offres-sumeria/',
+notice: "Le montant et la nature de la récompense dépendent de la campagne personnelle affichée dans l'application Sumeria. Seul le parrain est normalement récompensé, sauf disposition contraire. Le filleul doit accepter les conditions dans les 7 jours et accomplir les actions demandées avant l'échéance de l'offre.",
+officialUrl: 'https://support.sumeria.eu/l/fr/article/iqxnyfz65u-le-parrainage-dans-l-application-lydia',
     steps: [
       ['Vérifie les offres proposées dans Sumeria', 'Une campagne personnelle peut différer des offres publiques.'],
       ['Consulte les conditions d’éligibilité', 'Vérifie le type de compte et les éventuelles restrictions.'],
@@ -2072,8 +2075,8 @@ const BANK_RESEARCH_UPDATES = {
 
   wise: {
     bonus: null,
-    notice: 'Programme variable selon le compte et la campagne d’invitation.',
-    officialUrl: 'https://wise.com/fr/help/articles/2vsSGLBeYSnZOiCzpEumuw/comment-fonctionnent-les-campagnes-de-parrainage',
+notice: "Le filleul peut bénéficier d'une réduction de frais de transfert ou d'un avantage sur la carte Wise, selon le programme associé au lien d'invitation. La récompense du parrain et les opérations nécessaires varient également. Les conditions exactes sont consultables sur la page personnelle d'invitation.",
+officialUrl: 'https://wise.com/fr/help/articles/77zvWSO4tKdGobXrgHIJAA/comment-fonctionne-le-programme-de-parrainage-standard',
     steps: [
       ['Consulte les conditions de ton invitation Wise', 'Les avantages et récompenses peuvent varier selon l’utilisateur.'],
       ['Ouvre ton compte depuis une invitation éligible', 'Respecte les conditions applicables au nouveau client.'],
@@ -2084,8 +2087,8 @@ const BANK_RESEARCH_UPDATES = {
 
   'la-banque-postale': {
     bonus: '70 €',
-    notice: 'Offre anniversaire « 20 ans » : 50 € + 20 € pour le filleul et le parrain, sous conditions.',
-    officialUrl: 'https://parrainage.labanquepostale.fr/',
+    notice: "Offre de parrainage « 20 ans de La Banque Postale » : jusqu'à 70 € pour le filleul, répartis en deux avantages de 50 € et 20 €, sous réserve des conditions propres à chacun. Ouverture d'une Formule de Compte éligible et utilisation du parcours de parrainage officiel. Offre limitée à 5 filleuls par parrain et par an.",
+officialUrl: 'https://parrainage.labanquepostale.fr/',
     steps: [
       ['Vérifie ton éligibilité à l’offre anniversaire', 'Le parrain doit participer au programme de parrainage.'],
       ['Reçois une invitation d’un client La Banque Postale', 'Le parrain complète le formulaire dédié.'],
@@ -2122,9 +2125,10 @@ for (const [slug, details] of Object.entries(BANK_RESEARCH_UPDATES)) {
 
 const INVESTMENT_RESEARCH_UPDATES = {
   'trade-republic': {
-    bonus: null,
-    notice: 'Prime personnalisée selon l’invitation. Les liens publiés publiquement ne sont pas pris en compte.',
-    officialUrl: 'https://support.traderepublic.com/fr-fr/1034-How-can-I-participate-in-the-Refer_a_Friend-program',
+    bonus: '70 € en actions',
+notice: "Le montant de la récompense et les conditions de participation sont personnalisés dans l'application Trade Republic. Le filleul doit utiliser le lien personnel, enregistrer son numéro de téléphone puis ouvrir son compte avec ce même numéro. Les opérations et délais nécessaires dépendent de l'offre affichée. Les liens diffusés publiquement peuvent être exclus du programme.",
+officialUrl: 'https://support.traderepublic.com/fr-lu/463-Comment-puis-je-participer-au-programme-Parrainer-un-ami',
+
     steps: [
       [
         'Reçois une invitation personnelle',
@@ -2146,10 +2150,11 @@ const INVESTMENT_RESEARCH_UPDATES = {
   },
 
   trading212: {
-    bonus: null,
-    notice: 'Dernière campagne officielle trouvée : actions de 8 à 100 €, terminée le 03/11/2026.',
-    officialUrl: 'https://helpcentre.trading212.com/hc/en-us/articles/360007291258-Invite-Your-Friends-Get-Free-Fractional-Shares',
-    steps: [
+    
+bonus: null,
+notice: "La dernière campagne de parrainage officielle retrouvée s'est terminée le 03/11/2026. Elle proposait des fractions d'actions d'une valeur comprise entre 8 € et 100 €, sous conditions de vérification du compte et de dépôt. Aucune nouvelle campagne n'est confirmée à cette date.",
+officialUrl: 'https://helpcentre.trading212.com/hc/en-us/articles/360007291258-Invite-Your-Friends-Get-Free-Fractional-Shares',
+steps: [
       [
         'Vérifie si une nouvelle campagne est ouverte',
         'La dernière campagne identifiée allait du 21/09 au 03/11/2026.'
@@ -2170,9 +2175,11 @@ const INVESTMENT_RESEARCH_UPDATES = {
   },
 
   etoro: {
-    bonus: null,
-    notice: 'Prime de 50 à 500 $ réservée au parrain, selon son solde éligible. Le filleul ne reçoit pas automatiquement cette prime.',
-    officialUrl: 'https://www.etoro.com/wp-content/uploads/2025/06/eToro-EU-RAF-TCs-May-1-2026.pdf',
+    
+bonus: null,
+notice: "Programme de parrainage eToro Europe : récompense de 50 à 500 USD réservée au parrain selon son solde éligible. Le filleul doit être un nouveau client, vérifier son compte, déposer au moins 100 USD et ouvrir des positions d'au moins 100 USD au total dans les 90 jours. Aucune prime directe pour le filleul n'est prévue dans ce règlement. Investir comporte un risque de perte en capital.",
+officialUrl: 'https://www.etoro.com/customer-service/terms-conditions/',
+
     steps: [
       [
         'Vérifie l’éligibilité du programme eToro',
@@ -2194,9 +2201,11 @@ const INVESTMENT_RESEARCH_UPDATES = {
   },
 
   shares: {
-    bonus: null,
-    notice: 'Programme français confirmé ; montant de la récompense à vérifier dans les conditions applicables.',
-    officialUrl: 'https://www.shares.io/fr/terms/referral-free-trades',
+    
+bonus: '5 ordres offerts',
+notice: "Le filleul bénéficie de 5 ordres sans frais de transaction, sous réserve des exclusions prévues par Shares. Il doit être majeur, résider en France, ouvrir son premier compte via une invitation et déposer au moins 1 € dans les 7 jours. Avantage non convertible en espèces. Le règlement interdit la publication publique des liens et codes de parrainage.",
+officialUrl: 'https://www.shares.io/fr/terms/referral-free-trades',
+
     steps: [
       [
         'Vérifie ton éligibilité au parrainage Shares',
@@ -2218,9 +2227,11 @@ const INVESTMENT_RESEARCH_UPDATES = {
   },
 
   yomoni: {
-    bonus: '500 €',
-    notice: 'Campagne du 08/09 au 08/12/2026. Prime de 100 à 500 € pour chacun, dès 5 000 € investis ; risque de perte en capital.',
-    officialUrl: 'https://www.yomoni.fr/legal/parrainage',
+    
+bonus: '500 €',
+notice: "Offre du 08/09/2026 au 08/12/2026, réservée aux nouveaux clients éligibles. Prime de 100 € dès 5 000 € investis, 200 € dès 25 000 €, 300 € dès 50 000 € et 500 € dès 100 000 €. Première souscription ou transfert éligible en gestion sous mandat. Prime versée après 12 mois si les conditions de conservation sont respectées. Investissement comportant un risque de perte en capital. La publication publique du code peut exclure la prime du parrain.",
+officialUrl: 'https://www.yomoni.fr/legal/parrainage',
+
     steps: [
       [
         'Ouvre ton premier contrat Yomoni éligible',
@@ -2242,9 +2253,11 @@ const INVESTMENT_RESEARCH_UPDATES = {
   },
 
   ramify: {
-    bonus: null,
-    notice: 'Dernier règlement trouvé expiré le 31/10/2026. Prime historique de 50 à 500 € pour chacun ; nouvelle campagne à confirmer.',
-    officialUrl: 'https://www.ramify.fr/parrainage',
+    
+bonus: null,
+notice: "Le programme de parrainage Ramify affichait jusqu'à 500 € pour le parrain et le filleul, selon le montant investi. Toutefois, le règlement publié indique une fin de campagne au 31/10/2026. Les conditions d'une éventuelle nouvelle campagne doivent être confirmées avant activation. Les investissements comportent un risque de perte en capital.",
+officialUrl: 'https://www.ramify.fr/parrainage',
+
     steps: [
       [
         'Vérifie l’existence d’une campagne active',
@@ -2267,8 +2280,9 @@ const INVESTMENT_RESEARCH_UPDATES = {
 
   finary: {
     bonus: '1 mois Premium',
-    notice: 'Le parrain et le filleul obtiennent chacun un mois de Premium après un parrainage validé.',
-    officialUrl: 'https://help.finary.com/fr/articles/8907933-le-programme-de-parrainage',
+notice: "Le programme officiel prévoit un mois de Finary Premium offert au parrain pour chaque filleul inscrit avec son lien ou code et ayant synchronisé deux établissements financiers distincts. Aucun avantage systématique pour le filleul n'est confirmé par ce règlement. Les mois offerts sont soumis aux conditions d'abonnement et de facturation.",
+officialUrl: 'https://help.finary.com/fr/articles/8907933-le-programme-de-parrainage',
+
     steps: [
       [
         'Inscris-toi avec un lien ou code Finary',
@@ -2318,8 +2332,8 @@ if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
 const CRYPTO_RESEARCH_UPDATES = {
   coinbase: {
     bonus: null,
-    notice: 'Prime variable selon l’offre personnelle. Parrain et filleul peuvent recevoir une récompense. Risque de perte en capital.',
-    officialUrl: 'https://help.coinbase.com/fr/coinbase/getting-started/getting-started-with-coinbase/new-customer-incentive',
+    notice: "Le montant du bonus dépend du pays et de l'offre personnelle de parrainage. Le filleul doit créer son premier compte Coinbase avec le lien d'invitation et effectuer un achat de cryptomonnaie éligible dans les 90 jours suivant la vérification de son identité. Les achats Coinbase Advanced et Coinbase Prime sont exclus. Récompense soumise aux conditions et à l'éligibilité de chaque participant.",
+officialUrl: 'https://help.coinbase.com/fr/coinbase/getting-started/getting-started-with-coinbase/new-customer-incentive/simple-referral',
     steps: [
       [
         'Inscris-toi via un lien de parrainage Coinbase',
@@ -2341,9 +2355,11 @@ const CRYPTO_RESEARCH_UPDATES = {
   },
 
   swissborg: {
-    bonus: '50 € en BTC',
-    notice: 'Programme classique : jusqu’à 50 € en BTC chacun. Campagne supplémentaire du 01/11 au 31/12/2026, sous objectif collectif.',
-    officialUrl: 'https://help.swissborg.com/hc/fr-fr/articles/360010649897-Programme-de-parrainage-SwissBorg',
+    
+bonus: '50 €',
+notice: "Jusqu'à 50 € en Bitcoin pour le parrain et le filleul. Le filleul doit être un nouvel utilisateur SwissBorg, créer son compte via l'invitation, confirmer le code de parrainage et terminer le défi affiché dans l'application. Le défi varie selon le pays et la récompense proposée. Une récompense fixe ou un coupon bonus peut être disponible. Les 50 € constituent un plafond, pas un gain garanti.",
+officialUrl: 'https://help.swissborg.com/hc/fr-fr/articles/360010649897-Programme-de-parrainage-SwissBorg',
+
     steps: [
       [
         'Inscris-toi sur SwissBorg avec un code parrain',
@@ -2366,8 +2382,8 @@ const CRYPTO_RESEARCH_UPDATES = {
 
   bitvavo: {
     bonus: null,
-    notice: 'Récompense variable selon la campagne du Campaign Hub. Dépôt en euros et volume de trading potentiellement requis.',
-    officialUrl: 'https://support.bitvavo.com/hc/fr/articles/4405239714577-Comment-fonctionne-le-Programme-de-parrainage-d-amis-Bitvavo',
+    notice: "Le bonus du filleul dépend de la campagne disponible dans le Campaign Hub Bitvavo. Il peut être versé en euros ou en cryptomonnaies. Le filleul doit créer son premier compte avec le code de parrainage, vérifier son identité et son compte bancaire, puis effectuer les dépôts ou transactions demandés dans les délais. Le code ne peut pas être ajouté après l'inscription. Le bonus est normalement crédité sous 48 heures après validation des conditions.",
+officialUrl: 'https://support.bitvavo.com/hc/fr/articles/4405239714577-Comment-fonctionne-le-Programme-de-parrainage-d-amis-Bitvavo',
     steps: [
       [
         'Vérifie la campagne disponible sur Bitvavo',
@@ -2389,9 +2405,11 @@ const CRYPTO_RESEARCH_UPDATES = {
   },
 
   kraken: {
-    bonus: null,
-    notice: 'Prime de parrainage variable dans l’application Kraken. France éligible au programme ; conditions personnalisées.',
-    officialUrl: 'https://support.kraken.com/fr/articles/kraken-app-referral-program',
+    
+bonus: '20 €',
+notice: "Programme de parrainage Kraken accessible en France. Le filleul doit créer son premier compte via l'application Kraken avec le lien ou le code d'invitation, vérifier son identité, déposer des fonds éligibles et effectuer le volume de trading demandé dans les 30 jours. Le montant de référence est de 20 € pour une offre en euros, mais les conditions et la récompense exactes sont celles affichées dans l'application. Versement généralement sous 21 jours après validation.",
+officialUrl: 'https://support.kraken.com/fr/articles/kraken-app-referral-program',
+
     steps: [
       [
         'Récupère une invitation depuis l’application Kraken',
@@ -2413,9 +2431,11 @@ const CRYPTO_RESEARCH_UPDATES = {
   },
 
   bitpanda: {
-    bonus: '100 €',
-    notice: 'Jusqu’à 100 € chacun, en cinq paliers cumulables. Achats de cryptos ou indices crypto éligibles uniquement.',
-    officialUrl: 'https://support.bitpanda.com/hc/fr/articles/115002576209-Programme-Bitpanda-Tell-a-Friend',
+    
+bonus: '100 €',
+notice: "Jusqu'à 100 € pour le filleul et 100 € pour le parrain, selon cinq paliers cumulables d'achats de cryptomonnaies ou de Bitpanda Crypto Indices. Premier bonus de 5 € dès 500 € d'achats éligibles, puis 15 € au total dès 1 000 €, 30 € dès 2 000 €, 60 € dès 5 000 € et 100 € dès 10 000 €. Les ventes, swaps et autres actifs ne comptent pas. Récompenses sous forme de bons d'achat crédités sur le portefeuille fiat. Risque de perte en capital.",
+officialUrl: 'https://www.bitpanda.com/fr/tell-a-friend',
+
     steps: [
       [
         'Inscris-toi avec un lien Bitpanda',
@@ -2437,9 +2457,11 @@ const CRYPTO_RESEARCH_UPDATES = {
   },
 
   'crypto-com': {
-    bonus: null,
-    notice: 'Parrainage Crypto.com App distinct du bonus de bienvenue et du programme Crypto.com Exchange.',
-    officialUrl: 'https://help.crypto.com/fr/collections/1802537-programme-de-parrainage',
+    
+bonus: '65 $',
+notice: "Programme de parrainage de l'application Crypto.com pour les utilisateurs éligibles en France : jusqu'à 65 USD chacun pour le parrain et le filleul. Le filleul doit s'inscrire avec le code ou le lien, vérifier son identité et atteindre les paliers de volume de transactions dans les 30 jours suivant la validation KYC. Les récompenses dépendent du volume atteint. Le programme de bienvenue sans parrainage est distinct et non cumulable. Les cryptomonnaies comportent un risque de perte en capital.",
+officialUrl: 'https://help.crypto.com/fr/collections/1802537-programme-de-parrainage',
+
     steps: [
       [
         'Choisis le programme Crypto.com adapté',
@@ -2485,9 +2507,10 @@ if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
 
 const CASHBACK_RESEARCH_UPDATES = {
   igraal: {
-    bonus: null,
-    notice: 'Programme de cashback disponible ; montant actuel du parrainage non confirmé.',
-    officialUrl: 'https://fr.igraal.com/',
+    
+bonus: '5 €',
+notice: "Un bonus de bienvenue de 5 € pour le filleul est annoncé dans les relevés récents, sous conditions d'achat éligible au cashback, mais son montant doit être confirmé sur la page d'invitation. Le parrain reçoit 3 € lorsque son filleul cumule au moins 1 € de cashback validé dans les 365 jours, ainsi que 10 % de ses cashbacks éligibles sur cette période.",
+officialUrl: 'https://intercom-help.eu/fr-igraal/fr/articles/471530-quels-sont-les-avantages-lies-au-parrainage',
     draft: true,
     steps: [
       ['Vérifie le bonus de parrainage iGraal', 'Consulte les conditions affichées dans ton espace personnel avant de t’inscrire.'],
@@ -2499,8 +2522,9 @@ const CASHBACK_RESEARCH_UPDATES = {
 
   widilo: {
     bonus: '3 €',
-    notice: '3 € pour le filleul et 3 € pour le parrain après validation du premier cashback. Parrainage privé uniquement.',
-    officialUrl: 'https://www.widilo.fr/faq/le-parrainage/comment-fonctionne-le-parrainage',
+notice: "Le guide officiel Widilo annonce 3 € de bienvenue pour le filleul, crédités après validation de son premier cashback, et 3 € pour le parrain. Des offres plus récentes peuvent proposer un montant différent : vérifier la prime affichée lors de l'inscription. Le filleul doit utiliser le lien dès la création du compte. Le programme de parrainage est réservé à un cadre privé entre connaissances, amis ou proches.",
+officialUrl: 'https://www.widilo.fr/faq/le-parrainage/comment-fonctionne-le-parrainage',
+
     steps: [
       ['Inscris-toi avec le lien Widilo d’un proche', 'L’inscription doit impérativement être réalisée depuis le lien de parrainage.'],
       ['Active une offre de cashback', 'Choisis un marchand partenaire et respecte ses conditions.'],
@@ -2510,9 +2534,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   ebuyclub: {
-    bonus: '3 €',
-    notice: 'Bonus de bienvenue indiqué à 3 €. Le parrain reçoit 3 € puis 10 % des cashbacks validés du filleul.',
-    officialUrl: 'https://www.ebuyclub.com/parrainage',
+    
+bonus: '3 €',
+notice: "Le filleul bénéficie de 3 € de bonus d'inscription, selon les conditions de l'offre. Le parrain reçoit 3 € après validation d'un premier cashback éligible du filleul : achat en ligne d'au moins 10 € HT, ou achat en magasin ou bon d'achat d'au moins 40 €. Le parrain perçoit également 10 % des gains cashback validés du filleul à vie.",
+officialUrl: 'https://www.ebuyclub.com/parrainage',
+
     steps: [
       ['Inscris-toi sur eBuyClub via une invitation', 'Le parrainage doit être correctement associé à ton nouveau compte.'],
       ['Active un cashback ou achète un bon éligible', 'Les achats en ligne et certains bons d’achat ou achats en magasin sont admissibles.'],
@@ -2522,9 +2548,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   joko: {
-    bonus: '5 €',
-    notice: '5 € pour le filleul après 5 € de cashback collectés. Le parrain reçoit 10 € puis 10 % pendant un an.',
-    officialUrl: 'https://support.joko.com/fr/articles/200502-comment-fonctionne-le-parrainage',
+    
+bonus: '5 €',
+notice: "Le filleul reçoit 5 € de bonus après avoir collecté 5 € de cashback éligible. Le bonus doit être collecté dans l'application. Le parrain reçoit 10 € à la validation du parrainage, puis 10 % des cashbacks éligibles du filleul pendant un an. Le filleul doit saisir le code du parrain pendant son inscription : ouvrir simplement le lien ne suffit pas. Limite de 20 parrainages par parrain hors programme Ambassadeur.",
+officialUrl: 'https://support.joko.com/fr/articles/200502-comment-fonctionne-le-parrainage',
+
     steps: [
       ['Installe Joko et saisis ton code parrain', 'Le code doit être renseigné pendant l’inscription ; le simple téléchargement ne suffit pas.'],
       ['Active les offres de cashback Joko', 'Utilise les offres en ligne, les offres liées à une carte ou les bons d’achat éligibles.'],
@@ -2534,9 +2562,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   rakuten: {
-    bonus: '7 € en bon d’achat',
-    notice: 'Bon de 7 € pour chacun après le premier achat du filleul ; minimum de commande de 20 € pour le filleul.',
-    officialUrl: 'https://fr.shopping.rakuten.com/help/r_sponsorship/popup/true',
+    
+bonus: '7 € de réduction',
+notice: "Le filleul reçoit un bon de réduction de 7 € après inscription et validation de son premier achat. Le bon est utilisable sur une commande d'au moins 20 € hors frais de port, pendant un an, et n'est pas cumulable avec d'autres promotions Rakuten. Le parrain reçoit également un bon de 7 €, utilisable dès 10 € d'achat. Réservé aux nouveaux membres éligibles, distincts du parrain et de son foyer.",
+officialUrl: 'https://fr.shopping.rakuten.com/help/r_sponsorship/popup/true',
+
     steps: [
       ['Reçois une invitation Rakuten', 'Le filleul doit être nouveau membre et distinct du foyer du parrain.'],
       ['Inscris-toi depuis le lien de parrainage', 'Le suivi du parrainage doit être conservé, notamment grâce aux cookies.'],
@@ -2546,9 +2576,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   poulpeo: {
-    bonus: '5 €',
-    notice: '5 € offerts au filleul. Le parrain reçoit 3 € et 10 % des cashbacks validés à vie, ou 15 % avec Poulpeo+.',
-    officialUrl: 'https://www.poulpeo.com/conditions-parrainage-specifiques.html',
+    
+bonus: '5 €',
+notice: "Le filleul reçoit 5 € de bienvenue lors de son inscription avec le code de parrainage. Le parrain reçoit 3 € après validation des premiers cashbacks du filleul, sur une commande totale de 20 € TTC ou un cashback issu d'une boutique de services. Il reçoit ensuite 10 % des gains cashback du filleul à vie, ou 15 % s'il est membre Poulpeo+.",
+officialUrl: 'https://support.poulpeo.com/hc/fr/articles/4402777024401-Qu-est-ce-que-j-y-gagne-Quels-sont-les-avantages',
+
     steps: [
       ['Inscris-toi avec un code parrain Poulpeo', 'Vérifie que le code est correctement enregistré pendant ton inscription.'],
       ['Active ton premier cashback', 'Passe par Poulpeo pour effectuer une commande chez un marchand partenaire.'],
@@ -2558,9 +2590,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   shopmium: {
-    bonus: '2 €',
-    notice: '2 € chacun après la première demande de remboursement validée. Bonus ajouté à un remboursement, non versé seul.',
-    officialUrl: 'https://www.shopmium.com/fr/referral',
+    
+bonus: '2 €',
+notice: "2 € de bonus Shopmium pour le filleul et le parrain après validation de la première demande de remboursement du filleul. Le filleul doit être un nouveau membre, majeur et résidant en France métropolitaine, puis saisir le code de parrainage lors de son inscription dans l'application mobile. Le bonus est crédité dans une cagnotte utilisable sur les remboursements Shopmium, et non versé directement en espèces. Le parrain et le filleul doivent utiliser des comptes bancaires ou PayPal distincts.",
+officialUrl: 'https://support.shopmium.com/hc/fr-fr/articles/31923988168595-Comment-parrainer-un-ami',
+
     steps: [
       ['Télécharge l’application Shopmium', 'Le code de parrainage doit être saisi dans l’application mobile lors de l’inscription.'],
       ['Renseigne le code de ton parrain', 'Le parrain et le filleul ne doivent pas partager le même compte bancaire ou PayPal.'],
@@ -2570,9 +2604,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   naomi: {
-    bonus: '3 €',
-    notice: '3 € pour le filleul et 2 € pour le parrain après l’achat d’un bon d’achat éligible.',
-    officialUrl: 'https://naomihelp.zendesk.com/hc/fr/articles/32312240225170-Comment-fonctionne-le-programme-de-parrainage',
+    
+bonus: '3 €',
+notice: "3 € offerts au filleul et 2 € au parrain après validation du parrainage. Le filleul doit s'inscrire avec le code personnel de son parrain, puis effectuer un premier achat éligible chez un partenaire Naomi. Le parrainage est validé lorsque le premier gain partenaire apparaît dans la cagnotte du filleul. Les récompenses sont créditées dans l'application Naomi.",
+officialUrl: 'https://naomi.fr/comment-booster-ma-cagnotte/',
+
     steps: [
       ['Télécharge Naomi et crée ton compte', 'Renseigne le code de parrainage d’un proche lors de l’inscription.'],
       ['Accède aux bons d’achat disponibles', 'Choisis une enseigne partenaire proposant des bons d’achat.'],
@@ -2582,9 +2618,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   'capital-koala': {
-    bonus: null,
-    notice: 'Cashback destiné notamment à l’épargne d’un bénéficiaire. Montant de parrainage non confirmé.',
-    officialUrl: 'https://www.capitalkoala.com/faq',
+    
+bonus: '5 €',
+notice: "5 € de bonus pour le filleul lors de son inscription via un lien de parrainage éligible. Le filleul doit créer son compte Capital Koala et enregistrer l'IBAN du livret d'épargne de son enfant dans la rubrique des bénéficiaires pour valider le parrainage. L'adhésion à une KOAlition familiale ne donne pas droit au bonus. Les sommes de parrainage ne sont pas directement encaissables en espèces : elles participent au dispositif d'épargne destiné aux bénéficiaires.",
+officialUrl: 'https://new.capitalkoala.com/faq',
+
     draft: true,
     steps: [
       ['Inscris-toi sur Capital Koala', 'Crée ton compte et désigne un bénéficiaire pour l’épargne.'],
@@ -2595,9 +2633,11 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   topcashback: {
-    bonus: '5 €',
-    notice: 'Campagne du 03/10 au 31/12/2026 : 5 € pour le filleul et 15 € pour le parrain après 10 € de cashback éligible.',
-    officialUrl: 'https://www.topcashback.fr/parrainages/conditions/',
+    
+bonus: '10 €',
+notice: "Offre temporaire du 11/11/2026 au 12/11/2026 à 23h59 : 10 € de bonus pour le filleul qui crée son premier compte TopCashback via un lien de parrainage valide. Il doit cumuler au moins 10 € de cashback éligible dans les 90 jours suivant l'inscription. Le bonus est versé après approbation des transactions concernées. Le parrain reçoit 35 € sous les mêmes conditions de validation. Certaines enseignes et offres sont exclues du calcul du seuil.",
+officialUrl: 'https://www.topcashback.fr/parrainages/conditions/',
+
     steps: [
       ['Inscris-toi via un lien TopCashback', 'Nouveau membre inscrit entre le 03/10 et le 31/12/2026.'],
       ['Active des offres chez les marchands éligibles', 'Vérifie les exclusions du programme et les conditions de chaque enseigne.'],
@@ -2607,16 +2647,32 @@ const CASHBACK_RESEARCH_UPDATES = {
   },
 
   wanteeed: {
-    bonus: null,
-    notice: 'Service de codes promotionnels et de cashback ; aucune prime de parrainage active confirmée.',
-    officialUrl: 'https://wanteeed.com/fr/info/mentions-legales',
+    
+bonus: '3 €',
+notice: "3 € offerts au filleul dès son inscription via un lien de parrainage Wanteeed, crédités dans sa cagnotte sans achat préalable. Le parrain reçoit également 3 €, confirmés après validation du premier cashback du filleul. Retrait possible à partir de 20 € de cashback confirmé, par virement bancaire. Un seul compte autorisé par personne et auto-parrainage interdit.",
+officialUrl: 'https://wanteeed.com/fr/info/mentions-legales',
+
     draft: true,
-    steps: [
-      ['Crée ton compte Wanteeed', 'L’inscription est nécessaire pour utiliser certaines fonctionnalités de cashback.'],
-      ['Installe l’extension ou utilise le service', 'Recherche des codes promotionnels et des offres chez les marchands partenaires.'],
-      ['Active une offre avant ton achat', 'Vérifie les conditions de cashback et les éventuelles exclusions.'],
-      ['Consulte le suivi de tes gains', 'Aucun montant de prime de parrainage n’est confirmé dans les conditions consultées.']
-    ]
+    
+steps: [
+  [
+    'Inscris-toi avec un lien de parrainage Wanteeed',
+    'Crée ton compte depuis le lien personnel du parrain.'
+  ],
+  [
+    'Reçois 3 € dans ta cagnotte',
+    'Le bonus de bienvenue est crédité dès ton inscription, sans achat.'
+  ],
+  [
+    'Active le cashback lors de tes achats',
+    'Installe l’extension ou utilise Wanteeed chez les marchands partenaires.'
+  ],
+  [
+    'Retire tes gains à partir de 20 €',
+    'Demande un virement bancaire après confirmation des cashbacks éligibles.'
+  ]
+],
+
   }
 };
 
@@ -2848,7 +2904,7 @@ Object.assign(REFERRAL_OFFERS['┃revolut'], {
 
 
 Object.assign(REFERRAL_OFFERS['┃trade-republic'], {
-  bonus: 'Bonus de bienvenue',
+  bonus: '10 € en actions',
   verifiedAt: '10/11/2026',
   draft: false,
   notice: 'Le filleul reçoit un bonus de bienvenue dont le montant est précisé dans son invitation. Le parrain reçoit 10 € en actions lorsque les conditions sont remplies.',
@@ -2874,7 +2930,7 @@ Object.assign(REFERRAL_OFFERS['┃trade-republic'], {
 
 
 Object.assign(REFERRAL_OFFERS['┃finary'], {
-  bonus: '1 mois de Finary Premium offert',
+  bonus: '1 mois de Finary Premium',
   referralCode: 'MCK3YT',
   verifiedAt: '10/11/2026',
   draft: false,
@@ -3042,9 +3098,9 @@ const PUBLIC_AID_UPDATES = {
 
   // 01 — PASS CULTURE
   '┃pass-culture': {
-    bonus: '50 € à 17 ans · 150 € à 18 ans',
+    bonus: '200 €',
     officialUrl: 'https://pass.culture.fr/',
-    notice: "Dispositif public gratuit. Offres gratuites dès 15 ans. Crédit de 50 € à 17 ans et de 150 € à 18 ans, avec 50 € supplémentaires sous conditions. Activation du crédit avant 19 ans et utilisation possible jusqu'à 21 ans. Conditions de résidence applicables.",
+    notice: "Dispositif public gratuit, sans parrainage. Crédit de 50 € à 17 ans et de 150 € à 18 ans. Un bonus de 50 € peut porter le crédit de 18 ans à 200 €, sous conditions de ressources ou de handicap. Les montants ne sont pas garantis à tous les bénéficiaires. Conditions d'âge, de résidence et d'activation applicables.",
     steps: [
       [
         "Vérifie ton âge et ta résidence",
@@ -3067,7 +3123,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 02 — PRIME D'ACTIVITÉ
   '┃prime-activité': {
-    bonus: 'Complément de revenus mensuel',
+    bonus: 'Complément de revenus variable',
     officialUrl: 'https://www.caf.fr/',
     notice: "Aide versée par la CAF ou la MSA aux travailleurs éligibles de 18 ans ou plus. Le montant dépend des revenus, de la composition du foyer et de la situation personnelle. Les étudiants et apprentis sont soumis à des conditions spécifiques. Déclaration trimestrielle des ressources nécessaire.",
     steps: [
@@ -3092,9 +3148,9 @@ const PUBLIC_AID_UPDATES = {
 
   // 03 — CONTRAT D'ENGAGEMENT JEUNE
   '┃contrat-engagement-jeune': {
-    bonus: "Jusqu'à 566,17 € / mois",
+    bonus: '566,17 €/mois',
     officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F32700',
-    notice: "Le CEJ s'adresse principalement aux jeunes de 16 à 25 ans qui rencontrent des difficultés d'accès à l'emploi durable et ne sont ni étudiants ni en formation. Accompagnement de 15 à 20 heures par semaine. Allocation éventuelle selon l'âge, les ressources et la situation fiscale. Montant maximal indiqué pour certains majeurs éligibles.",
+    notice: "Allocation du Contrat d'engagement jeune (CEJ) : jusqu'à 566,17 € par mois pour un majeur fiscalement autonome ou rattaché à un foyer non imposable. Le montant dépend de l'âge, des ressources et de la situation fiscale. Le dispositif s'adresse aux jeunes de 16 à 25 ans, ou jusqu'à 29 ans en situation de handicap, sous conditions. Un engagement dans un parcours d'accompagnement est obligatoire.",
     steps: [
       [
         "Vérifie les conditions",
@@ -3142,7 +3198,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 05 — AIDES AU LOGEMENT
   '┃aides-logement': {
-    bonus: 'Réduction du loyer selon les ressources',
+    bonus: 'Réduction du loyer variable',
     officialUrl: 'https://www.caf.fr/',
     notice: "Les aides personnelles au logement comprennent l'APL, l'ALF et l'ALS. Elles ne sont pas cumulables entre elles. Leur attribution et leur montant dépendent notamment du logement, des ressources et de la composition du foyer. Certaines conditions particulières s'appliquent aux étudiants.",
     steps: [
@@ -3167,9 +3223,9 @@ const PUBLIC_AID_UPDATES = {
 
   // 06 — AIDES ÉTUDIANTES
   '┃aides-étudiantes': {
-    bonus: 'Bourses et aides selon le profil',
-    officialUrl: 'https://www.etudiant.gouv.fr/',
-    notice: "Les étudiants peuvent accéder, selon leur situation, aux bourses sur critères sociaux, aides spécifiques, logements CROUS et autres dispositifs. Les conditions, montants et calendriers varient selon l'aide. Le Dossier social étudiant est notamment utilisé pour demander une bourse et un logement CROUS.",
+    bonus: '7 602 €/an',
+    officialUrl: 'https://www.etudiant.gouv.fr/', 
+notice: "Bourse CROUS sur critères sociaux : jusqu'à 6 335 € pour l'année universitaire 2026-2027 sur 10 mois, ou 7 602 € avec maintien pendant les grandes vacances pour les étudiants éligibles à l'échelon 7. Le montant dépend des ressources familiales, de la situation et de l'échelon attribué. Les autres aides étudiantes ont leurs propres conditions.",
     steps: [
       [
         "Identifie les aides disponibles",
@@ -3192,7 +3248,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 07 — MOBILI-JEUNE
   '┃aide-mobili-jeune': {
-    bonus: "Jusqu'à 100 € / mois",
+    bonus: '100 €/mois',
     officialUrl: 'https://www.actionlogement.fr/l-aide-mobili-jeune',
     notice: "Aide Action Logement destinée principalement aux alternants de moins de 30 ans du secteur privé non agricole, sous conditions de salaire et de logement. Montant de 10 à 100 € par mois, plafonné à 1 100 € par année de formation sur 11 mensualités. Calcul après déduction des aides au logement.",
     steps: [
@@ -3217,9 +3273,9 @@ const PUBLIC_AID_UPDATES = {
 
   // 08 — FONDS D'AIDE AUX JEUNES
   '┃fonds-aide-jeunes': {
-    bonus: 'Aide financière locale variable',
+    bonus: '1 000 €',
     officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F13609',
-    notice: "Le Fonds d'aide aux jeunes (FAJ) est un dispositif départemental destiné aux jeunes de 18 à 25 ans rencontrant des difficultés d'insertion sociale ou professionnelle. Il peut contribuer à certaines dépenses essentielles selon les règles locales. Les montants et critères varient selon le département.",
+    notice: "Le Fonds d'aide aux jeunes (FAJ) accompagne les jeunes de 18 à 25 ans en difficulté. Le portail Mes aides de France Travail présente un montant pouvant atteindre 1 000 €. Ce plafond est indicatif : les montants, conditions et décisions d'attribution dépendent du département et du dossier. La demande s'effectue généralement avec un référent social ou une Mission locale.",
     steps: [
       [
         "Vérifie ton éligibilité",
@@ -3267,9 +3323,9 @@ const PUBLIC_AID_UPDATES = {
 
   // 10 — AIDES À LA MOBILITÉ
   '┃aides-mobilité': {
-    bonus: 'Transport et déplacements : aides variables',
-    officialUrl: 'https://www.1jeune1solution.gouv.fr/',
-    notice: "Plusieurs dispositifs peuvent aider à financer des déplacements liés à l'emploi, à la formation ou aux études. Les aides peuvent être proposées par France Travail, les collectivités territoriales, les établissements ou d'autres organismes. Les critères et montants varient selon la situation et le dispositif.",
+    bonus: '5 200 €/an',
+    officialUrl: 'https://www.francetravail.fr/candidat/en-formation/les-dispositifs/jentre-en-formation---laide-au-d.html',
+    notice: "Aide à la mobilité de France Travail : jusqu'à 5 200 € de remboursement sur 12 mois glissants, pour les frais éligibles de déplacement, repas et hébergement. Elle s'adresse principalement aux demandeurs d'emploi peu ou non indemnisés, sous conditions de distance et de situation. Les aides régionales et étudiantes sont distinctes et possèdent leurs propres plafonds.",
     steps: [
       [
         "Identifie ton besoin",
@@ -3292,7 +3348,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 11 — AIDES AU PERMIS
   '┃aides-permis': {
-    bonus: 'Prêt à taux zéro et aides locales',
+    bonus: '1 200 € de prêt à taux zéro',
     officialUrl: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F13609',
     notice: "Le permis à 1 € par jour est un prêt à taux zéro, et non une prime gratuite, destiné sous conditions aux jeunes de 15 à 25 ans. Des aides locales et certains financements CPF peuvent également exister. Les anciennes aides nationales de 500 € pour les apprentis et de France Travail ont été supprimées en 2026.",
     steps: [
@@ -3317,7 +3373,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 12 — AUTRES AIDES
   '┃autres-aides': {
-    bonus: 'Découvre les aides adaptées à ton profil',
+    bonus: null,
     officialUrl: 'https://www.1jeune1solution.gouv.fr/',
     notice: "Cette fiche regroupe les autres dispositifs susceptibles d'aider les jeunes : emploi, formation, santé, logement, alimentation, mobilité et accompagnement social. L'éligibilité, les montants et les démarches dépendent de chaque aide. Aucun versement n'est garanti.",
     steps: [
@@ -3405,55 +3461,111 @@ function getReferralLogo(offer) {
 
 
 
+
 const REFERRAL_EMOJI_ALIASES = {
   'hello-bank': 'hellobank',
   'trade-republic': 'traderepublic',
-  'trading212': 'trading212',
   'la-banque-postale': 'labanquepostale',
+  'distingo-bank': 'distingobank',
   'pass-culture': 'passculture',
   'crypto-com': 'cryptocom',
   'capital-koala': 'capitalkoala',
-  'distingo-bank': 'distingobank',
-  'topcashback': 'topcashback',
-  'ebuyclub': 'ebuyclub'
+
+  // Aides de l'État
+  'prime-activité': 'primeactivite',
+  'contrat-engagement-jeune': 'contratengagementjeune',
+  'rsa-jeune-actif': 'rsajeuneactif',
+  'aides-logement': 'aideslogement',
+  'aides-étudiantes': 'aidesetudiantes',
+  'aide-mobili-jeune': 'aidemobilijeune',
+  'fonds-aide-jeunes': 'fondsaidejeunes',
+  'service-civique': 'servicecivique',
+  'aides-mobilité': 'aidesmobilite',
+  'aides-permis': 'aidespermis',
+  'autres-aides': 'autresaides'
 };
+
+function normalizeReferralEmojiName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/gi, '')
+    .toLowerCase();
+}
 
 function getReferralEmoji(guild, offer) {
   const slug = offer.slug;
-  const name = REFERRAL_EMOJI_ALIASES[slug] ||
-    slug.replace(/[^a-z0-9]/gi, '');
 
-  const emoji = guild.emojis.cache.find(
-    e => e.name.toLowerCase() === name.toLowerCase()
+  const expectedName = normalizeReferralEmojiName(
+    REFERRAL_EMOJI_ALIASES[slug] || slug
   );
 
-  return emoji ? `${emoji.toString()} ` : '';
+  const emoji = guild.emojis.cache.find(
+    e => normalizeReferralEmojiName(e.name) === expectedName
+  );
+
+  if (!emoji) {
+    console.warn(
+      `[PARRAINAGES] Emoji introuvable : ${slug} (${expectedName})`
+    );
+    return '';
+  }
+
+  return `${emoji.toString()} `;
 }
+
+
+const REFERRAL_CONFIRMED_AMOUNTS = {
+  'rsa-jeune-actif': {
+    bonus: '651,69 €/mois',
+    notice: 'Montant forfaitaire de référence pour une personne seule, avant déduction des ressources et du forfait logement. Conditions spécifiques aux jeunes actifs.'
+  },
+  'service-civique': {
+    bonus: '619,83 €/mois',
+    notice: 'Indemnité et prestation mensuelles de base en métropole. Une majoration est possible sous conditions sociales.'
+  }
+};
+
+for (const [slug, update] of Object.entries(REFERRAL_CONFIRMED_AMOUNTS)) {
+  const offer = REFERRAL_OFFERS[`┃${slug}`];
+  if (!offer) continue;
+
+  Object.assign(offer, update);
+  offer.verifiedAt = '12/11/2026';
+  offer.draft = false;
+}
+
 
 
 function getReferralTitle(offer) {
   const name = offer.title;
-  const bonus = String(offer.bonus || '');
+  const bonus = String(offer.bonus || '').trim();
 
   if (!bonus) return name;
 
-  const amounts = [...bonus.matchAll(
-    /(\d[\d\s\u00a0\u202f.,]*)\s*€/g
-  )];
+  const amountMatch = bonus.match(
+    /(\d[\d\s\u00a0\u202f.,]*)\s*€\s*(\/\s*(?:mois|an))?/i
+  );
 
-  if (amounts.length) {
-    const values = amounts.map(match =>
-      Number(match[1].replace(/\s/g, '').replace(',', '.'))
-    );
-
-    const maximum = Math.max(...values);
-
-    if (Number.isFinite(maximum)) {
-      return `${name} — Jusqu'à ${maximum.toLocaleString('fr-FR')} €`;
-    }
+  if (!amountMatch) {
+    return `${name} — ${bonus}`;
   }
 
-  return `${name} — ${bonus}`;
+  const amount = Number(
+    amountMatch[1]
+      .replace(/[\s\u00a0\u202f]/g, '')
+      .replace(',', '.')
+  );
+
+  if (!Number.isFinite(amount)) {
+    return `${name} — ${bonus}`;
+  }
+
+  const unit = amountMatch[2]
+    ? amountMatch[2].replace(/\s/g, '').toLowerCase()
+    : '';
+
+  return `${name} — Jusqu'à ${amount.toLocaleString('fr-FR')} €${unit}`;
 }
 
 
@@ -3477,7 +3589,7 @@ function buildReferralContainer(offer) {
   if (isPending) {
     const label = offer.displayStatus === 'suspended'
       ? 'Offre temporairement suspendue'
-      : 'Bientôt disponible';
+      : 'L\'offre est temporairement suspendue ou indisponible, réessaie plus tard !';
 
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -3605,6 +3717,12 @@ function buildReferralContainer(offer) {
 
 
 async function syncReferralPanels(guild) {
+  await guild.emojis.fetch().catch(error => {
+  console.warn(
+    '[PARRAINAGES] Impossible d’actualiser les emojis :',
+    error.message
+  );
+});
   const configKey = 'referralPanelMessages';
   const saved = await getConfigValue(configKey, {});
   const messageIds = { ...saved };
