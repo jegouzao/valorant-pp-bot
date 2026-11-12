@@ -2364,6 +2364,23 @@ function extractVintedHtmlSamples(html, baseUrl) {
 
     const card = $(element);
 
+
+const parent = card.parent();
+
+const imageAttributes = [];
+
+parent.find('img').slice(0, 3).each((_, img) => {
+  const imageElement = $(img);
+
+  imageAttributes.push({
+    src: Boolean(imageElement.attr('src')),
+    srcset: Boolean(imageElement.attr('srcset')),
+    dataSrc: Boolean(imageElement.attr('data-src')),
+    dataSrcset: Boolean(imageElement.attr('data-srcset'))
+  });
+});
+
+
     const title =
       card.attr('title') ||
       card.attr('aria-label') ||
@@ -2379,6 +2396,7 @@ function extractVintedHtmlSamples(html, baseUrl) {
     const text = card.text().replace(/\s+/g, ' ').trim();
 
     samples.push({
+      imageAttributes,
       url,
       title: title?.slice(0, 120) || null,
       image: image?.slice(0, 250) || null,
@@ -8564,6 +8582,7 @@ if (
         `**Annonce ${index + 1}**`,
         `Titre : ${item.title || 'Introuvable'}`,
         `Image : ${item.image ? 'Détectée' : 'Introuvable'}`,
+        `Images voisines : ${JSON.stringify(item.imageAttributes || [])}`,
         `Texte : ${item.text || 'Aucun'}`
       ]
     )
