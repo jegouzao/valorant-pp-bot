@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path'); // ← mettre path avant son utilisation
+const cheerio = require('cheerio');
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const Points = require('./models/Points');
@@ -2328,6 +2329,68 @@ function parseVintedSearchFilters(searchUrl) {
 }
 
 
+function extractVintedHtmlSamples(html, baseUrl) {
+  const $ = cheerio.load(html);
+  const samples = [];
+  const seen = new Set();
+
+  $('a[href*="/items/"]').each((_, element) => {
+    if (samples.length >= 5) return false;
+
+    const href = $(element).attr('href');
+    if (!href) return;
+
+    let url;
+
+    try {
+      const parsed = new URL(href, baseUrl);
+
+      if (![
+        'vinted.fr',
+        'www.vinted.fr',
+        'vinted.com',
+        'www.vinted.com'
+      ].includes(parsed.hostname)) return;
+
+      if (!/^\/items\/\d+/.test(parsed.pathname)) return;
+
+      url = parsed.origin + parsed.pathname;
+    } catch {
+      return;
+    }
+
+    if (seen.has(url)) return;
+    seen.add(url);
+
+    const card = $(element);
+
+    const title =
+      card.attr('title') ||
+      card.attr('aria-label') ||
+      card.find('img').first().attr('alt') ||
+      card.text().trim() ||
+      null;
+
+    const image =
+      card.find('img').first().attr('src') ||
+      card.find('img').first().attr('data-src') ||
+      null;
+
+    const text = card.text().replace(/\s+/g, ' ').trim();
+
+    samples.push({
+      url,
+      title: title?.slice(0, 120) || null,
+      image: image?.slice(0, 250) || null,
+      text: text.slice(0, 200)
+    });
+  });
+
+  return samples;
+}
+
+
+
 async function diagnoseVintedAccess(searchUrl) {
   const url = new URL(
     validateWatchSearchUrl('vinted', searchUrl)
@@ -2349,6 +2412,9 @@ async function diagnoseVintedAccess(searchUrl) {
       response.headers.get('content-type') || '';
 
     const html = await response.text();
+    const htmlSamples = response.ok
+  ? extractVintedHtmlSamples(html, response.url)
+  : [];
 
 
 const indicators = {
@@ -2399,6 +2465,7 @@ const sampleLinks = [
     return {
       indicators,
       sampleLinks,
+      htmlSamples,
       success: response.ok,
       status: response.status,
       durationMs: Date.now() - startedAt,
@@ -8482,6 +8549,20 @@ if (
 
 '',
 '### 🔗 EXEMPLES D’ANNONCES',
+
+'',
+'### 🧪 EXTRACTION HTML',
+...(network.htmlSamples?.length
+  ? network.htmlSamples.slice(0, 3).flatMap(
+      (item, index) => [
+        `**Annonce ${index + 1}**`,
+        `Titre : ${item.title || 'Introuvable'}`,
+        `Image : ${item.image ? 'Détectée' : 'Introuvable'}`,
+        `Texte : ${item.text || 'Aucun'}`
+      ]
+    )
+  : ['Aucune annonce extraite']),
+
 ...(network.sampleLinks?.length
   ? network.sampleLinks.map(
       (link, index) => `${index + 1}. ${link}`
