@@ -1686,7 +1686,7 @@ const watchNotificationSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['pending', 'sending', 'sent'],
+    enum: ['pending', 'sending', 'sent', 'failed'],
     default: 'pending'
   },
 
@@ -1942,6 +1942,20 @@ new ButtonBuilder()
       )
       
     );
+
+
+if (search.platform === 'vinted') {
+  container.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`watch_vinted_url_${search._id}`)
+        .setLabel('Diagnostic URL Vinted')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('🔍')
+    )
+  );
+}
+
 
 if (search.platform === 'ebay') {
   container.addActionRowComponents(
@@ -2223,6 +2237,155 @@ async function fetchEbayListings(searchUrl) {
 }
 
 
+function parseVintedSearchFilters(searchUrl) {
+  const url = new URL(
+    validateWatchSearchUrl('vinted', searchUrl)
+  );
+
+  const params = url.searchParams;
+
+  const allowed = new Set([
+    'search_text',
+    'order',
+    'price_from',
+    'price_to',
+    'catalog[]',
+    'brand_ids[]',
+    'size_ids[]',
+    'status_ids[]',
+    'color_ids[]',
+    'material_ids[]',
+    'page',
+    'per_page',
+    'currency',
+    'time'
+  ]);
+
+  const ignored = new Set([
+    'referrer',
+    'search_id'
+  ]);
+
+  const unsupported = [...new Set(
+    [...params.keys()].filter(
+      key => !allowed.has(key) && !ignored.has(key)
+    )
+  )];
+
+  if (unsupported.length) {
+    throw new Error(
+      'Paramètres Vinted à vérifier : ' +
+      unsupported.join(', ')
+    );
+  }
+
+  const order = params.get('order');
+
+  if (order && order !== 'newest_first') {
+    throw new Error(
+      'Trie ta recherche Vinted par annonces récentes.'
+    );
+  }
+
+  const readPrice = key => {
+    const raw = params.get(key);
+    if (raw == null || raw === '') return null;
+
+    const value = Number(raw.replace(',', '.'));
+
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`Prix Vinted invalide : ${key}`);
+    }
+
+    return value;
+  };
+
+  const minPrice = readPrice('price_from');
+  const maxPrice = readPrice('price_to');
+
+  if (
+    minPrice !== null &&
+    maxPrice !== null &&
+    minPrice > maxPrice
+  ) {
+    throw new Error(
+      'Le prix minimum dépasse le prix maximum.'
+    );
+  }
+
+  return {
+    keywords: params.get('search_text') || '',
+    order: order || 'non précisé',
+    minPrice,
+    maxPrice,
+    catalogs: params.getAll('catalog[]'),
+    brands: params.getAll('brand_ids[]'),
+    sizes: params.getAll('size_ids[]'),
+    conditions: params.getAll('status_ids[]'),
+    colors: params.getAll('color_ids[]'),
+    materials: params.getAll('material_ids[]')
+  };
+}
+
+
+async function diagnoseVintedAccess(searchUrl) {
+  const url = new URL(
+    validateWatchSearchUrl('vinted', searchUrl)
+  );
+
+  const startedAt = Date.now();
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        Accept: 'text/html'
+      },
+      signal: AbortSignal.timeout(12000),
+      redirect: 'follow'
+    });
+
+    const contentType =
+      response.headers.get('content-type') || '';
+
+    const html = await response.text();
+
+    const title =
+      html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
+      ?.replace(/\s+/g, ' ')
+      ?.trim() || 'Non trouvé';
+
+    return {
+      success: response.ok,
+      status: response.status,
+      durationMs: Date.now() - startedAt,
+      contentType,
+      title: title.slice(0, 150),
+      htmlLength: html.length,
+      finalUrl: response.url
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      durationMs: Date.now() - startedAt,
+      error: error.message
+    };
+  }
+}
+
+
+async function fetchVintedListings(searchUrl) {
+  // Vérification des filtres avant toute récupération.
+  const filters = parseVintedSearchFilters(searchUrl);
+
+  // Aucun fournisseur de données configuré pour l'instant.
+  throw new Error(
+    'Connecteur Vinted non configuré : ' +
+    'aucune source de données autorisée sélectionnée.'
+  );
+}
+
 
 const WATCH_CONNECTORS = {
   leboncoin: null,
@@ -2335,8 +2498,40 @@ async function watchScanSearch(search) {
       throw new Error('Le connecteur doit retourner un tableau.');
     }
 
-    const listings = results
-      .map(item => normalizeWatchListing(search.platform, item));
+    
+const listings = [];
+let invalidCount = 0;
+
+for (const item of results) {
+  try {
+    const listing = normalizeWatchListing(
+      search.platform,
+      item
+    );
+
+    listings.push(listing);
+  } catch (error) {
+    invalidCount++;
+
+    console.warn(
+      `[SURVEILLANCE] Annonce ignorée (${search.platform}) :`,
+      error.message
+    );
+  }
+}
+
+if (results.length > 0 && listings.length === 0) {
+  throw new Error(
+    `Aucune annonce exploitable sur ${results.length} résultats.`
+  );
+}
+
+if (invalidCount > 0) {
+  console.warn(
+    `[SURVEILLANCE] ${invalidCount} annonce(s) invalides ignorée(s).`
+  );
+}
+
 
     // Déduplication dans les résultats reçus.
     const unique = [
@@ -2460,6 +2655,139 @@ async function watchScanAll() {
   }
 }
 
+
+// ============================================================
+// SURVEILLANCE — NETTOYAGE DES SALONS SUPPRIMÉS
+// ============================================================
+
+client.on(Events.ChannelDelete, async channel => {
+  try {
+    if (!channel.guildId) return;
+
+    const search = await WatchSearch.findOne({
+      guildId: channel.guildId,
+      channelId: channel.id
+    });
+
+    if (!search) return;
+
+    // Empêcher le moteur de reprendre cette recherche.
+    await WatchSearch.updateOne(
+      { _id: search._id },
+      { $set: { paused: true } }
+    );
+
+    // Supprimer les notifications associées.
+    const result = await WatchNotification.deleteMany({
+      searchId: search._id
+    });
+
+    // Libérer la place de surveillance du membre.
+    await WatchSearch.deleteOne({
+      _id: search._id
+    });
+
+    console.log(
+      `[SURVEILLANCE] Salon supprimé : ${channel.id}. ` +
+      `Recherche ${search._id} nettoyée, ` +
+      `${result.deletedCount} notification(s) supprimée(s).`
+    );
+
+  } catch (error) {
+    console.error(
+      '[SURVEILLANCE] Erreur nettoyage salon :',
+      error
+    );
+  }
+});
+
+
+
+async function watchCleanupMissingChannels() {
+  console.log('[SURVEILLANCE] Vérification des salons au démarrage...');
+
+  const searches = await WatchSearch.find({});
+  let deleted = 0;
+  let checked = 0;
+  let skipped = 0;
+
+  for (const search of searches) {
+    try {
+      const guild = client.guilds.cache.get(search.guildId);
+
+      // Serveur inaccessible : ne rien supprimer.
+      if (!guild) {
+        skipped++;
+        continue;
+      }
+
+      checked++;
+
+      try {
+        const channel = await guild.channels.fetch(
+          search.channelId,
+          { force: true }
+        );
+
+        // Le salon existe : aucune modification.
+        if (channel) continue;
+
+        // Réponse vide : ne pas supposer une suppression.
+        skipped++;
+        continue;
+
+      } catch (error) {
+        // Discord 10003 = Unknown Channel.
+        // C'est le seul cas qui autorise le nettoyage.
+        if (error.code !== 10003) {
+          console.warn(
+            `[SURVEILLANCE] Vérification impossible : ${search.channelId}`,
+            error.message
+          );
+          skipped++;
+          continue;
+        }
+      }
+
+      // Confirmer que la recherche existe toujours.
+      const removed = await WatchSearch.findOneAndDelete({
+        _id: search._id,
+        guildId: search.guildId,
+        channelId: search.channelId
+      });
+
+      if (!removed) continue;
+
+      const result = await WatchNotification.deleteMany({
+        searchId: search._id
+      });
+
+      deleted++;
+
+      console.log(
+        `[SURVEILLANCE] Recherche orpheline supprimée : ${search._id} ` +
+        `(${result.deletedCount} notification(s)).`
+      );
+
+    } catch (error) {
+      skipped++;
+
+      console.error(
+        `[SURVEILLANCE] Nettoyage impossible : ${search._id}`,
+        error
+      );
+    }
+  }
+
+  console.log(
+    `[SURVEILLANCE] Nettoyage terminé : ` +
+    `${checked} vérification(s), ` +
+    `${deleted} suppression(s), ` +
+    `${skipped} ignorée(s).`
+  );
+}
+
+
 function startWatchScheduler() {
   if (watchSchedulerStarted) return;
 
@@ -2499,6 +2827,10 @@ async function watchDeliverPending() {
 
   try {
     const now = new Date();
+    const pausedSearchIds = await WatchSearch.distinct(
+  '_id',
+  { paused: true }
+);
 
     // Réinitialiser les envois interrompus.
     await WatchNotification.updateMany(
@@ -2518,9 +2850,10 @@ async function watchDeliverPending() {
       const notification =
         await WatchNotification.findOneAndUpdate(
           {
-            status: 'pending',
-            nextAttemptAt: { $lte: new Date() }
-          },
+  status: 'pending',
+  searchId: { $nin: pausedSearchIds },
+  nextAttemptAt: { $lte: new Date() }
+},
           {
             $set: {
               status: 'sending',
@@ -2623,6 +2956,30 @@ async function watchDeliverPending() {
 
       } catch (error) {
         const attempts = notification.attempts + 1;
+
+
+if (attempts >= 10) {
+  await WatchNotification.updateOne(
+    { _id: notification._id },
+    {
+      $set: {
+        status: 'failed',
+        attempts,
+        lockedUntil: null,
+        lastError: String(error.message).slice(0, 500)
+      }
+    }
+  );
+
+  console.error(
+    `[SURVEILLANCE] Notification ${notification._id} ` +
+    'abandonnée après 10 tentatives :',
+    error.message
+  );
+
+  continue;
+}
+
 
         const delay = Math.min(
           60 * 60 * 1000,
@@ -6521,9 +6878,13 @@ client.once(Events.ClientReady, async () => {
   if (!guild) return;
 
   try {
-  await initMongo();
+  
+await initMongo();
+
+await watchCleanupMissingChannels();
 
 startWatchScheduler();
+
 
 gamesData.games = await getAllGames();
   console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
@@ -7988,6 +8349,109 @@ client.on('interactionCreate', async (interaction) => {
 // SURVEILLANCE — TEST D'UNE ANNONCE FICTIVE
 // ============================================================
 
+
+// ============================================================
+// SURVEILLANCE — DIAGNOSTIC URL VINTED
+// ============================================================
+
+if (
+  interaction.isButton() &&
+  /^watch_vinted_url_[a-f0-9]{24}$/.test(interaction.customId)
+) {
+  if (
+    !interaction.inGuild() ||
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return interaction.reply({
+      content: 'Diagnostic réservé aux administrateurs.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const searchId = interaction.customId.replace(
+    'watch_vinted_url_', ''
+  );
+
+  const search = await WatchSearch.findOne({
+    _id: searchId,
+    guildId: interaction.guildId,
+    channelId: interaction.channelId,
+    platform: 'vinted'
+  });
+
+  if (!search) {
+    return interaction.reply({
+      content: 'Recherche Vinted introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const filters = parseVintedSearchFilters(
+      search.searchUrl
+    );
+
+    const network = await diagnoseVintedAccess(
+      search.searchUrl
+    );
+
+
+    const formatValues = values =>
+      values.length ? values.join(', ') : 'Aucun';
+
+    const report = [
+      '## 🔍 DIAGNOSTIC URL VINTED',
+      '',
+      '**Analyse du lien :** réussie',
+      `**Mots-clés :** ${filters.keywords || 'Aucun'}`,
+      `**Tri :** ${filters.order}`,
+      `**Prix minimum :** ${filters.minPrice ?? 'Aucun'}`,
+      `**Prix maximum :** ${filters.maxPrice ?? 'Aucun'}`,
+      `**Catégories :** ${formatValues(filters.catalogs)}`,
+      `**Marques :** ${formatValues(filters.brands)}`,
+      `**Tailles :** ${formatValues(filters.sizes)}`,
+      `**États :** ${formatValues(filters.conditions)}`,
+      `**Couleurs :** ${formatValues(filters.colors)}`,
+      `**Matières :** ${formatValues(filters.materials)}`,
+      '',
+      
+      '',
+      '### 🌐 CONNEXION VINTED',
+      `**Connexion :** ${network.success ? 'Réussie' : 'Échec'}`,
+      `**Code HTTP :** ${network.status ?? 'Indisponible'}`,
+      `**Durée :** ${network.durationMs} ms`,
+      `**Type de contenu :** ${network.contentType || 'Inconnu'}`,
+      `**Taille HTML :** ${network.htmlLength ?? 0} caractères`,
+      `**Titre de page :** ${network.title || 'Inconnu'}`,
+      ...(network.error
+        ? [`**Erreur :** ${network.error}`]
+        : []),
+      '',
+      '-# Test de connexion uniquement. Aucune notification envoyée.'
+
+    ].join('\n');
+
+    
+return interaction.editReply({
+  content: report.slice(0, 1900),
+  allowedMentions: { parse: [] }
+});
+
+  } catch (error) {
+    return interaction.editReply({
+  content:
+    '❌ **Diagnostic Vinted échoué**\n' +
+    String(error.message).slice(0, 1500)
+});
+  }
+}
 
 
 // ============================================================
