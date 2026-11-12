@@ -1653,7 +1653,10 @@ customName: { type: String, default: '' },
   mentions: { type: Boolean, default: false },
   paused: { type: Boolean, default: false },
   seenListingIds: { type: [String], default: [] },
-  managementMessageId: { type: String, default: null }
+  managementMessageId: { type: String, default: null },
+initialScanDone: { type: Boolean, default: false },
+lastCheckedAt: { type: Date, default: null },
+lastScanError: { type: String, default: '' }
 }, { timestamps: true });
 
 watchSearchSchema.index({ guildId: 1, userId: 1 });
@@ -1900,6 +1903,215 @@ async function updateWatchManagementPanel(guild, search) {
     components: [buildWatchManagementPanel(guild, search)],
     flags: MessageFlags.IsComponentsV2
   });
+}
+
+
+
+ // ============================================================
+ // SURVEILLANCE — MOTEUR AUTOMATIQUE
+ // ============================================================
+
+const WATCH_CONNECTORS = {
+  leboncoin: null,
+  vinted: null,
+  ebay: null
+};
+
+const WATCH_ACTIVE_SCANS = new Set();
+
+let watchSchedulerStarted = false;
+let watchGlobalScanRunning = false;
+
+function watchListingKey(platform, listing) {
+  const id = String(listing.id || '').trim();
+
+  if (!id) {
+    throw new Error('Annonce sans identifiant.');
+  }
+
+  return `${platform}:${id}`;
+}
+
+function normalizeWatchListing(platform, raw) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('Annonce invalide.');
+  }
+
+  const id = String(raw.id || '').trim();
+  const title = String(raw.title || '').trim();
+  const url = String(raw.url || '').trim();
+
+  if (!id || !title || !url) {
+    throw new Error('Annonce incomplète.');
+  }
+
+  const parsed = new URL(url);
+
+  if (parsed.protocol !== 'https:') {
+    throw new Error('URL d’annonce non sécurisée.');
+  }
+
+  // Vérifier également le domaine de chaque annonce.
+  validateWatchSearchUrl(platform, url);
+
+  const price = raw.price == null
+    ? null
+    : Number(raw.price);
+
+  return {
+    id,
+    title: title.slice(0, 300),
+    url,
+    price: Number.isFinite(price) ? price : null,
+    imageUrl: raw.imageUrl || null,
+    location: String(raw.location || ''),
+    publishedAt: raw.publishedAt || null
+  };
+}
+
+// Le moteur appelle uniquement des connecteurs configurés.
+// Aucun accès non autorisé aux plateformes n'est effectué.
+async function watchScanSearch(search) {
+  const key = String(search._id);
+
+  if (WATCH_ACTIVE_SCANS.has(key)) return;
+  if (search.paused || !search.searchUrl) return;
+
+  const connector = WATCH_CONNECTORS[search.platform];
+
+  if (typeof connector !== 'function') return;
+
+  WATCH_ACTIVE_SCANS.add(key);
+
+  try {
+    const results = await connector(search.searchUrl, search);
+
+    if (!Array.isArray(results)) {
+      throw new Error('Le connecteur doit retourner un tableau.');
+    }
+
+    const listings = results
+      .map(item => normalizeWatchListing(search.platform, item));
+
+    // Déduplication dans les résultats reçus.
+    const unique = [
+      ...new Map(
+        listings.map(item => [
+          watchListingKey(search.platform, item),
+          item
+        ])
+      ).values()
+    ];
+
+    // Le connecteur doit fournir des annonces triées
+    // de la plus récente à la plus ancienne.
+    const selected = search.initialScanDone
+      ? unique
+      : unique.slice(0, WATCH_CONFIG.initialResultsLimit);
+
+    const seen = new Set(search.seenListingIds || []);
+
+    // Premier passage : enregistrer les annonces présentes.
+    // Les notifications seront ajoutées à l'étape suivante.
+    if (!search.initialScanDone) {
+      for (const item of unique) {
+        seen.add(watchListingKey(search.platform, item));
+      }
+
+      search.initialScanDone = true;
+    } else {
+      for (const item of selected) {
+        const listingKey = watchListingKey(
+          search.platform,
+          item
+        );
+
+        if (seen.has(listingKey)) continue;
+
+        // Réservation de l'identifiant pour éviter
+        // une notification en double.
+        seen.add(listingKey);
+
+        // FUTUR : envoyer la fiche Components V2.
+      }
+    }
+
+    // Limite de stockage pour éviter une croissance illimitée.
+    search.seenListingIds = [...seen].slice(-5000);
+    search.lastCheckedAt = new Date();
+    search.lastScanError = '';
+
+    await search.save();
+
+  } catch (error) {
+    console.error(
+      `[SURVEILLANCE] ${search.platform} / ${search._id}:`,
+      error
+    );
+
+    await WatchSearch.updateOne(
+      { _id: search._id },
+      {
+        $set: {
+          lastCheckedAt: new Date(),
+          lastScanError: String(error.message).slice(0, 500)
+        }
+      }
+    ).catch(() => {});
+  } finally {
+    WATCH_ACTIVE_SCANS.delete(key);
+  }
+}
+
+async function watchScanAll() {
+  if (watchGlobalScanRunning) return;
+
+  watchGlobalScanRunning = true;
+
+  try {
+    const platforms = Object.entries(WATCH_CONNECTORS)
+      .filter(([, connector]) => typeof connector === 'function')
+      .map(([platform]) => platform);
+
+    if (!platforms.length) return;
+
+    const searches = await WatchSearch.find({
+      paused: false,
+      searchUrl: { $exists: true, $ne: '' },
+      platform: { $in: platforms }
+    });
+
+    // Exécution séquentielle : évite les rafales de requêtes.
+    for (const search of searches) {
+      await watchScanSearch(search);
+    }
+
+  } catch (error) {
+    console.error('[SURVEILLANCE] Erreur globale :', error);
+  } finally {
+    watchGlobalScanRunning = false;
+  }
+}
+
+function startWatchScheduler() {
+  if (watchSchedulerStarted) return;
+
+  watchSchedulerStarted = true;
+
+  console.log(
+    '[SURVEILLANCE] Moteur initialisé — intervalle : ' +
+    `${WATCH_CONFIG.checkIntervalMs / 1000}s`
+  );
+
+  const run = () => {
+    watchScanAll().catch(error => {
+      console.error('[SURVEILLANCE] Scheduler :', error);
+    });
+  };
+
+  run();
+
+  setInterval(run, WATCH_CONFIG.checkIntervalMs);
 }
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
@@ -5687,7 +5899,9 @@ client.once(Events.ClientReady, async () => {
   try {
   await initMongo();
 
-  gamesData.games = await getAllGames();
+startWatchScheduler();
+
+gamesData.games = await getAllGames();
   console.log(`✅ ${gamesData.games.length} parties chargées depuis MongoDB`);
 } catch (err) {
   console.error('❌ Impossible de démarrer MongoDB :', err);
@@ -7288,7 +7502,11 @@ if (
 }
 
 
-  // Validation du formulaire et création du salon
+
+  // ============================================================
+  // SURVEILLANCE — CRÉATION DEPUIS UNE URL
+  // ============================================================
+
   if (
     interaction.isModalSubmit() &&
     interaction.customId.startsWith('watch_modal_')
@@ -7299,47 +7517,29 @@ if (
 
     if (!WATCH_CONFIG.platforms[platform]) return;
 
-    const keywords = interaction.fields
-      .getTextInputValue('keywords').trim();
+    let searchUrl;
 
-    const excludedKeywords = interaction.fields
-      .getTextInputValue('excluded').trim();
-
-    const minRaw = interaction.fields
-      .getTextInputValue('minprice').trim();
-
-    const maxRaw = interaction.fields
-      .getTextInputValue('maxprice').trim();
-
-    const validPrice = value =>
-      value === '' || /^\d+([.,]\d{1,2})?$/.test(value);
-
-    if (
-      !keywords ||
-      !validPrice(minRaw) ||
-      !validPrice(maxRaw)
-    ) {
+    try {
+      searchUrl = validateWatchSearchUrl(
+        platform,
+        interaction.fields.getTextInputValue('search_url')
+      );
+    } catch (error) {
       return interaction.reply({
-        content: 'Mots-clés ou prix invalides. Utilise des montants positifs.',
+        content: error.message,
         flags: MessageFlags.Ephemeral
       });
     }
 
-    const minPrice = minRaw
-      ? Number(minRaw.replace(',', '.'))
-      : null;
+    const customName = interaction.fields
+      .getTextInputValue('custom_name')
+      .trim();
 
-    const maxPrice = maxRaw
-      ? Number(maxRaw.replace(',', '.'))
-      : null;
+    const safeName = watchSafeChannelName(customName);
 
-    if (
-      minPrice !== null &&
-      maxPrice !== null &&
-      minPrice > maxPrice
-    ) {
+    if (customName && !safeName) {
       return interaction.reply({
-        content: 'Le prix minimum ne peut pas dépasser le prix maximum.',
+        content: 'Le nom du salon doit contenir au moins une lettre ou un chiffre.',
         flags: MessageFlags.Ephemeral
       });
     }
@@ -7353,100 +7553,111 @@ if (
       userId: interaction.user.id
     });
 
-    if (count >= 5) {
+    if (count >= WATCH_CONFIG.maxSearchesPerMember) {
       return interaction.editReply(
         'Tu as atteint la limite de 5 recherches.'
       );
     }
 
     const guild = interaction.guild;
+
     const category = await guild.channels
       .fetch(WATCH_CATEGORY_ID)
       .catch(() => null);
 
-    if (
-      !category ||
-      category.type !== ChannelType.GuildCategory
-    ) {
+    if (!category || category.type !== ChannelType.GuildCategory) {
       return interaction.editReply(
         'Catégorie de surveillance introuvable.'
       );
     }
 
-    const safeName = keywords
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 35) || 'recherche';
+    const channelName = safeName
+      ? `${platform}-${safeName}`
+      : `${platform}-recherche-${count + 1}`;
 
-    const channel = await guild.channels.create({
-      name: `${platform}-${safeName}`,
-      type: ChannelType.GuildText,
-      parent: WATCH_CATEGORY_ID,
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          deny: [PermissionFlagsBits.ViewChannel]
-        },
-        {
-          id: interaction.user.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.ReadMessageHistory
-          ]
-        },
-        {
-          id: client.user.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.SendMessages,
-            PermissionFlagsBits.ReadMessageHistory,
-            PermissionFlagsBits.EmbedLinks
-          ]
-        }
-      ],
-      reason: `Recherche privée de ${interaction.user.id}`
-    });
-
-    let search;
+    let channel = null;
+    let search = null;
 
     try {
+      channel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: WATCH_CATEGORY_ID,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone.id,
+            deny: [PermissionFlagsBits.ViewChannel]
+          },
+          {
+            id: interaction.user.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.ReadMessageHistory
+            ]
+          },
+          {
+            id: client.user.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.EmbedLinks
+            ]
+          }
+        ],
+        reason: `Recherche privée de ${interaction.user.id}`
+      });
+
       search = await WatchSearch.create({
         guildId: guild.id,
         userId: interaction.user.id,
         channelId: channel.id,
         platform,
-        keywords,
-        excludedKeywords,
-        minPrice,
-        maxPrice,
-        mentions: false
+        searchUrl,
+        customName: customName || '',
+        keywords: '',
+        mentions: false,
+        paused: false,
+        seenListingIds: []
       });
 
       const message = await channel.send({
         components: [
           buildWatchManagementPanel(guild, search)
         ],
-        flags: MessageFlags.IsComponentsV2
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
       });
 
       search.managementMessageId = message.id;
       await search.save();
 
     } catch (error) {
-      await channel.delete().catch(() => {});
-      throw error;
+      console.error(
+        'Erreur création surveillance :',
+        error
+      );
+
+      if (search) {
+        await WatchSearch.deleteOne({
+          _id: search._id
+        }).catch(() => {});
+      }
+
+      if (channel) {
+        await channel.delete().catch(() => {});
+      }
+
+      return interaction.editReply(
+        'Impossible de créer la recherche. Consulte les logs du bot.'
+      );
     }
 
     return interaction.editReply(
       `Recherche créée : ${channel}\n` +
-      'La surveillance des annonces sera activée après intégration du connecteur.'
+      'Le lien est enregistré. La récupération automatique des annonces sera activée après installation du connecteur.'
     );
   }
-
 
 
 
