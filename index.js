@@ -1756,25 +1756,25 @@ function buildWatchMainPanel(guild, count = 0) {
     )
     .addSeparatorComponents(
       new SeparatorBuilder()
-    )
-    .addActionRowComponents(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('watch_platform_vinted')
-          .setLabel('Recherche Vinted')
-          .setStyle(ButtonStyle.Secondary),
+    )   
+.addActionRowComponents(
+  new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('watch_platform_leboncoin')
+      .setLabel('Recherche Leboncoin')
+      .setStyle(ButtonStyle.Secondary),
 
-        new ButtonBuilder()
-          .setCustomId('watch_platform_leboncoin')
-          .setLabel('Recherche Leboncoin')
-          .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('watch_platform_vinted')
+      .setLabel('Recherche Vinted')
+      .setStyle(ButtonStyle.Secondary),
 
-        new ButtonBuilder()
-          .setCustomId('watch_platform_ebay')
-          .setLabel('Recherche eBay')
-          .setStyle(ButtonStyle.Secondary)
-      )
-    );
+    new ButtonBuilder()
+      .setCustomId('watch_platform_ebay')
+      .setLabel('Recherche eBay')
+      .setStyle(ButtonStyle.Secondary)
+  )
+);
 }
 
 
