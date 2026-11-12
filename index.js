@@ -1593,7 +1593,7 @@ const REFERRAL_CATALOG = {
   aides: [
     ['pass-culture', 'Pass Culture'],
     ['prime-activité', 'Prime d’activité'],
-    ['contrat-engagement-jeune', 'Contrat d’engagement jeune'],
+    ['contrat-engagement-jeune', 'Engagement jeune'],
     ['rsa-jeune-actif', 'RSA jeune actif'],
     ['aides-logement', 'Aides au logement'],
     ['aides-étudiantes', 'Aides étudiantes'],
@@ -2152,6 +2152,7 @@ officialUrl: 'https://support.traderepublic.com/fr-lu/463-Comment-puis-je-partic
   trading212: {
     
 bonus: null,
+displayStatus: 'suspended',
 notice: "La dernière campagne de parrainage officielle retrouvée s'est terminée le 03/11/2026. Elle proposait des fractions d'actions d'une valeur comprise entre 8 € et 100 €, sous conditions de vérification du compte et de dépôt. Aucune nouvelle campagne n'est confirmée à cette date.",
 officialUrl: 'https://helpcentre.trading212.com/hc/en-us/articles/360007291258-Invite-Your-Friends-Get-Free-Fractional-Shares',
 steps: [
@@ -2255,6 +2256,7 @@ officialUrl: 'https://www.yomoni.fr/legal/parrainage',
   ramify: {
     
 bonus: null,
+displayStatus: 'suspended',
 notice: "Le programme de parrainage Ramify affichait jusqu'à 500 € pour le parrain et le filleul, selon le montant investi. Toutefois, le règlement publié indique une fin de campagne au 31/10/2026. Les conditions d'une éventuelle nouvelle campagne doivent être confirmées avant activation. Les investissements comportent un risque de perte en capital.",
 officialUrl: 'https://www.ramify.fr/parrainage',
 
@@ -2634,17 +2636,25 @@ officialUrl: 'https://new.capitalkoala.com/faq',
 
   topcashback: {
     
-bonus: '10 €',
-notice: "Offre temporaire du 11/11/2026 au 12/11/2026 à 23h59 : 10 € de bonus pour le filleul qui crée son premier compte TopCashback via un lien de parrainage valide. Il doit cumuler au moins 10 € de cashback éligible dans les 90 jours suivant l'inscription. Le bonus est versé après approbation des transactions concernées. Le parrain reçoit 35 € sous les mêmes conditions de validation. Certaines enseignes et offres sont exclues du calcul du seuil.",
-officialUrl: 'https://www.topcashback.fr/parrainages/conditions/',
 
-    steps: [
-      ['Inscris-toi via un lien TopCashback', 'Nouveau membre inscrit entre le 03/10 et le 31/12/2026.'],
-      ['Active des offres chez les marchands éligibles', 'Vérifie les exclusions du programme et les conditions de chaque enseigne.'],
-      ['Gagne au moins 10 € de cashback sous 90 jours', 'Le seuil doit être atteint dans les 90 jours suivant ton inscription.'],
-      ['Reçois ton bonus de 5 €', 'Le bonus est accordé après approbation de la transaction éligible ; le parrain reçoit 15 €.']
-    ]
-  },
+bonus: '10 €',
+displayStatus: 'suspended',
+notice: "La campagne de parrainage à 10 € du 11 au 12 novembre 2026 est arrivée à son terme. Une autre campagne est mentionnée dans les anciennes conditions enregistrées, mais son montant et sa validité doivent être confirmés avant réactivation.",
+steps: [
+  [
+    'Consulte les conditions officielles',
+    'Vérifie la campagne de parrainage actuellement applicable.'
+  ],
+  [
+    'Vérifie le montant du bonus',
+    'Le montant pour le filleul peut différer de celui du parrain.'
+  ],
+  [
+    'Respecte les conditions de validation',
+    'Les seuils de cashback et les délais dépendent de la campagne.'
+  ]
+],
+
 
   wanteeed: {
     
@@ -2688,11 +2698,12 @@ for (const [slug, details] of Object.entries(
 if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
   continue;
 }
-  Object.assign(offer, {
-    ...details,
-    verifiedAt: '10/11/2026',
-    draft: details.draft ?? false
-  });
+
+Object.assign(offer, {
+  ...details,
+  verifiedAt: details.verifiedAt ?? null,
+  draft: details.draft ?? true
+});
 }
 
 
@@ -3040,7 +3051,7 @@ Object.assign(REFERRAL_OFFERS['┃joko'], {
   referralCode: 'lorwfa',
   verifiedAt: '11/11/2026',
   draft: false,
-  notice: "Le filleul reçoit 5 € après avoir cumulé 5 € de cashback éligible sur ses achats dans les 90 jours suivant son inscription. Les bonus ne comptent pas dans ce seuil. Le parrain reçoit 20 € et 10 % du cashback du filleul pendant un an. Le code LORWFA doit être saisi lors de l'inscription.",
+  notice: "Le filleul reçoit 5 € après avoir cumulé 5 € de cashback éligible sur ses achats dans les 90 jours suivant son inscription. Les bonus ne comptent pas dans ce seuil. Le parrain reçoit 10 € et 10 % du cashback du filleul pendant un an. Le code LORWFA doit être saisi lors de l'inscription.",
   steps: [
     [
       'Télécharge Joko avec notre lien',
@@ -3123,7 +3134,7 @@ const PUBLIC_AID_UPDATES = {
 
   // 02 — PRIME D'ACTIVITÉ
   '┃prime-activité': {
-    bonus: 'Complément de revenus variable',
+    bonus: 'Complément de revenus',
     officialUrl: 'https://www.caf.fr/',
     notice: "Aide versée par la CAF ou la MSA aux travailleurs éligibles de 18 ans ou plus. Le montant dépend des revenus, de la composition du foyer et de la situation personnelle. Les étudiants et apprentis sont soumis à des conditions spécifiques. Déclaration trimestrielle des ressources nécessaire.",
     steps: [
@@ -3537,36 +3548,57 @@ for (const [slug, update] of Object.entries(REFERRAL_CONFIRMED_AMOUNTS)) {
 
 
 
+
 function getReferralTitle(offer) {
-  const name = offer.title;
-  const bonus = String(offer.bonus || '').trim();
+  const name = String(offer.title || '').trim();
+  const bonus = String(offer.bonus ?? '').trim();
 
   if (!bonus) return name;
 
-  const amountMatch = bonus.match(
-    /(\d[\d\s\u00a0\u202f.,]*)\s*€\s*(\/\s*(?:mois|an))?/i
-  );
+  const normalized = bonus.replace(/\s+/g, ' ').trim();
 
-  if (!amountMatch) {
-    return `${name} — ${bonus}`;
+    if (offer.category === 'aides') {
+    return `${name} — ${normalized}`;
   }
 
-  const amount = Number(
-    amountMatch[1]
-      .replace(/[\s\u00a0\u202f]/g, '')
-      .replace(',', '.')
-  );
+  // Conserver les précisions indispensables.
+  const specialBonus =
+    /réduction|remise|bon d'achat|freebets|bonusbets|ticket bonus|prêt|crédit culturel|reversés|pour le filleul|en actions|en bitcoin|en BTC/i;
 
-  if (!Number.isFinite(amount)) {
-    return `${name} — ${bonus}`;
+  if (specialBonus.test(normalized)) {
+    return `${name} — ${normalized}`;
   }
 
-  const unit = amountMatch[2]
-    ? amountMatch[2].replace(/\s/g, '').toLowerCase()
-    : '';
+  // Ne pas transformer les avantages variables en montants.
+  if (!/\d/.test(normalized)) {
+    return `${name} — ${normalized}`;
+  }
 
-  return `${name} — Jusqu'à ${amount.toLocaleString('fr-FR')} €${unit}`;
+  // Montant simple en euros, éventuellement mensuel ou annuel.
+  const match = normalized.match(
+    /^(\d[\d\s\u00a0\u202f.,]*)\s*€\s*(\/\s*(?:mois|an))?$/i
+  );
+
+  if (match) {
+    const amount = Number(
+      match[1]
+        .replace(/[\s\u00a0\u202f]/g, '')
+        .replace(',', '.')
+    );
+
+    if (Number.isFinite(amount)) {
+      const unit = match[2]
+        ? match[2].replace(/\s/g, '').toLowerCase()
+        : '';
+
+      return `${name} — Jusqu'à ${amount.toLocaleString('fr-FR')} €${unit}`;
+    }
+  }
+
+  // Préserver le libellé d'origine lorsqu'il est plus précis.
+  return `${name} — ${normalized}`;
 }
+
 
 
 
@@ -3714,9 +3746,24 @@ function buildReferralContainer(offer) {
 }
 
 
-
+const referralSyncLocks = new Map();
 
 async function syncReferralPanels(guild) {
+
+  if (referralSyncLocks.has(guild.id)) {
+    return referralSyncLocks.get(guild.id);
+  }
+
+  const syncPromise = performReferralPanelSync(guild);
+  referralSyncLocks.set(guild.id, syncPromise);
+
+  try {
+    return await syncPromise;
+  } finally {
+    referralSyncLocks.delete(guild.id);
+  }
+}
+
   await guild.emojis.fetch().catch(error => {
   console.warn(
     '[PARRAINAGES] Impossible d’actualiser les emojis :',
@@ -3751,16 +3798,36 @@ const hasPersonalOffer = Boolean(
   offer.url || offer.referralCode
 );
 
+
+const campaignEndDates = {
+  'trading212': '2026-11-03T23:59:59+01:00',
+  'ramify': '2026-10-31T23:59:59+01:00',
+  'topcashback': '2026-11-12T23:59:59+01:00'
+};
+
+const campaignEnd = campaignEndDates[offer.slug];
+
+const campaignExpired =
+  campaignEnd &&
+  Date.now() > new Date(campaignEnd).getTime();
+
+
+
+
 offer.displayStatus =
   baseOffer.displayStatus === 'suspended'
     ? 'suspended'
     : baseOffer.displayStatus === 'coming_soon'
       ? 'coming_soon'
-      : baseOffer.displayStatus === 'available'
-        ? 'available'
-        : !isAid && !hasPersonalOffer
-          ? 'coming_soon'
-          : 'available';
+      : baseOffer.draft === true
+        ? 'coming_soon'
+        : baseOffer.displayStatus === 'available'
+          ? 'available'
+          : !isAid && !hasPersonalOffer
+            ? 'coming_soon'
+            : 'available';
+
+
 
           offer.emojiText = getReferralEmoji(guild, offer);
 
@@ -3801,6 +3868,31 @@ const payload = {
           .fetch(messageIds[channel.id])
           .catch(() => null);
       }
+
+
+
+
+      if (!message || message.author.id !== client.user.id) {
+        const recentMessages = await channel.messages
+          .fetch({ limit: 100 })
+          .catch(() => null);
+
+        if (recentMessages) {
+          const hasTicketButton = (components = []) =>
+            components.some(component =>
+              component.customId ===
+                `open_referral_ticket_${offer.slug}` ||
+              hasTicketButton(component.components || [])
+            );
+
+          message = recentMessages.find(msg =>
+            msg.author.id === client.user.id &&
+            msg.flags.has(MessageFlags.IsComponentsV2) &&
+            hasTicketButton(msg.components)
+          ) || null;
+        }
+      }
+
 
       if (message && message.author.id === client.user.id) {
         
