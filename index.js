@@ -8548,7 +8548,13 @@ if (
 `**Tableaux d'annonces :** ${network.indicators?.itemObjects ?? 0}`,
 
 '',
+
 '### 🔗 EXEMPLES D’ANNONCES',
+...(network.sampleLinks?.length
+  ? network.sampleLinks.slice(0, 2).map(
+      (link, index) => `${index + 1}. ${link}`
+    )
+  : ['Aucun lien exploitable détecté']),
 
 '',
 '### 🧪 EXTRACTION HTML',
@@ -8563,11 +8569,6 @@ if (
     )
   : ['Aucune annonce extraite']),
 
-...(network.sampleLinks?.length
-  ? network.sampleLinks.map(
-      (link, index) => `${index + 1}. ${link}`
-    )
-  : ['Aucun lien exploitable détecté']),
 
 
       ...(network.error
