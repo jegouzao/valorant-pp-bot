@@ -1938,7 +1938,9 @@ for (const [slug, details] of Object.entries(
   const offer = REFERRAL_OFFERS[`┃${slug}`];
   if (!offer) continue;
 
-
+if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
+  continue;
+}
   Object.assign(offer, {
     ...details,
     verifiedAt: '10/11/2026',
@@ -3401,54 +3403,63 @@ function getReferralLogo(offer) {
   };
 }
 
-function buildReferralContainer(offer) {
 
 
+const REFERRAL_EMOJI_ALIASES = {
+  'hello-bank': 'hellobank',
+  'trade-republic': 'traderepublic',
+  'trading212': 'trading212',
+  'la-banque-postale': 'labanquepostale',
+  'pass-culture': 'passculture',
+  'crypto-com': 'cryptocom',
+  'capital-koala': 'capitalkoala',
+  'distingo-bank': 'distingobank',
+  'topcashback': 'topcashback',
+  'ebuyclub': 'ebuyclub'
+};
+
+function getReferralEmoji(guild, offer) {
+  const slug = offer.slug;
+  const name = REFERRAL_EMOJI_ALIASES[slug] ||
+    slug.replace(/[^a-z0-9]/gi, '');
+
+  const emoji = guild.emojis.cache.find(
+    e => e.name.toLowerCase() === name.toLowerCase()
+  );
+
+  return emoji ? `${emoji.toString()} ` : '';
+}
 
 
-if (
-  offer.displayStatus === 'coming_soon' ||
-  offer.displayStatus === 'suspended'
-) {
-  const label = offer.displayStatus === 'suspended'
-    ? 'Offre temporairement suspendue'
-    : 'Bientôt disponible';
+function getReferralTitle(offer) {
+  const name = offer.title;
+  const bonus = String(offer.bonus || '');
 
-  const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR);
+  if (!bonus) return name;
 
-  const logo = getReferralLogo(offer);
+  const amounts = [...bonus.matchAll(
+    /(\d[\d\s\u00a0\u202f.,]*)\s*€/g
+  )];
 
-  const title = new TextDisplayBuilder()
-    .setContent(`# ${offer.title}`);
-
-  if (logo) {
-    container.addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(title)
-        .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(logo.url)
-        )
+  if (amounts.length) {
+    const values = amounts.map(match =>
+      Number(match[1].replace(/\s/g, '').replace(',', '.'))
     );
-  } else {
-    container.addTextDisplayComponents(title);
+
+    const maximum = Math.max(...values);
+
+    if (Number.isFinite(maximum)) {
+      return `${name} — Jusqu'à ${maximum.toLocaleString('fr-FR')} €`;
+    }
   }
 
-  container.addSeparatorComponents(
-    new SeparatorBuilder()
-      .setSpacing(SeparatorSpacingSize.Small)
-  );
-
-  container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`-# ${label}`)
-  );
-
-  return container;
+  return `${name} — ${bonus}`;
 }
 
 
 
 
+function buildReferralContainer(offer) {
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR);
 
@@ -3457,12 +3468,35 @@ if (
       .setSpacing(SeparatorSpacingSize.Small);
 
   const isAid = offer.category === 'aides';
+  const emoji = offer.emojiText || '';
 
-  const lines = [`# ${offer.title}`];
+  const isPending =
+    offer.displayStatus === 'coming_soon' ||
+    offer.displayStatus === 'suspended';
 
-  if (offer.bonus) {
-    lines.push(`**Récompense :** ${offer.bonus}`);
+  if (isPending) {
+    const label = offer.displayStatus === 'suspended'
+      ? 'Offre temporairement suspendue'
+      : 'Bientôt disponible';
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `# ${emoji}${offer.title}`
+      )
+    );
+
+    container.addSeparatorComponents(separator());
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`-# ${label}`)
+    );
+
+    return container;
   }
+
+  const lines = [
+    `# ${emoji}${getReferralTitle(offer)}`
+  ];
 
   if (offer.draft) {
     lines.push('-# Informations non vérifiées');
@@ -3470,30 +3504,10 @@ if (
     lines.push(`-# Offre vérifiée le ${offer.verifiedAt}`);
   }
 
-  const header = lines.join('\n');
-
-  
-const logo = getReferralLogo(offer);
-
-if (logo) {
-  container.addSectionComponents(
-    new SectionBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(header)
-      )
-      .setThumbnailAccessory(
-        new ThumbnailBuilder().setURL(logo.url)
-      )
-  );
-} else {
   container.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(header)
+    new TextDisplayBuilder().setContent(lines.join('\n'))
   );
-}
 
-
-  // ÉTAPES COURTES
-    // ÉTAPES — présentation avec séparateurs
   const steps = (offer.steps || [])
     .filter(([title, detail]) => title || detail);
 
@@ -3504,13 +3518,13 @@ if (logo) {
       const instruction = String(title || '').trim();
       const description = String(detail || '').trim();
 
-      const content = [
-        `**${index + 1}. ${instruction}**`,
-        description ? `-# ${description}` : ''
-      ].filter(Boolean).join('\n');
-
       container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(content)
+        new TextDisplayBuilder().setContent(
+          [
+            `**${instruction}**`,
+            description ? `-# ${description}` : ''
+          ].filter(Boolean).join('\n')
+        )
       );
 
       if (index < steps.length - 1) {
@@ -3519,10 +3533,8 @@ if (logo) {
     });
   }
 
-  // CODE PERSONNEL
   if (!isAid && offer.referralCode) {
     container.addSeparatorComponents(separator());
-
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `**Code de parrainage :** \`${offer.referralCode}\``
@@ -3530,18 +3542,15 @@ if (logo) {
     );
   }
 
-  // INFORMATIONS COMPLÉMENTAIRES
   if (offer.notice && !offer.draft) {
     container.addSeparatorComponents(separator());
-
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `**À retenir**\n-# ${offer.notice}`
+        `-# ${offer.notice}`
       )
     );
   }
 
-  // BOUTONS
   const buttons = [];
 
   const personalUrl = !isAid
@@ -3554,15 +3563,12 @@ if (logo) {
   if (mainUrl && !offer.draft) {
     buttons.push(
       new ButtonBuilder()
-        .setLabel(
-          isAid ? 'Faire ma demande' : 'Lien de parrainage'
-        )
+        .setLabel(isAid ? 'Faire ma demande' : 'Lien de parrainage')
         .setStyle(ButtonStyle.Link)
         .setURL(mainUrl)
     );
   }
 
-  // Uniquement un règlement de parrainage identifié.
   if (offer.referralTermsUrl) {
     buttons.push(
       new ButtonBuilder()
@@ -3572,7 +3578,6 @@ if (logo) {
     );
   }
 
-  // Ne pas confondre site officiel et règlement.
   if (offer.officialUrl && !offer.referralTermsUrl) {
     buttons.push(
       new ButtonBuilder()
@@ -3595,6 +3600,7 @@ if (logo) {
 
   return container;
 }
+
 
 
 
@@ -3638,6 +3644,8 @@ offer.displayStatus =
           ? 'coming_soon'
           : 'available';
 
+          offer.emojiText = getReferralEmoji(guild, offer);
+
 
     const channel = guild.channels.cache.find(
       ch => ch.name === channelName && ch.type === ChannelType.GuildText
@@ -3661,11 +3669,8 @@ offer.displayStatus =
 
     try {
       
-const logo = getReferralLogo(offer);
-
 const payload = {
   components: [buildReferralContainer(offer)],
-  files: logo ? [logo.file] : [],
   flags: MessageFlags.IsComponentsV2,
   allowedMentions: { parse: [] }
 };
@@ -3683,7 +3688,6 @@ const payload = {
         
 await message.edit({
   components: payload.components,
-  files: payload.files,
   attachments: [],
   allowedMentions: payload.allowedMentions
 });
