@@ -2350,12 +2350,29 @@ async function diagnoseVintedAccess(searchUrl) {
 
     const html = await response.text();
 
+
+const indicators = {
+  itemLinks: (
+    html.match(/href=["'][^"']*\/items\/\d+/gi) || []
+  ).length,
+
+  itemIds: (
+    html.match(/"item_id"\s*:\s*\d+/gi) || []
+  ).length,
+
+  itemObjects: (
+    html.match(/"items"\s*:\s*\[/gi) || []
+  ).length
+};
+
+
     const title =
       html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
       ?.replace(/\s+/g, ' ')
       ?.trim() || 'Non trouvé';
 
     return {
+      indicators,
       success: response.ok,
       status: response.status,
       durationMs: Date.now() - startedAt,
@@ -8430,6 +8447,13 @@ if (
       `**Type de contenu :** ${network.contentType || 'Inconnu'}`,
       `**Taille HTML :** ${network.htmlLength ?? 0} caractères`,
       `**Titre de page :** ${network.title || 'Inconnu'}`,
+
+'',
+'### 📦 DONNÉES D’ANNONCES',
+`**Liens d'annonces :** ${network.indicators?.itemLinks ?? 0}`,
+`**Identifiants détectés :** ${network.indicators?.itemIds ?? 0}`,
+`**Tableaux d'annonces :** ${network.indicators?.itemObjects ?? 0}`,
+
       ...(network.error
         ? [`**Erreur :** ${network.error}`]
         : []),
