@@ -1739,50 +1739,44 @@ function getWatchTitle(guild, platform, title) {
 
 
 
+
 function buildWatchMainPanel(guild, count = 0) {
-  const vinted = getWatchEmoji(guild, 'vinted');
   const leboncoin = getWatchEmoji(guild, 'leboncoin');
+  const vinted = getWatchEmoji(guild, 'vinted');
   const ebay = getWatchEmoji(guild, 'ebay');
 
   return new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
-
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `# ${[vinted, leboncoin, ebay].filter(Boolean).join('')} SURVEILLANCE DES ANNONCES\n` +
+        `# ${[leboncoin, vinted, ebay].filter(Boolean).join('')} SURVEILLANCE DES ANNONCES\n` +
         '-# Configure tes filtres sur la plateforme, trie du plus récent au plus ancien, puis colle ton lien de recherche.\n' +
         '-# Jusqu’à 5 recherches personnelles, chacune dans un salon privé.'
       )
     )
-
     .addSeparatorComponents(
       new SeparatorBuilder()
     )
-
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('watch_platform_vinted')
-          .setLabel('Créer une recherche Vinted')
+          .setLabel('Recherche Vinted')
           .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
           .setCustomId('watch_platform_leboncoin')
-          .setLabel('Créer une recherche Le Bon Coin')
+          .setLabel('Recherche Leboncoin')
           .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
           .setCustomId('watch_platform_ebay')
-          .setLabel('Créer une recherche eBay')
-          .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-          .setCustomId('watch_list')
-          .setLabel('Mes recherches')
-          .setStyle(ButtonStyle.Primary)
+          .setLabel('Recherche eBay')
+          .setStyle(ButtonStyle.Secondary)
       )
     );
 }
+
 
 
 
