@@ -2652,9 +2652,10 @@ steps: [
   [
     'Respecte les conditions de validation',
     'Les seuils de cashback et les délais dépendent de la campagne.'
+
   ]
 ],
-
+  },
 
   wanteeed: {
     
@@ -2699,12 +2700,14 @@ if (['boursobank', 'fortuneo', 'revolut'].includes(slug)) {
   continue;
 }
 
+
 Object.assign(offer, {
   ...details,
   verifiedAt: details.verifiedAt ?? null,
   draft: details.draft ?? true
 });
 }
+
 
 
 const AID_RESEARCH_UPDATES = {
@@ -3763,7 +3766,7 @@ async function syncReferralPanels(guild) {
     referralSyncLocks.delete(guild.id);
   }
 }
-
+async function performReferralPanelSync(guild) {
   await guild.emojis.fetch().catch(error => {
   console.warn(
     '[PARRAINAGES] Impossible d’actualiser les emojis :',
