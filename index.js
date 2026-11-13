@@ -2642,13 +2642,14 @@ const price = prices.length >= 2
 const WATCH_CONNECTORS = {
   leboncoin: null,
   vinted: fetchVintedListings,
-  ebay: null
+  ebay: fetchEbayListings
 };
 
 const WATCH_ACTIVE_SCANS = new Set();
 
 let watchSchedulerStarted = false;
 let watchGlobalScanRunning = false;
+let watchSearchRotation = 0;
 
 function watchListingKey(platform, listing) {
   const id = String(listing.id || '').trim();
@@ -2915,6 +2916,7 @@ async function watchScanAll() {
   if (watchGlobalScanRunning) return;
 
   watchGlobalScanRunning = true;
+  const cycleStartedAt = Date.now();
 
   try {
     const platforms = Object.entries(WATCH_CONNECTORS)
@@ -2924,12 +2926,28 @@ async function watchScanAll() {
     if (!platforms.length) return;
 
     const searches = await WatchSearch.find({
-      paused: false,
-      searchUrl: { $exists: true, $ne: '' },
-      platform: { $in: platforms }
-    });
+  paused: false,
+  searchUrl: { $exists: true, $ne: '' },
+  platform: { $in: platforms }
+}).sort({ _id: 1 });
 
-    const MAX_CONCURRENT_SCANS = 3;
+const MAX_CONCURRENT_SCANS = 3;
+
+// Changer le point de départ à chaque cycle.
+// Évite de privilégier systématiquement les mêmes recherches.
+if (searches.length > 0) {
+  const offset = watchSearchRotation % searches.length;
+
+  const rotatedSearches = [
+    ...searches.slice(offset),
+    ...searches.slice(0, offset)
+  ];
+
+  searches.splice(0, searches.length, ...rotatedSearches);
+
+  watchSearchRotation =
+    (watchSearchRotation + MAX_CONCURRENT_SCANS) % searches.length;
+}
 
     let nextIndex = 0;
 
@@ -2965,9 +2983,14 @@ async function watchScanAll() {
       '[SURVEILLANCE] Erreur globale :',
       error
     );
-  } finally {
-    watchGlobalScanRunning = false;
-  }
+} finally {
+  console.log('[SURVEILLANCE] CYCLE TERMINÉ', {
+    dureeMs: Date.now() - cycleStartedAt,
+    intervalleCibleMs: WATCH_CONFIG.checkIntervalMs
+  });
+
+  watchGlobalScanRunning = false;
+}
 }
 
 
