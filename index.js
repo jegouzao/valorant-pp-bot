@@ -2579,8 +2579,11 @@ const imageUrl = imageCandidates
 
 
 if (listings.size < 3) {
-  console.log('[VINTED IMAGE]', {
-    id,
+  console.log('[VINTED IMAGE DEBUG]', {
+    annonce: id,
+    src: imageElement.attr('src'),
+    dataSrc: imageElement.attr('data-src'),
+    srcset: imageElement.attr('srcset'),
     imageUrl,
     candidates: imageCandidates
   });
