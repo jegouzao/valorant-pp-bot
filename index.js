@@ -8951,10 +8951,10 @@ if (
   // Gestion d'une recherche existante
   if (
     interaction.isButton() &&
-    /^watch_(pause|mentions|delete)_/.test(interaction.customId)
+    /^watch_(suspend|resume|delete)_/.test(interaction.customId)
   ) {
     const match = interaction.customId.match(
-      /^watch_(pause|mentions|delete)_([a-f0-9]{24})$/
+      /^watch_(suspend|resume|delete)_([a-f0-9]{24})$/
     );
 
     if (!match) return;
@@ -9033,13 +9033,29 @@ if (action === 'delete') {
       flags: MessageFlags.Ephemeral
     });
 
-    if (action === 'pause') {
-      search.paused = !search.paused;
-    }
 
-    if (action === 'mentions') {
-      search.mentions = !search.mentions;
-    }
+if (action === 'suspend') {
+  if (search.paused) {
+    return interaction.reply({
+      content: 'Cette recherche est déjà suspendue.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  search.paused = true;
+}
+
+if (action === 'resume') {
+  if (!search.paused) {
+    return interaction.reply({
+      content: 'Cette recherche est déjà active.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  search.paused = false;
+}
+
 
     await search.save();
     await updateWatchManagementPanel(
