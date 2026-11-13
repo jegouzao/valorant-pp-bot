@@ -1895,19 +1895,21 @@ function buildWatchManagementPanel(guild, search) {
 const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        getWatchTitle(
-          guild,
-          search.platform,
-          `SURVEILLANCE — ${platformName.toUpperCase()}`
-        ) +
-        '\n' +
-        `-# Recherche de <@${search.userId}>\n\n` +
-        `${details}\n` +
-        `**Mentions :** ${search.mentions ? 'Activées' : 'Désactivées'}\n` +
-        `**Statut :** ${search.paused ? 'Suspendue' : 'Active'}\n\n` +
-        '-# Récupération automatique en attente de connexion à la plateforme.'
-      )
+      
+new TextDisplayBuilder().setContent(
+  getWatchTitle(
+    guild,
+    search.platform,
+    `SURVEILLANCE — ${platformName.toUpperCase()}`
+  ) +
+  '\n' +
+  `-# Recherche de <@${search.userId}>\n\n` +
+  `${details}\n` +
+  `**Statut :** ${search.paused ? 'Suspendue' : 'Active'}\n\n` +
+  '-# Les annonces sont publiées automatiquement dans ce salon.\n' +
+  '-# Pour recevoir les alertes sur ton téléphone, active les notifications de ce salon dans Discord.'
+)
+
     )
     .addSeparatorComponents(
       new SeparatorBuilder()
@@ -1915,24 +1917,21 @@ const container = new ContainerBuilder()
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`watch_pause_${search._id}`)
-          .setLabel(search.paused ? 'Reprendre' : 'Suspendre')
-          .setStyle(ButtonStyle.Secondary),
+  .setCustomId(`watch_suspend_${search._id}`)
+  .setLabel('Suspendre')
+  .setStyle(ButtonStyle.Secondary)
+  .setDisabled(Boolean(search.paused)),
 
-        new ButtonBuilder()
-          .setCustomId(`watch_mentions_${search._id}`)
-          .setLabel(
-            search.mentions
-              ? 'Désactiver les mentions'
-              : 'Activer les mentions'
-          )
-          .setStyle(ButtonStyle.Secondary),
+new ButtonBuilder()
+  .setCustomId(`watch_resume_${search._id}`)
+  .setLabel('Reprendre')
+  .setStyle(ButtonStyle.Secondary)
+  .setDisabled(!search.paused),
 
-        
 new ButtonBuilder()
   .setCustomId(`watch_delete_${search._id}`)
-  .setLabel('Supprimer')
-  .setStyle(ButtonStyle.Danger),
+  .setLabel('Arrêter')
+  .setStyle(ButtonStyle.Secondary),
 
 new ButtonBuilder()
   .setCustomId(`watch_test_${search._id}`)
@@ -2895,7 +2894,17 @@ for (const listing of selected) {
     search.lastCheckedAt = new Date();
     search.lastScanError = '';
 
-    await search.save();
+    await WatchSearch.updateOne(
+  { _id: search._id },
+  {
+    $set: {
+      initialScanDone: true,
+      seenListingIds: [],
+      lastCheckedAt: search.lastCheckedAt,
+      lastScanError: ''
+    }
+  }
+);
 
   } catch (error) {
     console.error(
@@ -3217,23 +3226,20 @@ async function watchDeliverPending() {
         }
 
    
-        components.push(
-          buildWatchListingCard(
-            guild,
-            notification.platform,
-            notification.listing,
-            search
-          )
-        );
 
+          const message = await channel.send({
+            components: [
+              buildWatchListingCard(
+                guild,
+                notification.platform,
+                notification.listing,
+                search
+              )
+            ],
+            flags: MessageFlags.IsComponentsV2,
+            allowedMentions: { parse: [] }
+          });
 
-        const message = await channel.send({
-          components,
-          flags: MessageFlags.IsComponentsV2,
-          allowedMentions: mention
-            ? { users: [search.userId] }
-            : { parse: [] }
-        });
 
 
         await WatchNotification.updateOne(
@@ -3357,17 +3363,22 @@ function buildWatchListingCard(guild, platform, listing, search) {
     `### ${emoji ? emoji + ' ' : ''}${platformName.toUpperCase()}` +
     ` · NOUVELLE ANNONCE`;
 
-  const info = [
-    `**${title}**`,
-    '',
-    `## ${price}`,
-    ...(details.length
-      ? ['', `-# ${details.join(' · ')}`]
-      : []),
-    ...(location
-      ? [`-# 📍 ${location}`]
-      : [])
-  ].join('\n');
+  
+const info = [
+  `## ${title}`,
+  '',
+  `# ${price}`,
+  ...(platform === 'vinted'
+    ? ['-# Prix incluant les frais de protection Vinted']
+    : []),
+  ...(details.length
+    ? [`-# ${details.join(' · ')}`]
+    : []),
+  ...(location
+    ? [`-# 📍 ${location}`]
+    : [])
+].join('\n');
+
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
@@ -3413,34 +3424,37 @@ function buildWatchListingCard(guild, platform, listing, search) {
   }
 
 
-  container
-    .addSeparatorComponents(
-      new SeparatorBuilder()
+
+container
+  .addSeparatorComponents(
+    new SeparatorBuilder()
+  )
+  .addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel('Ouvrir')
+        .setStyle(ButtonStyle.Link)
+        .setURL(listing.url),
+
+      new ButtonBuilder()
+        .setCustomId(`watch_suspend_${search._id}`)
+        .setLabel('Suspendre')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(Boolean(search.paused)),
+
+      new ButtonBuilder()
+        .setCustomId(`watch_resume_${search._id}`)
+        .setLabel('Reprendre')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!search.paused),
+
+      new ButtonBuilder()
+        .setCustomId(`watch_delete_${search._id}`)
+        .setLabel('Arrêter')
+        .setStyle(ButtonStyle.Secondary)
     )
-    .addActionRowComponents(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setLabel("Voir l'annonce")
-          .setEmoji('🔗')
-          .setStyle(ButtonStyle.Link)
-          .setURL(listing.url),
+  );
 
-        new ButtonBuilder()
-          .setCustomId(`watch_pause_${search._id}`)
-          .setLabel('Pause / Reprise')
-          .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-          .setCustomId(`watch_mentions_${search._id}`)
-          .setLabel('Ping')
-          .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-          .setCustomId(`watch_delete_${search._id}`)
-          .setLabel('Supprimer')
-          .setStyle(ButtonStyle.Danger)
-      )
-    );
 
 
   return container;
