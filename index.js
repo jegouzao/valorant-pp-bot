@@ -2044,11 +2044,19 @@ async function getEbayAccessToken() {
     }
   );
 
-  if (!response.ok) {
-    throw new Error(
-      `Authentification eBay : HTTP ${response.status}`
-    );
-  }
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+
+  const errorCode = String(errorData.error || 'unknown');
+  const errorDescription = String(
+    errorData.error_description || 'Aucune précision'
+  );
+
+  throw new Error(
+    `Authentification eBay : HTTP ${response.status} — ` +
+    `${errorCode} — ${errorDescription}`
+  );
+}
 
   const data = await response.json();
 
