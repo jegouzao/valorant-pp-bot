@@ -2065,6 +2065,7 @@ async function getEbayAccessToken() {
 }
 
 
+
 function parseEbaySearchFilters(searchUrl) {
   const url = new URL(
     validateWatchSearchUrl('ebay', searchUrl)
@@ -2072,24 +2073,15 @@ function parseEbaySearchFilters(searchUrl) {
 
   const params = url.searchParams;
 
-  
-const category = params.get('_sacat');
-
-if (category && category !== '0') {
-  throw new Error(
-    'Les recherches limitées à une catégorie eBay ' +
-    'ne sont pas encore prises en charge.'
-  );
-}
-
-const supported = new Set([
-  '_nkw', '_udlo', '_udhi', '_sop',
-  '_ipg', '_pgn', 'rt', 'mkcid',
-  'mkrid', 'siteid', 'campid',
-  'customid', 'toolid',
-  '_sacat', '_from'
-]);
-
+  const supported = new Set([
+    '_nkw', '_udlo', '_udhi', '_sop',
+    '_ipg', '_pgn', 'rt', 'mkcid',
+    'mkrid', 'siteid', 'campid',
+    'customid', 'toolid',
+    '_sacat', '_from', '_dcat',
+    'LH_ItemCondition', 'LH_BIN',
+    'Personnage'
+  ]);
 
   const unsupported = [...new Set(
     [...params.keys()].filter(key => !supported.has(key))
@@ -2105,9 +2097,7 @@ const supported = new Set([
   const keywords = (params.get('_nkw') || '').trim();
 
   if (!keywords) {
-    throw new Error(
-      'Mots-clés eBay introuvables dans le lien.'
-    );
+    throw new Error('Mots-clés eBay introuvables.');
   }
 
   const readPrice = key => {
@@ -2137,21 +2127,61 @@ const supported = new Set([
     );
   }
 
-  // _sop=10 correspond au tri par annonces récentes.
   const sort = params.get('_sop');
 
   if (sort && sort !== '10') {
     throw new Error(
-      'Trie la recherche eBay par annonces récentes.'
+      'Trie la recherche par annonces récentes.'
+    );
+  }
+
+  const category =
+    params.get('_dcat') ||
+    params.get('_sacat');
+
+  if (
+    category &&
+    category !== '0' &&
+    !/^\d+$/.test(category)
+  ) {
+    throw new Error('Catégorie eBay invalide.');
+  }
+
+  const condition = params.get('LH_ItemCondition');
+
+  if (condition && condition !== '3') {
+    throw new Error(
+      'Cet état eBay n’est pas encore pris en charge.'
+    );
+  }
+
+  const buyNow = params.get('LH_BIN');
+
+  if (buyNow && buyNow !== '1') {
+    throw new Error(
+      'Filtre achat immédiat invalide.'
+    );
+  }
+
+  const personnage = params.get('Personnage');
+
+  if (personnage && !category) {
+    throw new Error(
+      'Le filtre Personnage nécessite une catégorie.'
     );
   }
 
   return {
     keywords,
     minPrice,
-    maxPrice
+    maxPrice,
+    category: category === '0' ? null : category,
+    condition,
+    buyNow: buyNow === '1',
+    personnage
   };
 }
+
 
 
 
@@ -2168,7 +2198,40 @@ async function fetchEbayListings(searchUrl) {
   apiUrl.searchParams.set('limit', '50');
   apiUrl.searchParams.set('sort', 'newlyListed');
 
-  const apiFilters = [];
+  
+const apiFilters = [];
+
+if (filters.category) {
+  apiUrl.searchParams.set(
+    'category_ids',
+    filters.category
+  );
+}
+
+if (filters.condition === '3') {
+  apiFilters.push('conditions:{USED}');
+}
+
+if (filters.buyNow) {
+  apiFilters.push('buyingOptions:{FIXED_PRICE}');
+}
+
+if (filters.personnage) {
+  if (!filters.category) {
+    throw new Error(
+      'Catégorie obligatoire pour le filtre Personnage.'
+    );
+  }
+
+  const safeValue = filters.personnage
+    .replace(/[{}|\\]/g, '\\$&');
+
+  apiUrl.searchParams.set(
+    'aspect_filter',
+    `categoryId:${filters.category},Personnage:{${safeValue}}`
+  );
+}
+
 
   if (
     filters.minPrice !== null ||
