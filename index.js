@@ -1934,18 +1934,10 @@ new ButtonBuilder()
   .setLabel('Supprimer')
   .setStyle(ButtonStyle.Danger),
 
-
 new ButtonBuilder()
   .setCustomId(`watch_test_${search._id}`)
   .setLabel('Tester une annonce')
-  .setStyle(ButtonStyle.Secondary),
-
-new ButtonBuilder()
-  .setCustomId(`watch_preview_${search._id}`)
-  .setLabel('Aperçu du design')
-  .setEmoji('🎨')
   .setStyle(ButtonStyle.Secondary)
-
 
   
       )
@@ -7745,592 +7737,6 @@ const sorted = sortLeaderboardPlayers(
   }
 }
 
-
-// ===== Contenu de la commande /onboarding =====
-
-function buildOnboardingContainer() {
-  const row = new ActionRowBuilder().addComponents(
-  new ButtonBuilder()
-    .setCustomId('open_rules')
-    .setLabel('Règlement')
-    .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-    .setCustomId('rank_up')
-    .setLabel('J\'ai Rank Up')
-    .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-    .setCustomId('apply_organizer')
-    .setLabel('Rejoindre l\'équipe')
-    .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-    .setCustomId('toggle_notif_pp')
-    .setLabel('Notifications PP')
-    .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-    .setCustomId('open_ticket')
-    .setLabel('Support')
-    .setStyle(ButtonStyle.Secondary)
-);
-
-  return new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:Roles:1493046347337699499> ONBOARDING — VALORANT PP`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    )
-
-    .addMediaGalleryComponents(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder()
-          .setURL(BANNERS.onboarding)
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-    )
-
-    .addActionRowComponents(row);
-}
-
-async function showPlayerStats(interaction) {
-
-  await interaction.deferReply({
-    flags:
-      MessageFlags.Ephemeral |
-      MessageFlags.IsComponentsV2
-  });
-
-  const member = interaction.member;
-  const guild = interaction.guild;
-
-  const allPoints = await getAllPoints();
-  const allInvites = await getAllInvites();
-  const seasonChampions =
-  await getSeasonChampions();
-
-const playerChampionships =
-  seasonChampions
-    .filter(
-      champion =>
-        champion.userId === member.id
-    )
-    .sort((a, b) =>
-      b.seasonKey.localeCompare(a.seasonKey)
-    );
-
-const championshipLine =
-  playerChampionships.length
-    ? playerChampionships
-        .map(champion => champion.seasonLabel)
-        .join(' • ')
-    : null;
-
-  const stats = allPoints[member.id] || {
-    rr: 0,
-    games: 0,
-    wins: 0,
-    timeouts: 0
-  };
-
-  const invitesData = allInvites[member.id] || {
-    invites: 0,
-    members: []
-  };
-
-  const totalInvitesPerMember = {};
-
-  for (const [id, data] of Object.entries(allInvites)) {
-    totalInvitesPerMember[id] = data.invites || 0;
-  }
-
-  const sorted = sortLeaderboardPlayers(
-    allPoints,
-    totalInvitesPerMember,
-    guild.members.cache
-  );
-
-  const positionIndex = sorted.findIndex(
-    ([id]) => id === member.id
-  );
-
-  const position =
-  positionIndex !== -1
-    ? `#${positionIndex + 1}`
-    : '—';
-
-  const rankEmoji = getRankEmojiFromMember(member);
-
-  let topInviterId = null;
-  let maxInvites = -1;
-
-  for (const [id, data] of Object.entries(allInvites)) {
-  const memberData = guild.members.cache.get(id);
-
-  if (!memberData || memberData.user.bot) continue;
-
-  const invites = Number(data.invites) || 0;
-
-  if (
-    invites > maxInvites ||
-    (invites === maxInvites &&
-      topInviterId !== null &&
-      id.localeCompare(topInviterId) < 0)
-  ) {
-    maxInvites = invites;
-    topInviterId = id;
-  }
-}
-
-  const badgeTop1 =
-  positionIndex === 0
-    ? BADGES.TOP1
-    : '';
-
-const badgeTopInviter =
-  member.id === topInviterId && maxInvites > 0
-    ? BADGES.TOP_INVITER
-    : '';
-
-const badgeOG =
-  member.roles.cache.has(OG_ROLE_ID)
-    ? BADGES.OG
-    : '';
-
-const badgeOrganizer =
-  member.roles.cache.has(ORGANIZER_ROLE_ID)
-    ? BADGES.ORGANIZER
-    : '';
-
-const badgeWinner =
-  member.roles.cache.has(WINNER_ROLE_ID)
-    ? BADGES.WINNER
-    : '';
-
-const badgeServerTag =
-  member.roles.cache.has(SERVER_TAG_ROLE_ID)
-    ? BADGES.SERVER_TAG
-    : '';
-
-const badgeBooster =
-  member.roles.cache.has(BOOSTER_ROLE_ID)
-    ? BADGES.BOOSTER
-    : '';
-
-const badgesLine = [
-  badgeTop1,
-  badgeTopInviter,
-  badgeWinner,
-  badgeOG,
-  badgeOrganizer,
-  badgeServerTag,
-  badgeBooster
-]
-  .filter(Boolean)
-  .join(' ');
-
-  const games = Math.max(0, Number(stats.games) || 0);
-const wins = Math.max(0, Number(stats.wins) || 0);
-
-const winrate = games > 0
-  ? (
-      Math.min(100, (wins / games) * 100)
-    ).toFixed(1)
-  : '0.0';
-
-  const joinedTs = member.joinedTimestamp
-    ? Math.floor(member.joinedTimestamp / 1000)
-    : null;
-
-  const roleNames = member.roles.cache
-    .filter(r => r.id !== guild.id)
-    .sort((a, b) => b.position - a.position)
-    .map(r => `<@&${r.id}>`)
-    .join(', ') || 'Aucun';
-
-  const maxRR = Math.max(
-  1,
-  Number(sorted[0]?.[1]?.rr) || 0,
-  Number(stats.rr) || 0
-);
-
-const barLength = 15;
-  const rawBars =
-    (stats.rr / maxRR) * barLength;
-
-  const filledBars = Math.max(
-    0,
-    Math.min(
-      barLength,
-      Math.round(rawBars)
-    )
-  );
-
-  const progressBar =
-  PARALLELOGRAM_FULL.repeat(filledBars) +
-  PARALLELOGRAM_EMPTY.repeat(barLength - filledBars);
-
-  const statsContainer = new ContainerBuilder()
-  .setAccentColor(EMBED_COLOR)
-
-  .addSectionComponents(
-    new SectionBuilder()
-
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `## ${member.displayName} ${rankEmoji ? rankEmoji + ' ' : ''}${badgesLine}\n` +
-          `-# Tes statistiques personnelles sur **VALORANT PP**\n` +
-          `-# Membre  <:VIDE:1493046369076777110>  depuis le ${joinedTs ? `<t:${joinedTs}:D>` : '—'}\n` +
-          `-# **${position}** au classement général`
-        )
-      )
-
-      .setThumbnailAccessory(
-        new ThumbnailBuilder()
-          .setURL(
-            member.displayAvatarURL({
-              size: 256
-            })
-          )
-      )
-  )
-
-  .addSeparatorComponents(
-    new SeparatorBuilder()
-  )
-
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `-# ${progressBar}`
-    )
-  )
-
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      `### ${stats.rr}<:VIDE:1541125087384829962>      ` +
-      `${winrate}<:VIDE:1541167342535319603>%  　` +
-      `${stats.games}<:VIDE:1472667851239456935>　` +
-      `${stats.wins}<:VIDE:1493266372954820741>　` +
-      `${invitesData.invites}<:VIDE:1472667823875559708>　` +
-      `${stats.timeouts || 0}<:VIDE:1493378253446975619>　\n`
-    )
-  )
-
-  .addSeparatorComponents(
-    new SeparatorBuilder()
-  )
-
-  .addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(
-      championshipLine
-        ? `### ${BADGES.WINNER} PALMARÈS\n` +
-          `-# ${championshipLine}\n\n${roleNames}`
-        : `${roleNames}`
-    )
-  )
-
-  .addMediaGalleryComponents(
-  new MediaGalleryBuilder().addItems(
-    new MediaGalleryItemBuilder().setURL(
-      'attachment://stats-divider.png'
-    )
-  )
-);
-
-return interaction.editReply({
-  components: [statsContainer],
-
-  files: [
-    {
-      attachment: path.join(
-        __dirname,
-        'assets',
-        'images',
-        'stats-divider.png'
-      ),
-      name: 'stats-divider.png'
-    }
-  ],
-
-  flags: MessageFlags.IsComponentsV2
-});
-}
-
-
-
-function buildRulesContainer() {
-  return new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:EMOJI_RULES:1493046347337699499> RÈGLEMENT — VALORANT PP\n` +
-        `-# **AFK, leave volontaire et smurfing** sont sanctionnés\n` +
-        `-# Pour le reste, **aucune restriction d'armes ou de décibels**\n` +
-        `-# *Le but est de clipfarm un max*`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-  new TextDisplayBuilder().setContent(
-    `## <:EMOJI_RR:1493266536813690970> BARÈME DES POINTS\n` +
-    `-# <:36:1497395169224556686><:36:1497395178045050992>—    Victoire avec Boost serveur\n` +
-    `-# <:33:1497395187415126127><:36:1497395194289455114>—    Victoire avec Tag serveur\n` +
-    `-# <:30:1493259044893360200><:36:1493259054804369408>—    Victoire standard\n` +
-    `-# <:15:1493259005584343080><:36:1493259016686538932>—    Défaite`
-  )
-)
-
-       .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:EMOJI_BALANCE:1466470349351686194> ÉQUILIBRAGE DES ÉQUIPES\n` +
-        `-# Boombot compose automatiquement les équipes selon le **Peak Rank** de chaque joueur\n` +
-        `-# L'équilibrage peut être annulé par l'organisateur si nécessaire`
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `## <:EMOJI_GIFT:1544365369253171282> RÉCOMPENSES MENSUELLES\n` +
-        `-# ${BADGES.TOP1} — Top 1 du **classement général**\n` +
-        `-# ${BADGES.TOP_INVITER} — Top 1 du **classement des invitations**\n` +
-        `-# Les récompenses varieront selon les saisons (bundles, Riot Cards, PayPal, Nitro…)`
-      )
-    );
-}
-
-function getDiscordVisualWidth(text, guild) {
-  if (!text) return 0;
-
-  let width = 0;
-
-  const parts = text.match(
-    /<@!?\d+>|<a?:\w+:\d+>|./gu
-  ) || [];
-
-  for (const part of parts) {
-
-    // Mention utilisateur
-    const mentionMatch = part.match(/^<@!?(\d+)>$/);
-
-    if (mentionMatch) {
-      const member = guild.members.cache.get(mentionMatch[1]);
-
-      const name = member
-        ? `@${member.displayName}`
-        : '@Utilisateur';
-
-      for (const char of name) {
-        if ('ilIjtfr1.,\'`|!:'.includes(char)) {
-          width += 0.45;
-        } else if ('MW@#%&'.includes(char)) {
-          width += 1.15;
-        } else if (/[A-ZÀ-Ü]/.test(char)) {
-          width += 0.85;
-        } else if (/[0-9]/.test(char)) {
-          width += 0.75;
-        } else {
-          width += 0.72;
-        }
-      }
-
-      continue;
-    }
-
-    // Emoji custom Discord
-    if (/^<a?:\w+:\d+>$/.test(part)) {
-      width += 2.15;
-      continue;
-    }
-
-    // Espaces normaux
-    if (part === ' ') {
-      width += 0.42;
-      continue;
-    }
-
-    // Caractères classiques
-    if ('ilIjtfr1.,\'`|!:'.includes(part)) {
-      width += 0.45;
-    } else if ('MW@#%&'.includes(part)) {
-      width += 1.15;
-    } else if (/[A-ZÀ-Ü]/.test(part)) {
-      width += 0.85;
-    } else {
-      width += 0.72;
-    }
-  }
-
-  return width;
-}
-
-
-
-function padTeamLine(left, right, guild) {
-  const COLUMN_TARGET = 24.5;
-  const FULL_SPACE_WIDTH = 1.35;
-  const THIN_SPACE_WIDTH = 0.25;
-
-  const normalizedLeft = left || '';
-  const normalizedRight = right || '';
-
-  if (!normalizedLeft) {
-    const fullSpaces = Math.floor(
-      COLUMN_TARGET / FULL_SPACE_WIDTH
-    );
-
-    const remainder =
-      COLUMN_TARGET -
-      (fullSpaces * FULL_SPACE_WIDTH);
-
-    const thinSpaces = Math.max(
-      0,
-      Math.round(
-        remainder / THIN_SPACE_WIDTH
-      )
-    );
-
-    return (
-      '　'.repeat(fullSpaces) +
-      '\u2009'.repeat(thinSpaces) +
-      normalizedRight
-    );
-  }
-
-  const leftWidth = getDiscordVisualWidth(
-    normalizedLeft,
-    guild
-  );
-
-  const remainingWidth =
-    COLUMN_TARGET - leftWidth;
-
-  const fullSpaces = Math.max(
-    2,
-    Math.floor(
-      remainingWidth / FULL_SPACE_WIDTH
-    )
-  );
-
-  const remainder =
-    Math.max(
-      0,
-      remainingWidth -
-      (fullSpaces * FULL_SPACE_WIDTH)
-    );
-
-  const thinSpaces = Math.max(
-    0,
-    Math.round(
-      remainder / THIN_SPACE_WIDTH
-    )
-  );
-
-  return (
-    normalizedLeft +
-    '　'.repeat(fullSpaces) +
-    '\u2009'.repeat(thinSpaces) +
-    normalizedRight
-  );
-}
-
-
-function buildInGameContainer({
-  attackersText,
-  defendersText,
-  mapName,
-  mapImage,
-  footerText,
-  guild
-}) {
-  const attackers = String(attackersText || '')
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean);
-
-  const defenders = String(defendersText || '')
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean);
-
-  const maxPlayers = Math.max(
-    attackers.length,
-    defenders.length
-  );
-
-  const teamLines = [];
-
-  for (let i = 0; i < maxPlayers; i++) {
-  const attacker = attackers[i] || '';
-  const defender = defenders[i] || '';
-
-  teamLines.push(
-    padTeamLine(attacker, defender, guild)
-  );
-}
-
-const container = new ContainerBuilder()
-    .setAccentColor(EMBED_COLOR)
-
-    .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            `## <:VIDE:1493046347337699499> PARTIE EN COURS ${mapName || ''}\n` +
-            `-# Partie lancée par **${footerText}**\n` +
-            `-# Mode spectateur disponible\n` +
-            `-# Rejoins un salon vocal avant de choisir le side à observer`
-          )
-        )
-        .setThumbnailAccessory(
-          new ThumbnailBuilder().setURL(`attachment://${mapImage}`)
-        )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    )
-
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        teamLines.join('\n')
-      )
-    )
-
-    .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setSpacing(SeparatorSpacingSize.Large)
-    );
-
-  return container;
-}
-
 // ── Embed "Annonce Custom" (partie créée / inscription) ──
 function buildAnnounceContainer({
   waitingVCId,
@@ -8683,14 +8089,12 @@ if (
       `**Tri :** ${filters.order}`,
       `**Prix minimum :** ${filters.minPrice ?? 'Aucun'}`,
       `**Prix maximum :** ${filters.maxPrice ?? 'Aucun'}`,
-      `**Catégories :** ${formatValues(filters.catalogs)}`,
+            `**Catégories :** ${formatValues(filters.catalogs)}`,
       `**Marques :** ${formatValues(filters.brands)}`,
       `**Tailles :** ${formatValues(filters.sizes)}`,
       `**États :** ${formatValues(filters.conditions)}`,
       `**Couleurs :** ${formatValues(filters.colors)}`,
       `**Matières :** ${formatValues(filters.materials)}`,
-      '',
-      
       '',
       '### 🌐 CONNEXION VINTED',
       `**Connexion :** ${network.success ? 'Réussie' : 'Échec'}`,
@@ -8699,63 +8103,50 @@ if (
       `**Type de contenu :** ${network.contentType || 'Inconnu'}`,
       `**Taille HTML :** ${network.htmlLength ?? 0} caractères`,
       `**Titre de page :** ${network.title || 'Inconnu'}`,
-
-'',
-'### 📦 DONNÉES D’ANNONCES',
-`**Liens d'annonces :** ${network.indicators?.itemLinks ?? 0}`,
-`**Identifiants détectés :** ${network.indicators?.itemIds ?? 0}`,
-`**Tableaux d'annonces :** ${network.indicators?.itemObjects ?? 0}`,
-
-'',
-
-'### 🔗 EXEMPLES D’ANNONCES',
-...(network.sampleLinks?.length
-  ? network.sampleLinks.slice(0, 2).map(
-      (link, index) => `${index + 1}. ${link}`
-    )
-  : ['Aucun lien exploitable détecté']),
-
-'',
-'### 🧪 EXTRACTION HTML',
-...(network.htmlSamples?.length
-  ? network.htmlSamples.slice(0, 3).flatMap(
-      (item, index) => [
-        `**Annonce ${index + 1}**`,
-        `Titre : ${item.title || 'Introuvable'}`,
-        `Image : ${item.image ? 'Détectée' : 'Introuvable'}`,
-        `Images voisines : ${JSON.stringify(item.imageAttributes || [])}`,
-        `Texte : ${item.text || 'Aucun'}`
-      ]
-    )
-  : ['Aucune annonce extraite']),
-
-
-
-      ...(network.error
-        ? [`**Erreur :** ${network.error}`]
-        : []),
+      '',
+      '### 📦 DONNÉES D’ANNONCES',
+      `**Liens d'annonces :** ${network.indicators?.itemLinks ?? 0}`,
+      `**Identifiants détectés :** ${network.indicators?.itemIds ?? 0}`,
+      `**Tableaux d'annonces :** ${network.indicators?.itemObjects ?? 0}`,
+      '',
+      '### 🔗 EXEMPLES D’ANNONCES',
+      ...(network.sampleLinks?.length
+        ? network.sampleLinks.slice(0, 2).map(
+            (link, index) => `${index + 1}. ${link}`
+          )
+        : ['Aucun lien exploitable détecté']),
+      '',
+      '### 🧪 EXTRACTION HTML',
+      ...(network.htmlSamples?.length
+        ? network.htmlSamples.slice(0, 3).flatMap(
+            (item, index) => [
+              `**Annonce ${index + 1}**`,
+              `Titre : ${item.title || 'Introuvable'}`,
+              `Image : ${item.image ? 'Détectée' : 'Introuvable'}`,
+              `Images voisines : ${JSON.stringify(item.imageAttributes || [])}`,
+              `Texte : ${item.text || 'Aucun'}`
+            ]
+          )
+        : ['Aucune annonce extraite']),
+      ...(network.error ? [`**Erreur :** ${network.error}`] : []),
       '',
       '-# Test de connexion uniquement. Aucune notification envoyée.'
-
     ].join('\n');
 
-    
-
-return interaction.editReply({
-  content: report.slice(0, 1900),
-  flags: MessageFlags.SuppressEmbeds,
-  allowedMentions: { parse: [] }
-});
+    return interaction.editReply({
+      content: report.slice(0, 1900),
+      flags: MessageFlags.SuppressEmbeds,
+      allowedMentions: { parse: [] }
+    });
 
   } catch (error) {
     return interaction.editReply({
-  content:
-    '❌ **Diagnostic Vinted échoué**\n' +
-    String(error.message).slice(0, 1500)
-});
+      content:
+        '❌ **Diagnostic Vinted échoué**\n' +
+        String(error.message).slice(0, 1500)
+    });
   }
 }
-
 
 // ============================================================
 // SURVEILLANCE — DIAGNOSTIC API EBAY
@@ -8898,28 +8289,22 @@ if (
 
   const search = await WatchSearch.findById(searchId);
 
-  if (
-    !search ||
-    search.guildId !== interaction.guildId ||
-    search.channelId !== interaction.channelId
-  ) {
+
+  if (!search || search.guildId !== interaction.guildId || search.channelId !== interaction.channelId) {
     return interaction.reply({
       content: 'Recherche introuvable.',
       flags: MessageFlags.Ephemeral
     });
   }
 
-  if (
-    search.userId !== interaction.user.id &&
-    !interaction.memberPermissions?.has(
-      PermissionFlagsBits.Administrator
-    )
-  ) {
+  if (search.userId !== interaction.user.id) {
     return interaction.reply({
       content: 'Cette recherche ne t’appartient pas.',
       flags: MessageFlags.Ephemeral
     });
   }
+
+
 
   if (search.paused) {
     return interaction.reply({
