@@ -1956,6 +1956,18 @@ if (search.platform === 'vinted') {
   );
 }
 
+if (search.platform === 'leboncoin') {
+  container.addActionRowComponents(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`watch_leboncoin_url_${search._id}`)
+        .setLabel('Diagnostic URL Leboncoin')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('🔍')
+    )
+  );
+}
+
 
 if (search.platform === 'ebay') {
   container.addActionRowComponents(
@@ -2708,6 +2720,165 @@ const price = prices.length >= 2
 
 
 
+function parseLeboncoinSearchFilters(searchUrl) {
+  const url = new URL(
+    validateWatchSearchUrl('leboncoin', searchUrl)
+  );
+
+  if (url.pathname !== '/recherche') {
+    throw new Error(
+      'Le lien doit être une recherche Leboncoin.'
+    );
+  }
+
+  const params = url.searchParams;
+
+  const allowed = new Set([
+    'category',
+    'price',
+    'mileage',
+    'regdate',
+    'u_car_brand',
+    'u_car_model',
+    'sort',
+    'order'
+  ]);
+
+  const unsupported = [...new Set(
+    [...params.keys()].filter(key => !allowed.has(key))
+  )];
+
+  if (unsupported.length) {
+    throw new Error(
+      'Filtres Leboncoin non encore pris en charge : ' +
+      unsupported.join(', ')
+    );
+  }
+
+  const parseRange = (key) => {
+    const raw = params.get(key);
+    if (!raw) return null;
+
+    const match = raw.match(
+      /^(?:(min|max)-)?(\d+)(?:-(\d+))?$/
+    );
+
+    if (!match) {
+      throw new Error(
+        `Format de filtre Leboncoin invalide : ${key}`
+      );
+    }
+
+    return {
+      raw,
+      prefix: match[1] || null,
+      first: Number(match[2]),
+      second: match[3] == null
+        ? null
+        : Number(match[3])
+    };
+  };
+
+  const price = parseRange('price');
+  const mileage = parseRange('mileage');
+  const regdate = parseRange('regdate');
+
+  if (
+    price?.second !== null &&
+    price?.second !== undefined &&
+    price.first > price.second
+  ) {
+    throw new Error('Plage de prix invalide.');
+  }
+
+  return {
+    url: url.toString(),
+    category: params.get('category'),
+    price,
+    mileage,
+    regdate,
+    brand: params.get('u_car_brand'),
+    model: params.get('u_car_model'),
+    sort: params.get('sort'),
+    order: params.get('order')
+  };
+}
+
+
+async function diagnoseLeboncoinAccess(searchUrl) {
+  const url = validateWatchSearchUrl(
+    'leboncoin',
+    searchUrl
+  );
+
+  const startedAt = Date.now();
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/html'
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000)
+    });
+
+    const html = await response.text();
+
+    const $ = cheerio.load(html);
+
+    const title = $('title').first().text().trim();
+
+    const listingLinks = new Set();
+
+    $('a[href]').each((_, element) => {
+      const href = $(element).attr('href');
+
+      try {
+        const parsed = new URL(href, response.url);
+
+        if (
+          ['leboncoin.fr', 'www.leboncoin.fr']
+            .includes(parsed.hostname) &&
+          /^\/ad\/[^/]+\/\d+/.test(parsed.pathname)
+        ) {
+          listingLinks.add(
+            parsed.origin + parsed.pathname
+          );
+        }
+      } catch {}
+    });
+
+    const indicators = {
+      listingLinks: listingLinks.size,
+      jsonLdScripts:
+        $('script[type="application/ld+json"]').length,
+      nextData: html.includes('__NEXT_DATA__'),
+      blocked:
+        /captcha|access denied|robot check/i.test(title)
+    };
+
+    return {
+      success: response.ok,
+      status: response.status,
+      durationMs: Date.now() - startedAt,
+      contentType:
+        response.headers.get('content-type') || '',
+      title: title.slice(0, 150),
+      htmlLength: html.length,
+      finalUrl: response.url,
+      indicators,
+      sampleLinks: [...listingLinks].slice(0, 3)
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      durationMs: Date.now() - startedAt,
+      error: error.message
+    };
+  }
+}
 
 
 const WATCH_CONNECTORS = {
@@ -8497,6 +8668,88 @@ if (
         String(error.message).slice(0, 1500)
     });
   }
+}
+
+if (
+  interaction.isButton() &&
+  /^watch_leboncoin_url_[a-f0-9]{24}$/.test(interaction.customId)
+) {
+  if (
+    !interaction.inGuild() ||
+    !interaction.memberPermissions?.has(
+      PermissionFlagsBits.Administrator
+    )
+  ) {
+    return interaction.reply({
+      content: 'Diagnostic réservé aux administrateurs.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  const searchId = interaction.customId.replace(
+    'watch_leboncoin_url_', ''
+  );
+
+  const search = await WatchSearch.findOne({
+    _id: searchId,
+    guildId: interaction.guildId,
+    channelId: interaction.channelId,
+    platform: 'leboncoin'
+  });
+
+  if (!search) {
+    return interaction.reply({
+      content: 'Recherche Leboncoin introuvable.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const result = await diagnoseLeboncoinAccess(
+      search.searchUrl
+    );
+
+    const report = [
+      '**DIAGNOSTIC LE BON COIN**',
+      '',
+      `HTTP : ${result.status ?? 'Erreur réseau'}`,
+      `Succès HTTP : ${result.success ? 'Oui' : 'Non'}`,
+      `Durée : ${result.durationMs} ms`,
+      `Taille HTML : ${result.htmlLength ?? 0} caractères`,
+      `Type : ${result.contentType || 'Inconnu'}`,
+      `Titre : ${result.title || 'Inconnu'}`,
+      '',
+      `Liens annonces : ${result.indicators?.listingLinks ?? 0}`,
+      `Scripts JSON-LD : ${result.indicators?.jsonLdScripts ?? 0}`,
+      `Next Data : ${result.indicators?.nextData ? 'Oui' : 'Non'}`,
+      `Blocage possible : ${result.indicators?.blocked ? 'Oui' : 'Non'}`,
+      '',
+      '**Exemples de liens :**',
+      ...(result.sampleLinks?.length
+        ? result.sampleLinks.map(link => `<${link}>`)
+        : ['Aucun lien détecté']),
+      '',
+      result.error
+        ? `Erreur : ${result.error}`
+        : ''
+    ].join('\n');
+
+    await interaction.editReply({
+      content: report.slice(0, 1900),
+      allowedMentions: { parse: [] }
+    });
+
+  } catch (error) {
+    await interaction.editReply({
+      content: `Diagnostic impossible : ${error.message}`
+    });
+  }
+
+  return;
 }
 
 // ============================================================
