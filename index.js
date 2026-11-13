@@ -2551,6 +2551,14 @@ async function fetchVintedListings(searchUrl) {
       ? link.find('img').first()
       : context.find('img').first();
 
+      if (listings.size === 0) {
+  console.log('[VINTED HTML IMAGE]', {
+    lien: link.prop('outerHTML')?.slice(0, 2500),
+    parent: link.parent().prop('outerHTML')?.slice(0, 3500),
+    imagesDansParent: link.parent().find('img').length
+  });
+}
+
 
 const imageCandidates = [
   imageElement.attr('data-src'),
@@ -2563,10 +2571,12 @@ const imageCandidates = [
   context.find('img[src]').first().attr('src')
 ];
 
+
 const imageUrl = imageCandidates
+  .filter(value => typeof value === 'string' && value.trim())
   .map(value => {
     try {
-      return new URL(value, response.url).toString();
+      return new URL(value.trim(), response.url).toString();
     } catch {
       return null;
     }
@@ -2576,6 +2586,7 @@ const imageUrl = imageCandidates
     value.startsWith('https://') &&
     !value.includes('placeholder')
   ) || null;
+
 
 
 if (listings.size < 3) {
