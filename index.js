@@ -2753,7 +2753,7 @@ const scanStartedAt = Date.now();
 try {
   const results = await connector(search.searchUrl, search);
 
-  console.log('[SURVEILLANCE] SCAN TERMINÉ', {
+  console.log('[SURVEILLANCE] RÉCUPÉRATION TERMINÉE', {
     plateforme: search.platform,
     recherche: key,
     dureeMs: Date.now() - scanStartedAt,
@@ -2825,13 +2825,6 @@ if (invalidCount > 0) {
       ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
       : unique;
 
-
-console.log('📦 VINTED — SÉLECTION', {
-  annoncesValides: listings.length,
-  annoncesUniques: unique.length,
-  annoncesAEnvoyer: selected.length,
-  premierScan: isInitialScan
-});
 
 
 for (const listing of selected) {
