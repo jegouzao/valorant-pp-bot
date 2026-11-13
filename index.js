@@ -2698,6 +2698,15 @@ async function watchScanSearch(search) {
   try {
     const results = await connector(search.searchUrl, search);
 
+
+console.log('🔎 VINTED — SCAN', {
+  searchId: String(search._id),
+  resultats: Array.isArray(results) ? results.length : 'INVALIDE',
+  initialScanDone: search.initialScanDone,
+  paused: search.paused
+});
+
+
 console.log('🔎 VINTED — RÉSULTATS DU SCAN', {
   searchId: String(search._id),
   platform: search.platform,
@@ -2771,6 +2780,15 @@ if (invalidCount > 0) {
     const selected = isInitialScan
       ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
       : unique;
+
+
+console.log('📦 VINTED — SÉLECTION', {
+  annoncesValides: listings.length,
+  annoncesUniques: unique.length,
+  annoncesAEnvoyer: selected.length,
+  premierScan: isInitialScan
+});
+
 
 for (const listing of selected) {
   await watchQueueListing(
