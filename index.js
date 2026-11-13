@@ -1931,7 +1931,7 @@ const container = new ContainerBuilder()
         
 new ButtonBuilder()
   .setCustomId(`watch_delete_${search._id}`)
-  .setLabel('Supprimer')
+  .setLabel('Stopper')
   .setStyle(ButtonStyle.Danger),
 
 new ButtonBuilder()
@@ -2592,13 +2592,17 @@ async function fetchVintedListings(searchUrl) {
       .replace(/\s+/g, ' ')
       .trim();
 
-    const priceMatch = `${rawTitle} ${text}`.match(
-      /(\d+(?:[.,]\d{1,2})?)\s*€/
-    );
+    
+const prices = [
+  ...`${rawTitle} ${text}`.matchAll(
+    /(\d+(?:[.,]\d{1,2})?)\s*€/g
+  )
+].map(match => Number(match[1].replace(',', '.')));
 
-    const price = priceMatch
-      ? Number(priceMatch[1].replace(',', '.'))
-      : null;
+const price = prices.length >= 2
+  ? prices[1]
+  : null;
+
 
     listings.set(id, {
       id,
@@ -2610,12 +2614,14 @@ async function fetchVintedListings(searchUrl) {
       size,
       condition,
       location: '',
+
       publishedAt: null
     });
-
+  });
 
   return [...listings.values()];
 }
+
 
 
 
@@ -3195,13 +3201,16 @@ async function watchDeliverPending() {
           );
         }
 
+   
         components.push(
           buildWatchListingCard(
             guild,
             notification.platform,
-            notification.listing
+            notification.listing,
+            search
           )
         );
+
 
         const message = await channel.send({
           components,
@@ -3290,7 +3299,7 @@ if (attempts >= 10) {
 
 
 
-function buildWatchListingCard(guild, platform, listing) {
+function buildWatchListingCard(guild, platform, listing, search) {
   const platformName =
     WATCH_CONFIG.platforms[platform]?.name || platform;
 
@@ -3388,6 +3397,7 @@ function buildWatchListingCard(guild, platform, listing) {
     );
   }
 
+
   container
     .addSeparatorComponents(
       new SeparatorBuilder()
@@ -3398,9 +3408,25 @@ function buildWatchListingCard(guild, platform, listing) {
           .setLabel("Voir l'annonce")
           .setEmoji('🔗')
           .setStyle(ButtonStyle.Link)
-          .setURL(listing.url)
+          .setURL(listing.url),
+
+        new ButtonBuilder()
+          .setCustomId(`watch_pause_${search._id}`)
+          .setLabel('Suspendre / Reprendre')
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+          .setCustomId(`watch_mentions_${search._id}`)
+          .setLabel('Notifications ON/OFF')
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+          .setCustomId(`watch_delete_${search._id}`)
+          .setLabel('Stopper')
+          .setStyle(ButtonStyle.Danger)
       )
     );
+
 
   return container;
 }
@@ -8162,11 +8188,14 @@ const listing = {
 };
 
 
-    const card = buildWatchListingCard(
-      interaction.guild,
-      search.platform,
-      listing
-    );
+
+const card = buildWatchListingCard(
+  interaction.guild,
+  search.platform,
+  listing,
+  search
+);
+
 
     return interaction.reply({
       components: [card],
