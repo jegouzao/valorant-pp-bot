@@ -7719,34 +7719,41 @@ console.log('🔎 LEADERBOARD ÉTAPE 2 — Construction du container');
 
 console.log('🔎 LEADERBOARD ÉTAPE 3 — Modification du message Discord');
 
-    const leaderboardIconName = 'leaderboard-icon.png';
+    
+const leaderboardIconName = 'leaderboard-icon.png';
 
-    const existingAttachments = [...msg.attachments.values()];
+const existingAttachments = [...msg.attachments.values()];
 
-    const hasLeaderboardIcon = existingAttachments.some(
-      file => file.name === leaderboardIconName
-    );
+const hasLeaderboardIcon = existingAttachments.some(
+  file => file.name === leaderboardIconName
+);
 
-    const editPayload = {
-      components: [container],
-      attachments: existingAttachments.map(file => ({
-        id: file.id
-      }))
-    };
+const editPayload = {
+  components: [container],
+  attachments: existingAttachments.map(file => ({
+    id: file.id
+  }))
+};
 
-    if (!hasLeaderboardIcon) {
-      editPayload.files = [{
-        attachment: path.join(
-          __dirname,
-          'assets',
-          'images',
-          leaderboardIconName
-        ),
-        name: leaderboardIconName
-      }];
-    }
+if (!hasLeaderboardIcon) {
+  const iconPath = path.join(
+    __dirname,
+    'assets',
+    'images',
+    leaderboardIconName
+  );
 
-    await msg.edit(editPayload);
+  const iconBuffer = fs.readFileSync(iconPath);
+
+  editPayload.files = [
+    new AttachmentBuilder(iconBuffer, {
+      name: leaderboardIconName
+    })
+  ];
+}
+
+await msg.edit(editPayload);
+
 
 
     console.log('✅ Leaderboard mis à jour');
