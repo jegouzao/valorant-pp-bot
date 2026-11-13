@@ -2264,8 +2264,11 @@ function parseVintedSearchFilters(searchUrl) {
 
   const ignored = new Set([
     'referrer',
-    'search_id'
+    'search_id',
+    'search_by_image_uuid',
+    'search_by_image_id'
   ]);
+
 
   const unsupported = [...new Set(
     [...params.keys()].filter(
