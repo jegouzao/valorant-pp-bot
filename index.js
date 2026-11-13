@@ -2695,6 +2695,22 @@ async function watchScanSearch(search) {
   try {
     const results = await connector(search.searchUrl, search);
 
+console.log('🔎 VINTED — RÉSULTATS DU SCAN', {
+  searchId: String(search._id),
+  platform: search.platform,
+  initialScanDone: search.initialScanDone,
+  nombreAnnonces: Array.isArray(results) ? results.length : 'INVALIDE',
+  premieresAnnonces: Array.isArray(results)
+    ? results.slice(0, 3).map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        imageUrl: item.imageUrl
+      }))
+    : []
+});
+
+
     if (!Array.isArray(results)) {
       throw new Error('Le connecteur doit retourner un tableau.');
     }
@@ -8985,15 +9001,19 @@ if (action === 'delete') {
 
     await WatchSearch.deleteOne({ _id: search._id });
 
+
+    await interaction.editReply(
+      'Recherche supprimée. Une place est maintenant disponible.'
+    ).catch(console.error);
+
     if (channel) {
       await channel.delete(
         'Recherche de surveillance supprimée'
       ).catch(console.error);
     }
 
-    return interaction.editReply(
-      'Recherche supprimée. Une place est maintenant disponible.'
-    );
+    return;
+
   }
 }
 
