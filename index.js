@@ -2579,13 +2579,7 @@ const imageUrl = imageCandidates
     !value.includes('placeholder')
   ) || null;
 
-
-
-}
-
-
-
-    const rawTitle =
+const rawTitle =
       link.attr('title') ||
       link.attr('aria-label') ||
       imageElement.attr('alt') ||
