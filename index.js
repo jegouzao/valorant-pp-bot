@@ -2746,34 +2746,25 @@ async function watchScanSearch(search) {
 
   if (typeof connector !== 'function') return;
 
-  WATCH_ACTIVE_SCANS.add(key);
+WATCH_ACTIVE_SCANS.add(key);
 
-  try {
-    const results = await connector(search.searchUrl, search);
+const scanStartedAt = Date.now();
+
+try {
+  const results = await connector(search.searchUrl, search);
+
+  console.log('[SURVEILLANCE] SCAN TERMINÉ', {
+    plateforme: search.platform,
+    recherche: key,
+    dureeMs: Date.now() - scanStartedAt,
+    annoncesRecuperees: Array.isArray(results)
+      ? results.length
+      : 'INVALIDE'
+  });
 
 
-console.log('🔎 VINTED — SCAN', {
-  searchId: String(search._id),
-  resultats: Array.isArray(results) ? results.length : 'INVALIDE',
-  initialScanDone: search.initialScanDone,
-  paused: search.paused
-});
 
 
-console.log('🔎 VINTED — RÉSULTATS DU SCAN', {
-  searchId: String(search._id),
-  platform: search.platform,
-  initialScanDone: search.initialScanDone,
-  nombreAnnonces: Array.isArray(results) ? results.length : 'INVALIDE',
-  premieresAnnonces: Array.isArray(results)
-    ? results.slice(0, 3).map(item => ({
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        imageUrl: item.imageUrl
-      }))
-    : []
-});
 
 
     if (!Array.isArray(results)) {
@@ -3264,7 +3255,7 @@ async function watchDeliverPending() {
         }
 
    
-
+const deliveryStartedAt = Date.now();
           const message = await channel.send({
             components: [
               buildWatchListingCard(
@@ -3277,6 +3268,14 @@ async function watchDeliverPending() {
             flags: MessageFlags.IsComponentsV2,
             allowedMentions: { parse: [] }
           });
+
+          console.log('[SURVEILLANCE] ANNONCE PUBLIÉE', {
+  plateforme: notification.platform,
+  recherche: String(notification.searchId),
+  delaiEnvoiMs: Date.now() - deliveryStartedAt,
+  attenteFileMs:
+    Date.now() - new Date(notification.createdAt).getTime()
+});
 
 
 
