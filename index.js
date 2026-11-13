@@ -2865,8 +2865,15 @@ async function diagnoseLeboncoinAccess(searchUrl) {
       contentType:
         response.headers.get('content-type') || '',
       title: title.slice(0, 150),
-      htmlLength: html.length,
+            htmlLength: html.length,
       finalUrl: response.url,
+      server: response.headers.get('server') || '',
+      requestId: response.headers.get('x-request-id') || '',
+      bodyPreview: $('body')
+        .text()
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 350),
       indicators,
       sampleLinks: [...listingLinks].slice(0, 3)
     };
@@ -8721,7 +8728,10 @@ if (
       `Durée : ${result.durationMs} ms`,
       `Taille HTML : ${result.htmlLength ?? 0} caractères`,
       `Type : ${result.contentType || 'Inconnu'}`,
-      `Titre : ${result.title || 'Inconnu'}`,
+            `Titre : ${result.title || 'Inconnu'}`,
+      `Serveur : ${result.server || 'Inconnu'}`,
+      `Request ID : ${result.requestId || 'Aucun'}`,
+      `Réponse : ${result.bodyPreview || 'Vide'}`,
       '',
       `Liens annonces : ${result.indicators?.listingLinks ?? 0}`,
       `Scripts JSON-LD : ${result.indicators?.jsonLdScripts ?? 0}`,
