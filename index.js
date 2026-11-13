@@ -2552,9 +2552,6 @@ const imageElement = link.parent().find('img').first().length
   : context.find('img').first();
 
 
-}
-
-
 const imageCandidates = [
   imageElement.attr('data-src'),
   imageElement.attr('data-original'),
