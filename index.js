@@ -1918,7 +1918,7 @@ new TextDisplayBuilder().setContent(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
   .setCustomId(`watch_suspend_${search._id}`)
-  .setLabel('Suspendre')
+  .setLabel('Mettre en pause')
   .setStyle(ButtonStyle.Secondary)
   .setDisabled(Boolean(search.paused)),
 
@@ -2926,6 +2926,7 @@ for (const listing of selected) {
   }
 }
 
+
 async function watchScanAll() {
   if (watchGlobalScanRunning) return;
 
@@ -2944,17 +2945,47 @@ async function watchScanAll() {
       platform: { $in: platforms }
     });
 
-    // Exécution séquentielle : évite les rafales de requêtes.
-    for (const search of searches) {
-      await watchScanSearch(search);
+    const MAX_CONCURRENT_SCANS = 3;
+
+    let nextIndex = 0;
+
+    async function worker() {
+      while (nextIndex < searches.length) {
+        const search = searches[nextIndex++];
+
+        try {
+          await watchScanSearch(search);
+        } catch (error) {
+          console.error(
+            `[SURVEILLANCE] Recherche ${search._id} :`,
+            error
+          );
+        }
+      }
     }
 
+    await Promise.all(
+      Array.from(
+        {
+          length: Math.min(
+            MAX_CONCURRENT_SCANS,
+            searches.length
+          )
+        },
+        () => worker()
+      )
+    );
+
   } catch (error) {
-    console.error('[SURVEILLANCE] Erreur globale :', error);
+    console.error(
+      '[SURVEILLANCE] Erreur globale :',
+      error
+    );
   } finally {
     watchGlobalScanRunning = false;
   }
 }
+
 
 
 // ============================================================
@@ -3089,6 +3120,7 @@ async function watchCleanupMissingChannels() {
 }
 
 
+
 function startWatchScheduler() {
   if (watchSchedulerStarted) return;
 
@@ -3099,24 +3131,44 @@ function startWatchScheduler() {
     `${WATCH_CONFIG.checkIntervalMs / 1000}s`
   );
 
-
-  const run = async () => {
+  // Scanner les plateformes indépendamment des envois.
+  const runScans = async () => {
     try {
       await watchScanAll();
-      await watchDeliverPending();
     } catch (error) {
       console.error(
-        '[SURVEILLANCE] Scheduler :',
+        '[SURVEILLANCE] Scanner :',
         error
       );
     }
   };
 
+  // Traiter régulièrement les annonces en attente.
+  const runDelivery = async () => {
+    try {
+      await watchDeliverPending();
+    } catch (error) {
+      console.error(
+        '[SURVEILLANCE] Livraison Discord :',
+        error
+      );
+    }
+  };
 
-  run();
+  runScans();
+  runDelivery();
 
-  setInterval(run, WATCH_CONFIG.checkIntervalMs);
+  setInterval(
+    runScans,
+    WATCH_CONFIG.checkIntervalMs
+  );
+
+  setInterval(
+    runDelivery,
+    2000
+  );
 }
+
 
 
 let watchDeliveryRunning = false;
@@ -3209,20 +3261,6 @@ async function watchDeliverPending() {
 
         if (!channel?.isTextBased()) {
           throw new Error('Salon privé introuvable.');
-        }
-
-        const mention =
-          !notification.initial && search.mentions
-            ? `<@${search.userId}>`
-            : '';
-
-        
-        const components = [];
-
-        if (mention) {
-          components.push(
-            new TextDisplayBuilder().setContent(mention)
-          );
         }
 
    
@@ -3437,7 +3475,7 @@ container
 
       new ButtonBuilder()
         .setCustomId(`watch_suspend_${search._id}`)
-        .setLabel('Suspendre')
+        .setLabel('Mettre en pause')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(Boolean(search.paused)),
 
