@@ -7752,6 +7752,14 @@ if (!hasLeaderboardIcon) {
   ];
 }
 
+console.log('🔎 DIAGNOSTIC LEADERBOARD', {
+  attachments: [...msg.attachments.values()].map(file => file.name),
+  filesToUpload: editPayload.files?.map(file => file.name) || [],
+  iconExists: fs.existsSync(
+    path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png')
+  )
+});
+
 await msg.edit(editPayload);
 
 
