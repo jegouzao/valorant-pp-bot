@@ -7612,6 +7612,7 @@ await updateleaderboardEmbed();
 
 async function updateleaderboardEmbed() {
   try {
+    console.log('🔎 LEADERBOARD — Entrée dans la fonction');
     const leaderboardData = await getConfigValue('leaderboardData', {});
 
     const currentMonth = getParisMonthKey();
@@ -7680,9 +7681,10 @@ const sorted = sortLeaderboardPlayers(
     (data.games || 0) > 0
   )
   .length;
-
+console.log('🔎 LEADERBOARD — Avant récupération des membres');
     await fetchLeaderboardPageMembers(guild, sorted, 0);
-
+    console.log('✅ LEADERBOARD ÉTAPE 1 terminée');
+console.log('🔎 LEADERBOARD ÉTAPE 2 — Construction du container');
     const container = buildLeaderboardContainer({
       sorted,
       totalInvitesPerMember,
@@ -7714,7 +7716,7 @@ const sorted = sortLeaderboardPlayers(
       console.log('✅ Leaderboard recréé en Components V2');
       return;
     }
-
+console.log('🔎 LEADERBOARD ÉTAPE 3 — Modification du message Discord');
     await msg.edit({
   components: [container],
   files: [
