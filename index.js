@@ -2329,6 +2329,7 @@ function parseVintedSearchFilters(searchUrl) {
 }
 
 
+
 function extractVintedHtmlSamples(html, baseUrl) {
   const $ = cheerio.load(html);
   const samples = [];
@@ -2337,75 +2338,75 @@ function extractVintedHtmlSamples(html, baseUrl) {
   $('a[href*="/items/"]').each((_, element) => {
     if (samples.length >= 5) return false;
 
-    const href = $(element).attr('href');
+    const card = $(element);
+    const href = card.attr('href');
     if (!href) return;
 
     let url;
+    let id;
 
     try {
       const parsed = new URL(href, baseUrl);
 
-      if (![
-        'vinted.fr',
-        'www.vinted.fr',
-        'vinted.com',
-        'www.vinted.com'
-      ].includes(parsed.hostname)) return;
+      if (!['vinted.fr', 'www.vinted.fr',
+             'vinted.com', 'www.vinted.com']
+          .includes(parsed.hostname)) return;
 
-      if (!/^\/items\/\d+/.test(parsed.pathname)) return;
+      const match = parsed.pathname.match(/^\/items\/(\d+)/);
+      if (!match) return;
 
+      id = match[1];
       url = parsed.origin + parsed.pathname;
     } catch {
       return;
     }
 
-    if (seen.has(url)) return;
-    seen.add(url);
+    if (seen.has(id)) return;
+    seen.add(id);
 
-    const card = $(element);
+    const parent = card.parent();
 
+    const imageElement = card.find('img').first().length
+      ? card.find('img').first()
+      : parent.find('img').first();
 
-const parent = card.parent();
-
-const imageAttributes = [];
-
-parent.find('img').slice(0, 3).each((_, img) => {
-  const imageElement = $(img);
-
-  imageAttributes.push({
-    src: Boolean(imageElement.attr('src')),
-    srcset: Boolean(imageElement.attr('srcset')),
-    dataSrc: Boolean(imageElement.attr('data-src')),
-    dataSrcset: Boolean(imageElement.attr('data-srcset'))
-  });
-});
-
+    const image =
+      imageElement.attr('src') ||
+      imageElement.attr('data-src') ||
+      imageElement.attr('srcset')
+        ?.split(',')[0]?.trim().split(/\s+/)[0] ||
+      null;
 
     const title =
       card.attr('title') ||
       card.attr('aria-label') ||
-      card.find('img').first().attr('alt') ||
+      imageElement.attr('alt') ||
       card.text().trim() ||
       null;
 
-    const image =
-      card.find('img').first().attr('src') ||
-      card.find('img').first().attr('data-src') ||
-      null;
+    const text = parent.text().replace(/\s+/g, ' ').trim();
 
-    const text = card.text().replace(/\s+/g, ' ').trim();
+    const priceMatch = (title || text).match(
+      /(\d+(?:[.,]\d{1,2})?)\s*€/
+    );
+
+    const price = priceMatch
+      ? Number(priceMatch[1].replace(',', '.'))
+      : null;
 
     samples.push({
-      imageAttributes,
+      id,
       url,
-      title: title?.slice(0, 120) || null,
-      image: image?.slice(0, 250) || null,
+      title: title?.slice(0, 200) || null,
+      price,
+      image: image?.slice(0, 500) || null,
       text: text.slice(0, 200)
     });
   });
 
   return samples;
 }
+
 
 
 
@@ -2503,21 +2504,93 @@ const sampleLinks = [
 }
 
 
-async function fetchVintedListings(searchUrl) {
-  // Vérification des filtres avant toute récupération.
-  const filters = parseVintedSearchFilters(searchUrl);
 
-  // Aucun fournisseur de données configuré pour l'instant.
-  throw new Error(
-    'Connecteur Vinted non configuré : ' +
-    'aucune source de données autorisée sélectionnée.'
-  );
+async function fetchVintedListings(searchUrl) {
+  const url = validateWatchSearchUrl('vinted', searchUrl);
+  parseVintedSearchFilters(url);
+
+  const response = await fetch(url, {
+    headers: { Accept: 'text/html' },
+    signal: AbortSignal.timeout(12000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Vinted HTTP ${response.status}`);
+  }
+
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  const listings = new Map();
+
+  $('a[href*="/items/"]').each((_, element) => {
+    const link = $(element);
+    const href = link.attr('href');
+
+    if (!href) return;
+
+    let parsed;
+
+    try {
+      parsed = new URL(href, response.url);
+
+      if (!['vinted.fr', 'www.vinted.fr'].includes(
+        parsed.hostname
+      )) return;
+    } catch {
+      return;
+    }
+
+    const match = parsed.pathname.match(/^\/items\/(\d+)/);
+    if (!match) return;
+
+    const id = match[1];
+    if (listings.has(id)) return;
+
+    const card = link.closest('[data-testid*="item"]');
+    const context = card.length ? card : link.parent();
+
+    const imageElement = context.find('img').first();
+
+    const imageUrl =
+      imageElement.attr('src') ||
+      imageElement.attr('data-src') ||
+      imageElement.attr('srcset')
+        ?.split(',')[0]?.trim().split(/\s+/)[0] ||
+      null;
+
+    const title =
+      link.attr('title') ||
+      link.attr('aria-label') ||
+      imageElement.attr('alt') ||
+      link.text().trim();
+
+    const text = context.text().replace(/\s+/g, ' ').trim();
+
+    const priceMatch = text.match(
+      /(\d+(?:[.,]\d{1,2})?)\s*€/
+    );
+
+    if (!title || !priceMatch) return;
+
+    listings.set(id, {
+      id,
+      title: title.slice(0, 300),
+      url: parsed.origin + parsed.pathname,
+      price: Number(priceMatch[1].replace(',', '.')),
+      imageUrl,
+      location: '',
+      publishedAt: null
+    });
+  });
+
+  return [...listings.values()];
 }
+
 
 
 const WATCH_CONNECTORS = {
   leboncoin: null,
-  vinted: null,
+  vinted: fetchVintedListings,
   ebay: null
 };
 
@@ -2680,13 +2753,13 @@ if (invalidCount > 0) {
       ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
       : unique;
 
-    for (const listing of selected) {
-      await watchQueueListing(
-        search,
-        listing,
-        isInitialScan
-      );
-    }
+for (const listing of selected) {
+  await watchQueueListing(
+    search,
+    listing,
+    isInitialScan
+  );
+}
 
     // Les anciennes annonces non affichées au premier
     // passage sont aussi mémorisées pour éviter
@@ -7750,13 +7823,7 @@ editPayload.files = [
 ];
 }
 
-console.log('🔎 DIAGNOSTIC LEADERBOARD', {
-  attachments: [...msg.attachments.values()].map(file => file.name),
-  filesToUpload: editPayload.files?.map(file => file.name) || [],
-  iconExists: fs.existsSync(
-    path.join(__dirname, 'assets', 'images', 'leaderboard-icon.png')
-  )
-});
+
 
 
 await msg.edit(editPayload);
