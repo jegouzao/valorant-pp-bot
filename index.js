@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path'); // ← mettre path avant son utilisation
-const cheerio = require('cheerio');
+const cheerio = require('cheerio/slim');
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const Points = require('./models/Points');
