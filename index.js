@@ -2569,11 +2569,11 @@ async function fetchVintedListings(searchUrl) {
 
     const text = context.text().replace(/\s+/g, ' ').trim();
 
-    const priceMatch = text.match(
-      /(\d+(?:[.,]\d{1,2})?)\s*€/
-    );
+    const priceMatch = `${title || ''} ${text}`.match(
+  /(\d+(?:[.,]\d{1,2})?)\s*€/
+);
 
-    if (!title || !priceMatch) return;
+if (!title) return;
 
     listings.set(id, {
       id,
