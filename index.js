@@ -2547,16 +2547,11 @@ async function fetchVintedListings(searchUrl) {
     const card = link.closest('[data-testid*="item"]');
     const context = card.length ? card : link.parent();
 
-    const imageElement = link.find('img').first().length
-      ? link.find('img').first()
-      : context.find('img').first();
+const imageElement = link.parent().find('img').first().length
+  ? link.parent().find('img').first()
+  : context.find('img').first();
 
-      if (listings.size === 0) {
-  console.log('[VINTED HTML IMAGE]', {
-    lien: link.prop('outerHTML')?.slice(0, 2500),
-    parent: link.parent().prop('outerHTML')?.slice(0, 3500),
-    imagesDansParent: link.parent().find('img').length
-  });
+
 }
 
 
@@ -2589,15 +2584,6 @@ const imageUrl = imageCandidates
 
 
 
-if (listings.size < 3) {
-  console.log('[VINTED IMAGE DEBUG]', {
-    annonce: id,
-    src: imageElement.attr('src'),
-    dataSrc: imageElement.attr('data-src'),
-    srcset: imageElement.attr('srcset'),
-    imageUrl,
-    candidates: imageCandidates
-  });
 }
 
 
