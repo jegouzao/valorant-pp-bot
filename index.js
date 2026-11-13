@@ -2551,11 +2551,42 @@ async function fetchVintedListings(searchUrl) {
       ? link.find('img').first()
       : context.find('img').first();
 
-    const imageUrl =
-      imageElement.attr('src') ||
-      imageElement.attr('data-src') ||
-      imageElement.attr('srcset')?.split(',')[0]?.trim().split(' ')[0] ||
-      null;
+
+const imageCandidates = [
+  imageElement.attr('data-src'),
+  imageElement.attr('data-original'),
+  imageElement.attr('srcset')?.split(',')[0]?.trim().split(/\s+/)[0],
+  imageElement.attr('src'),
+  context.find('img[data-src]').first().attr('data-src'),
+  context.find('img[srcset]').first()
+    .attr('srcset')?.split(',')[0]?.trim().split(/\s+/)[0],
+  context.find('img[src]').first().attr('src')
+];
+
+const imageUrl = imageCandidates
+  .map(value => {
+    try {
+      return new URL(value, response.url).toString();
+    } catch {
+      return null;
+    }
+  })
+  .find(value =>
+    value &&
+    value.startsWith('https://') &&
+    !value.includes('placeholder')
+  ) || null;
+
+
+if (listings.size < 3) {
+  console.log('[VINTED IMAGE]', {
+    id,
+    imageUrl,
+    candidates: imageCandidates
+  });
+}
+
+
 
     const rawTitle =
       link.attr('title') ||
@@ -2585,13 +2616,17 @@ async function fetchVintedListings(searchUrl) {
       .replace(/\s+/g, ' ')
       .trim();
 
-    const prices = [
-      ...text.matchAll(/(\d+(?:[.,]\d{1,2})?)\s*€/g)
-    ].map(match => Number(match[1].replace(',', '.')));
 
-    const price = prices.length >= 2
-      ? prices[1]
-      : prices[0] ?? null;
+const priceText = `${rawTitle} ${text}`;
+
+const prices = [
+  ...priceText.matchAll(/(\d+(?:[.,]\d{1,2})?)\s*€/g)
+].map(match => Number(match[1].replace(',', '.')));
+
+const price = prices.length >= 2
+  ? prices[1]
+  : prices[0] ?? null;
+
 
     listings.set(id, {
       id,
