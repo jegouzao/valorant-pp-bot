@@ -7743,13 +7743,11 @@ if (!hasLeaderboardIcon) {
     leaderboardIconName
   );
 
-  const iconBuffer = fs.readFileSync(iconPath);
-
-  editPayload.files = [
-    new AttachmentBuilder(iconBuffer, {
-      name: leaderboardIconName
-    })
-  ];
+editPayload.files = [
+  new AttachmentBuilder(iconPath, {
+    name: leaderboardIconName
+  })
+];
 }
 
 console.log('🔎 DIAGNOSTIC LEADERBOARD', {
@@ -7760,15 +7758,8 @@ console.log('🔎 DIAGNOSTIC LEADERBOARD', {
   )
 });
 
-// TEST TEMPORAIRE : modification sans envoi de fichier
-delete editPayload.files;
 
-try {
-  await msg.edit(editPayload);
-  console.log('✅ TEST LEADERBOARD : modification sans fichier réussie');
-} catch (error) {
-  console.error('❌ TEST LEADERBOARD :', error);
-}
+await msg.edit(editPayload);
 
 
 
