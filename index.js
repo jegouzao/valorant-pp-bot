@@ -7718,19 +7718,11 @@ console.log('🔎 LEADERBOARD ÉTAPE 2 — Construction du container');
     }
 console.log('🔎 LEADERBOARD ÉTAPE 3 — Modification du message Discord');
     await msg.edit({
-  components: [container],
-  files: [
-    {
-      attachment: path.join(
-        __dirname,
-        'assets',
-        'images',
-        'leaderboard-icon.png'
-      ),
-      name: 'leaderboard-icon.png'
-    }
-  ]
-});
+      components: [container],
+      attachments: [...msg.attachments.values()].map(file => ({
+        id: file.id
+      }))
+    });
 
     console.log('✅ Leaderboard mis à jour');
 
