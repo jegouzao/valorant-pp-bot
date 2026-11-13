@@ -2042,7 +2042,7 @@ async function getEbayAccessToken() {
       }),
       signal: AbortSignal.timeout(15000)
     }
-  );
+  ); 
 
 if (!response.ok) {
   const errorData = await response.json().catch(() => ({}));
