@@ -3361,12 +3361,11 @@ function buildWatchListingCard(guild, platform, listing, search) {
 
   const header =
     `### ${emoji ? emoji + ' ' : ''}${platformName.toUpperCase()}` +
-    ` · NOUVELLE ANNONCE`;
+    ` · NOUVELLE ANNONCE DÉTECTÉE`;
 
   
 const info = [
-  `## ${title}`,
-  '',
+  `### ${title}`,
   `# ${price}`,
   ...(platform === 'vinted'
     ? ['-# Prix incluant les frais de protection Vinted']
@@ -3432,7 +3431,7 @@ container
   .addActionRowComponents(
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setLabel('Ouvrir')
+        .setLabel("Ouvrir l'annonce")
         .setStyle(ButtonStyle.Link)
         .setURL(listing.url),
 
@@ -3450,7 +3449,7 @@ container
 
       new ButtonBuilder()
         .setCustomId(`watch_delete_${search._id}`)
-        .setLabel('Arrêter')
+        .setLabel('Supprimer le salon')
         .setStyle(ButtonStyle.Secondary)
     )
   );
