@@ -7716,13 +7716,38 @@ console.log('🔎 LEADERBOARD ÉTAPE 2 — Construction du container');
       console.log('✅ Leaderboard recréé en Components V2');
       return;
     }
+
 console.log('🔎 LEADERBOARD ÉTAPE 3 — Modification du message Discord');
-    await msg.edit({
+
+    const leaderboardIconName = 'leaderboard-icon.png';
+
+    const existingAttachments = [...msg.attachments.values()];
+
+    const hasLeaderboardIcon = existingAttachments.some(
+      file => file.name === leaderboardIconName
+    );
+
+    const editPayload = {
       components: [container],
-      attachments: [...msg.attachments.values()].map(file => ({
+      attachments: existingAttachments.map(file => ({
         id: file.id
       }))
-    });
+    };
+
+    if (!hasLeaderboardIcon) {
+      editPayload.files = [{
+        attachment: path.join(
+          __dirname,
+          'assets',
+          'images',
+          leaderboardIconName
+        ),
+        name: leaderboardIconName
+      }];
+    }
+
+    await msg.edit(editPayload);
+
 
     console.log('✅ Leaderboard mis à jour');
 
