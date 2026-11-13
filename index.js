@@ -2549,42 +2549,70 @@ async function fetchVintedListings(searchUrl) {
     const id = match[1];
     if (listings.has(id)) return;
 
+
     const card = link.closest('[data-testid*="item"]');
     const context = card.length ? card : link.parent();
 
-    const imageElement = context.find('img').first();
+    const imageElement = link.find('img').first().length
+      ? link.find('img').first()
+      : context.find('img').first();
 
     const imageUrl =
-      imageElement.attr('src') ||
       imageElement.attr('data-src') ||
+      imageElement.attr('src') ||
       imageElement.attr('srcset')
         ?.split(',')[0]?.trim().split(/\s+/)[0] ||
       null;
 
-    const title =
+    const rawTitle =
       link.attr('title') ||
       link.attr('aria-label') ||
       imageElement.attr('alt') ||
       link.text().trim();
 
-    const text = context.text().replace(/\s+/g, ' ').trim();
+    if (!rawTitle) return;
 
-    const priceMatch = `${title || ''} ${text}`.match(
-  /(\d+(?:[.,]\d{1,2})?)\s*€/
-);
+    const title = rawTitle
+      .split(/,\s*(?:Marque|État|Taille)\s*:/i)[0]
+      .trim();
 
-if (!title) return;
+    const brand = rawTitle.match(
+      /(?:^|,)\s*Marque\s*:\s*([^,]+)/i
+    )?.[1]?.trim() || '';
+
+    const condition = rawTitle.match(
+      /(?:^|,)\s*État\s*:\s*([^,]+)/i
+    )?.[1]?.trim() || '';
+
+    const size = rawTitle.match(
+      /(?:^|,)\s*Taille\s*:\s*([^,]+)/i
+    )?.[1]?.trim() || '';
+
+    const text = context.text()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const priceMatch = `${rawTitle} ${text}`.match(
+      /(\d+(?:[.,]\d{1,2})?)\s*€/
+    );
+
+    const price = priceMatch
+      ? Number(priceMatch[1].replace(',', '.'))
+      : null;
 
     listings.set(id, {
       id,
       title: title.slice(0, 300),
       url: parsed.origin + parsed.pathname,
-      price: Number(priceMatch[1].replace(',', '.')),
+      price,
       imageUrl,
+      brand,
+      size,
+      condition,
       location: '',
       publishedAt: null
     });
-  });
+
 
   return [...listings.values()];
 }
@@ -2643,9 +2671,14 @@ function normalizeWatchListing(platform, raw) {
     title: title.slice(0, 300),
     url,
     price: Number.isFinite(price) ? price : null,
-    imageUrl: raw.imageUrl || null,
-    location: String(raw.location || ''),
-    publishedAt: raw.publishedAt || null
+    
+imageUrl: raw.imageUrl || null,
+brand: String(raw.brand || '').slice(0, 60),
+size: String(raw.size || '').slice(0, 30),
+condition: String(raw.condition || '').slice(0, 60),
+location: String(raw.location || ''),
+publishedAt: raw.publishedAt || null
+
   };
 }
 
