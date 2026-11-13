@@ -1931,7 +1931,7 @@ const container = new ContainerBuilder()
         
 new ButtonBuilder()
   .setCustomId(`watch_delete_${search._id}`)
-  .setLabel('Stopper')
+  .setLabel('Supprimer')
   .setStyle(ButtonStyle.Danger),
 
 new ButtonBuilder()
@@ -2557,12 +2557,49 @@ async function fetchVintedListings(searchUrl) {
       ? link.find('img').first()
       : context.find('img').first();
 
-    const imageUrl =
-      imageElement.attr('data-src') ||
-      imageElement.attr('src') ||
-      imageElement.attr('srcset')
-        ?.split(',')[0]?.trim().split(/\s+/)[0] ||
-      null;
+    
+const imageCandidates = [
+  imageElement.attr('data-src'),
+  imageElement.attr('data-original'),
+  imageElement.attr('srcset')
+    ?.split(',')[0]?.trim().split(/\s+/)[0],
+  imageElement.attr('src'),
+  context.find('img[srcset]').first()
+    .attr('srcset')
+    ?.split(',')[0]?.trim().split(/\s+/)[0],
+  context.find('img[src]').first().attr('src')
+];
+
+const imageUrl = imageCandidates
+  .map(value => String(value || '').trim())
+  .find(value => {
+    try {
+      const parsed = new URL(value, response.url);
+      return (
+        parsed.protocol === 'https:' &&
+        !parsed.hostname.includes('placeholder')
+      );
+    } catch {
+      return false;
+    }
+  }) || null;
+```
+
+Cette modification privilégie les sources d'image alternatives et évite de conserver une valeur vide ou manifestement factice.
+
+### 3. Ajouter un diagnostic temporaire des images
+
+Juste après ce nouveau bloc, ajoute :
+
+<CodeBlock language="javascript" editable>
+if (listings.size < 3) {
+  console.log('[VINTED IMAGE]', {
+    id,
+    imageUrl,
+    candidates: imageCandidates
+  });
+}
+
 
     const rawTitle =
       link.attr('title') ||
@@ -3412,17 +3449,17 @@ function buildWatchListingCard(guild, platform, listing, search) {
 
         new ButtonBuilder()
           .setCustomId(`watch_pause_${search._id}`)
-          .setLabel('Suspendre / Reprendre')
+          .setLabel('Pause / Reprise')
           .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
           .setCustomId(`watch_mentions_${search._id}`)
-          .setLabel('Notifications ON/OFF')
+          .setLabel('Ping')
           .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
           .setCustomId(`watch_delete_${search._id}`)
-          .setLabel('Stopper')
+          .setLabel('Supprimer')
           .setStyle(ButtonStyle.Danger)
       )
     );
