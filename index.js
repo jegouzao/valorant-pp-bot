@@ -2311,26 +2311,10 @@ if (filters.personnage) {
           ? Number(item.price.value)
           : null,
       imageUrl: item.image?.imageUrl || null,
-      location: (() => {
-  const city = String(ad.location?.city_label || '').trim();
-  const zipcode = String(ad.location?.zipcode || '').trim();
-
-  if (!city) return '';
-
-  let department = '';
-
-  if (/^\d{5}$/.test(zipcode)) {
-    if (zipcode.startsWith('97') || zipcode.startsWith('98')) {
-      department = zipcode.slice(0, 3);
-    } else if (zipcode.startsWith('20')) {
-      department = Number(zipcode) <= 20190 ? '2A' : '2B';
-    } else {
-      department = zipcode.slice(0, 2);
-    }
-  }
-
-  return department ? `${city} (${department})` : city;
-})(),
+location: [
+  item.itemLocation?.city,
+  item.itemLocation?.postalCode
+].filter(Boolean).join(' '),
       publishedAt: item.itemCreationDate || null
     }));
 }
@@ -4003,11 +3987,25 @@ addLine(
 }
 
 
-  const location = listing.location
+const location = listing.location
   ? clean(
       platform === 'leboncoin'
         ? String(listing.location)
-            .replace(/\b\d{5}\b/g, '')
+            .replace(/\b(\d{5})\b/g, (_, zipcode) => {
+              let department;
+
+              if (/^97|^98/.test(zipcode)) {
+                department = zipcode.slice(0, 3);
+              } else if (zipcode.startsWith('20')) {
+                department = Number(zipcode) <= 20190
+                  ? '2A'
+                  : '2B';
+              } else {
+                department = zipcode.slice(0, 2);
+              }
+
+              return `(${department})`;
+            })
             .replace(/\s+/g, ' ')
             .trim()
         : listing.location,
