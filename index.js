@@ -3037,6 +3037,24 @@ async function fetchLeboncoinListings(searchUrl) {
   }
 
   return response.ads.map(ad => ({
+
+vehicleDetails: Object.fromEntries(
+  (ad.attributes || [])
+    .filter(attr => [
+      'regdate',
+      'mileage',
+      'fuel',
+      'gearbox',
+      'doors',
+      'seats',
+      'vehicle_technical_inspection_valid'
+    ].includes(attr.key))
+    .map(attr => [
+      attr.key,
+      String(attr.value_label ?? attr.value ?? '').trim()
+    ])
+),
+
     id: String(ad.list_id || ''),
     title: ad.subject || '',
     url: ad.url || '',
@@ -3824,12 +3842,53 @@ function buildWatchListingCard(guild, platform, listing, search) {
     details.push(clean(listing.condition, 60));
   }
 
+
+if (platform === 'leboncoin') {
+  details.length = 0;
+
+  const vehicle = listing.vehicleDetails || {};
+
+  const firstLine = [
+    vehicle.regdate,
+    vehicle.mileage,
+    vehicle.fuel
+  ].filter(Boolean);
+
+  const secondLine = [
+    vehicle.gearbox
+      ? `Boîte ${vehicle.gearbox.toLowerCase()}`
+      : null,
+    vehicle.doors
+      ? `${vehicle.doors} portes`
+      : null,
+    vehicle.seats
+      ? `${vehicle.seats} places`
+      : null
+  ].filter(Boolean);
+
+  const ct = vehicle.vehicle_technical_inspection_valid;
+
+  if (ct) {
+    const valid = ['oui', 'true', '1'].includes(ct.toLowerCase());
+    const invalid = ['non', 'false', '0'].includes(ct.toLowerCase());
+
+    if (valid) secondLine.push('CT valide');
+    else if (invalid) secondLine.push('CT non valide');
+  }
+
+  if (firstLine.length) details.push(firstLine.join(' · '));
+  if (secondLine.length) details.push(secondLine.join(' · '));
+}
+
+
   const location = listing.location
   ? clean(
-      listing.location
-        .replace(/\b\d{5}\b/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^[,\s]+|[,\s]+$/g, ''),
+      platform === 'leboncoin'
+        ? String(listing.location)
+            .replace(/\b\d{5}\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : listing.location,
       100
     )
   : null;
@@ -3845,9 +3904,7 @@ const info = [
   ...(platform === 'vinted'
     ? ['-# Prix incluant les frais de protection Vinted']
     : []),
-  ...(details.length
-    ? [`-# ${details.join(' · ')}`]
-    : []),
+  ...details.map(detail => `-# ${detail}`),
   ...(location
   ? [`-# ${location}`]
   : [])
