@@ -2931,9 +2931,10 @@ async function testLeboncoinApiSearch() {
         : [],
         responsePreview: JSON.stringify(results)?.slice(0, 500),
       examples: (items || []).slice(0, 3).map(item => ({
-        title: item.subject || item.title || 'Sans titre',
-        price: item.price?.[0] ?? item.price ?? '?'
-      }))
+  title: item.subject || item.title || 'Sans titre',
+  price: item.price?.[0] ?? item.price ?? '?',
+  attributes: item.attributes || []
+}))
     };
 
   } catch (error) {
@@ -3810,8 +3811,14 @@ function buildWatchListingCard(guild, platform, listing, search) {
   }
 
   const location = listing.location
-    ? clean(listing.location, 100)
-    : null;
+  ? clean(
+      listing.location
+        .replace(/\b\d{5}\b/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^[,\s]+|[,\s]+$/g, ''),
+      100
+    )
+  : null;
 
   const header =
     `### ${emoji ? emoji + ' ' : ''}${platformName.toUpperCase()}` +
@@ -3828,8 +3835,8 @@ const info = [
     ? [`-# ${details.join(' · ')}`]
     : []),
   ...(location
-    ? [`-# 📍 ${location}`]
-    : [])
+  ? [`-# ${location}`]
+  : [])
 ].join('\n');
 
 
@@ -8882,6 +8889,7 @@ const apiTest = await testLeboncoinApiSearch();
       `Type de réponse : ${apiTest.responseType || 'Inconnu'}`,
       `Clés : ${apiTest.keys?.join(', ') || 'Aucune'}`,
 `Réponse brute : ${apiTest.responsePreview || 'Aucune'}`,
+`Attributs véhicule : ${JSON.stringify(apiTest.examples?.[0]?.attributes || []).slice(0, 2500)}`,
 `Erreur : ${apiTest.error || 'Aucune'}`,
       ...apiTest.examples?.map(
         item => `${item.title} — ${item.price} €`
