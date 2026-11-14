@@ -3038,22 +3038,19 @@ async function fetchLeboncoinListings(searchUrl) {
 
   return response.ads.map(ad => ({
 
-vehicleDetails: Object.fromEntries(
-  (ad.attributes || [])
-    .filter(attr => [
-      'regdate',
-      'mileage',
-      'fuel',
-      'gearbox',
-      'doors',
-      'seats',
-      'vehicle_technical_inspection_valid'
-    ].includes(attr.key))
-    .map(attr => [
-      attr.key,
-      String(attr.value_label ?? attr.value ?? '').trim()
-    ])
-),
+attributes: (Array.isArray(ad.attributes) ? ad.attributes : [])
+  .filter(attr => attr && attr.key)
+  .map(attr => ({
+    key: String(attr.key).slice(0, 80),
+    label: String(attr.label || attr.key).slice(0, 80),
+    value: String(
+      attr.value_label ??
+      attr.value ??
+      ''
+    ).trim().slice(0, 120)
+  }))
+  .filter(attr => attr.value)
+  .slice(0, 40),
 
     id: String(ad.list_id || ''),
     title: ad.subject || '',
@@ -3133,6 +3130,16 @@ size: String(raw.size || '').slice(0, 30),
 condition: String(raw.condition || '').slice(0, 60),
 location: String(raw.location || ''),
 publishedAt: raw.publishedAt || null,
+attributes: platform === 'leboncoin' && Array.isArray(raw.attributes)
+  ? raw.attributes
+      .filter(attr => attr && attr.key && attr.value)
+      .slice(0, 40)
+      .map(attr => ({
+        key: String(attr.key).slice(0, 80),
+        label: String(attr.label || attr.key).slice(0, 80),
+        value: String(attr.value).slice(0, 120)
+      }))
+  : []
 vehicleDetails: platform === 'leboncoin'
   ? (raw.vehicleDetails || {})
   : {}
@@ -3849,38 +3856,138 @@ function buildWatchListingCard(guild, platform, listing, search) {
 if (platform === 'leboncoin') {
   details.length = 0;
 
-  const vehicle = listing.vehicleDetails || {};
+  const attributes = Array.isArray(listing.attributes)
+    ? listing.attributes
+    : [];
 
-  const firstLine = [
-    vehicle.regdate,
-    vehicle.mileage,
-    vehicle.fuel
-  ].filter(Boolean);
+  const byKey = new Map(
+    attributes.map(attr => [
+      String(attr.key).toLowerCase(),
+      String(attr.value || '').trim()
+    ])
+  );
 
-  const secondLine = [
-    vehicle.gearbox
-      ? `Boîte ${vehicle.gearbox.toLowerCase()}`
-      : null,
-    vehicle.doors
-      ? `${vehicle.doors} portes`
-      : null,
-    vehicle.seats
-      ? `${vehicle.seats} places`
-      : null
-  ].filter(Boolean);
+  const used = new Set();
+  const selected = [];
 
-  const ct = vehicle.vehicle_technical_inspection_valid;
+  const add = (keys, formatter = value => value) => {
+    for (const key of keys) {
+      const normalizedKey = key.toLowerCase();
+      const value = byKey.get(normalizedKey);
 
-  if (ct) {
-    const valid = ['oui', 'true', '1'].includes(ct.toLowerCase());
-    const invalid = ['non', 'false', '0'].includes(ct.toLowerCase());
+      if (!value || used.has(normalizedKey)) continue;
 
-    if (valid) secondLine.push('CT valide');
-    else if (invalid) secondLine.push('CT non valide');
+      const result = formatter(value);
+
+      if (!result) continue;
+
+      selected.push(clean(result, 100));
+      used.add(normalizedKey);
+      return;
+    }
+  };
+
+  // Caractéristiques automobiles
+  const isVehicle = [
+    'regdate', 'mileage', 'fuel', 'gearbox'
+  ].some(key => byKey.has(key));
+
+  if (isVehicle) {
+    add(['regdate']);
+    add(['mileage']);
+    add(['fuel']);
+
+    if (selected.length) {
+      details.push(selected.splice(0).join(' · '));
+    }
+
+    add(['gearbox'], value =>
+      `Boîte ${value.toLowerCase()}`
+    );
+
+    add(['doors'], value => `${value} portes`);
+    add(['seats'], value => `${value} places`);
+
+    add(['vehicle_technical_inspection_valid'], value => {
+      const v = value.toLowerCase();
+
+      if (['oui', 'true', '1'].includes(v)) {
+        return 'CT valide';
+      }
+
+      if (['non', 'false', '0'].includes(v)) {
+        return 'CT non valide';
+      }
+
+      return null;
+    });
+
+    if (selected.length) {
+      details.push(selected.splice(0).join(' · '));
+    }
+  } else {
+    // Priorité aux caractéristiques utiles
+    const priorities = [
+      ['brand', 'u_brand', 'marque'],
+      ['model', 'u_model', 'modele'],
+      ['storage', 'capacity', 'u_storage', 'memory'],
+      ['size', 'clothing_size', 'u_size'],
+      ['condition', 'item_condition', 'state'],
+      ['color', 'colour', 'u_color'],
+      ['material', 'u_material'],
+      ['dimensions', 'dimension'],
+      ['collection', 'series'],
+      ['edition', 'version']
+    ];
+
+    for (const keys of priorities) {
+      add(keys);
+
+      if (selected.length >= 6) break;
+    }
+
+    // Compléter avec les attributs disponibles
+    if (selected.length < 4) {
+      const ignored = new Set([
+        'category', 'category_id',
+        'shipping', 'delivery',
+        'payment', 'price',
+        'location', 'zipcode',
+        'phone', 'email'
+      ]);
+
+      for (const attr of attributes) {
+        const key = String(attr.key).toLowerCase();
+
+        if (used.has(key) || ignored.has(key)) continue;
+
+        const value = String(attr.value || '').trim();
+
+        if (!value || value.length > 65) continue;
+
+        const label = String(attr.label || '').trim();
+
+        const display = label &&
+          label.toLowerCase() !== value.toLowerCase()
+          ? `${label} : ${value}`
+          : value;
+
+        selected.push(clean(display, 100));
+        used.add(key);
+
+        if (selected.length >= 6) break;
+      }
+    }
+
+    // Maximum deux lignes de trois caractéristiques
+    if (selected.length) {
+      details.push(selected.slice(0, 3).join(' · '));
+    }
+
+    if (selected.length > 3) {
+      details.push(selected.slice(3, 6).join(' · '));
+    }
   }
-
-  if (firstLine.length) details.push(firstLine.join(' · '));
-  if (secondLine.length) details.push(secondLine.join(' · '));
 }
 
 
@@ -3968,24 +4075,7 @@ container
       new ButtonBuilder()
         .setLabel("Ouvrir l'annonce")
         .setStyle(ButtonStyle.Link)
-        .setURL(listing.url),
-
-      new ButtonBuilder()
-        .setCustomId(`watch_suspend_${search._id}`)
-        .setLabel('Mettre en pause')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(Boolean(search.paused)),
-
-      new ButtonBuilder()
-        .setCustomId(`watch_resume_${search._id}`)
-        .setLabel('Reprendre')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!search.paused),
-
-      new ButtonBuilder()
-        .setCustomId(`watch_delete_${search._id}`)
-        .setLabel('Supprimer le salon')
-        .setStyle(ButtonStyle.Secondary)
+        .setURL(listing.url)
     )
   );
 
@@ -9485,14 +9575,15 @@ if (
             ]
           },
           {
-            id: client.user.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.EmbedLinks
-            ]
-          }
+  id: client.user.id,
+  allow: [
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.ReadMessageHistory,
+    PermissionFlagsBits.EmbedLinks,
+    PermissionFlagsBits.ManageMessages
+  ]
+}
         ],
         reason: `Recherche privée de ${interaction.user.id}`
       });
@@ -9519,7 +9610,16 @@ if (
       });
 
       search.managementMessageId = message.id;
-      await search.save();
+await search.save();
+
+try {
+  await message.pin();
+} catch (error) {
+  console.error(
+    `Impossible d'épingler le panneau de surveillance ${search._id} :`,
+    error
+  );
+}
 
     } catch (error) {
       console.error(
