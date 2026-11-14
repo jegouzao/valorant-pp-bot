@@ -3132,7 +3132,10 @@ brand: String(raw.brand || '').slice(0, 60),
 size: String(raw.size || '').slice(0, 30),
 condition: String(raw.condition || '').slice(0, 60),
 location: String(raw.location || ''),
-publishedAt: raw.publishedAt || null
+publishedAt: raw.publishedAt || null,
+vehicleDetails: platform === 'leboncoin'
+  ? (raw.vehicleDetails || {})
+  : {}
 
   };
 }
