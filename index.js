@@ -2758,8 +2758,13 @@ function parseLeboncoinSearchFilters(searchUrl) {
     'regdate',
     'u_car_brand',
     'u_car_model',
-    'sort',
-    'order'
+'phone_brand',
+'phone_memory',
+'item_condition',
+'owner_type',
+'transaction_status',
+'sort',
+'order'
   ]);
 
   const unsupported = [...new Set(
@@ -2817,6 +2822,11 @@ function parseLeboncoinSearchFilters(searchUrl) {
     regdate,
     brand: params.get('u_car_brand'),
     model: params.get('u_car_model'),
+    phoneBrand: params.get('phone_brand'),
+phoneMemory: params.get('phone_memory'),
+itemCondition: params.get('item_condition'),
+ownerType: params.get('owner_type'),
+transactionStatus: params.get('transaction_status'),
     sort: params.get('sort'),
     order: params.get('order')
   };
@@ -2905,6 +2915,98 @@ async function diagnoseLeboncoinAccess(searchUrl) {
   }
 }
 
+async function testLeboncoinPhoneFilters() {
+  const { search } = require('./leboncoin-api-search.cjs');
+
+  const base = {
+    keywords: 'iphone 17',
+    category: '17',
+    price_min: 500,
+    price_max: 800,
+    sort_by: 'date',
+    sort_order: 'desc',
+    limit: 5
+  };
+
+  const tests = [
+    {
+      name: 'Recherche de base',
+      options: base
+    },
+    {
+      name: 'Marque Apple',
+      options: {
+        ...base,
+        enums: { phone_brand: ['apple'] }
+      }
+    },
+    {
+      name: 'Stockage 256/512 Go',
+      options: {
+        ...base,
+        enums: {
+          phone_memory: ['256go', '512go']
+        }
+      }
+    },
+    {
+      name: 'État 1/2',
+      options: {
+        ...base,
+        enums: {
+          item_condition: ['1', '2']
+        }
+      }
+    },
+    {
+      name: 'Vendeur particulier',
+      options: {
+        ...base,
+        owner_type: 'private'
+      }
+    },
+    {
+      name: 'Tous les filtres',
+      options: {
+        ...base,
+        enums: {
+          phone_brand: ['apple'],
+          phone_memory: ['256go', '512go'],
+          item_condition: ['1', '2']
+        },
+        owner_type: 'private'
+      }
+    }
+  ];
+
+  const results = [];
+
+  for (const test of tests) {
+    try {
+      const response = await search(test.options);
+      const ads = Array.isArray(response?.ads)
+        ? response.ads
+        : [];
+
+      results.push({
+        test: test.name,
+        count: ads.length,
+        total: response?.total ?? null,
+        examples: ads.slice(0, 2).map(ad => ({
+          title: ad.subject,
+          price: ad.price?.[0] ?? ad.price
+        }))
+      });
+    } catch (error) {
+      results.push({
+        test: test.name,
+        error: error.message
+      });
+    }
+  }
+
+  return results;
+}
 
 async function testLeboncoinApiSearch(searchUrl) {
   const startedAt = Date.now();
@@ -3006,6 +3108,24 @@ async function fetchLeboncoinListings(searchUrl) {
   if (filters.model) {
     enums.u_car_model = [filters.model];
   }
+
+  // Filtres spécifiques aux téléphones et autres produits.
+  const addEnum = (key, value) => {
+    if (!value) return;
+
+    const values = String(value)
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    if (values.length) {
+      enums[key] = values;
+    }
+  };
+
+  addEnum('phone_brand', filters.phoneBrand);
+  addEnum('phone_memory', filters.phoneMemory);
+  addEnum('item_condition', filters.itemCondition);
 
   if (Object.keys(enums).length) {
     options.enums = enums;
@@ -9060,6 +9180,13 @@ if (
       search.searchUrl
     );
 const apiTest = await testLeboncoinApiSearch(search.searchUrl);
+
+const phoneTests = await testLeboncoinPhoneFilters();
+
+console.log(
+  '[LEBONCOIN] TEST FILTRES TÉLÉPHONIE',
+  JSON.stringify(phoneTests, null, 2)
+);
     const report = [
       '**DIAGNOSTIC LE BON COIN**',
       '',
