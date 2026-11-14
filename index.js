@@ -2904,67 +2904,39 @@ async function diagnoseLeboncoinAccess(searchUrl) {
     };
   }
 }
-async function testLeboncoinApiSearch() {
+
+
+async function testLeboncoinApiSearch(searchUrl) {
   const startedAt = Date.now();
 
   try {
-    const { search, CATEGORY, SORT_BY, SORT_ORDER } =
-  require('./leboncoin-api-search.cjs');
-
-    if (typeof search !== 'function') {
-      throw new Error('La fonction search est introuvable.');
+    if (!searchUrl) {
+      throw new Error('Aucune URL de recherche fournie.');
     }
 
-    // Test limité : Lada Niva, catégorie voitures,
-    // prix entre 1000 et 4500 euros.
-    const results = await search({
-      keywords: 'Lada Niva',
-      category: CATEGORY.VOITURES,
-      sort_by: SORT_BY.TIME,
-      sort_order: SORT_ORDER.DESC,
-      price_min: 1000,
-      price_max: 4500,
-      limit: 5
-    });
-
-    const items = Array.isArray(results)
-      ? results
-      : Array.isArray(results?.ads)
-        ? results.ads
-        : Array.isArray(results?.data?.ads)
-          ? results.data.ads
-          : null;
+    const filters = parseLeboncoinSearchFilters(searchUrl);
+    const items = await fetchLeboncoinListings(searchUrl);
 
     return {
-      success: items !== null,
+      success: true,
       durationMs: Date.now() - startedAt,
-      count: items?.length ?? 0,
-      responseType: Array.isArray(results)
-        ? 'tableau'
-        : typeof results,
-      keys: results && typeof results === 'object'
-        ? Object.keys(results).slice(0, 10)
-        : [],
-        responsePreview: JSON.stringify(results)?.slice(0, 500),
-      examples: (items || []).slice(0, 3).map(item => ({
-  title: item.subject || item.title || 'Sans titre',
-  price: item.price?.[0] ?? item.price ?? '?',
-  attributes: (item.attributes || [])
-  .filter(attr =>
-    ![
-      'profile_picture_url',
-      'brand',
-      'model',
-      'u_car_brand',
-      'u_car_model'
-    ].includes(attr.key)
-  )
-  .map(attr => ({
-    key: attr.key,
-    label: attr.key_label,
-    value: attr.value_label || attr.value
-  }))
-}))
+      count: items.length,
+      responseType: 'tableau',
+      keys: items.length ? Object.keys(items[0]) : [],
+      responsePreview: JSON.stringify(items.slice(0, 2)).slice(0, 500),
+
+      filters: {
+        category: filters.category,
+        price: filters.price,
+        sort: filters.sort,
+        order: filters.order
+      },
+
+      examples: items.slice(0, 3).map(item => ({
+        title: item.title,
+        price: item.price,
+        attributes: item.attributes || []
+      }))
     };
 
   } catch (error) {
@@ -9058,7 +9030,7 @@ if (
     const result = await diagnoseLeboncoinAccess(
       search.searchUrl
     );
-const apiTest = await testLeboncoinApiSearch();
+const apiTest = await testLeboncoinApiSearch(search.searchUrl);
     const report = [
       '**DIAGNOSTIC LE BON COIN**',
       '',
@@ -9069,7 +9041,8 @@ const apiTest = await testLeboncoinApiSearch();
       `Type de réponse : ${apiTest.responseType || 'Inconnu'}`,
       `Clés : ${apiTest.keys?.join(', ') || 'Aucune'}`,
 `Réponse brute : ${apiTest.responsePreview || 'Aucune'}`,
-`Attributs véhicule : ${JSON.stringify(apiTest.examples?.[0]?.attributes || []).slice(0, 2500)}`,
+`Attributs produit : ${JSON.stringify(apiTest.examples?.[0]?.attributes || []).slice(0, 2500)}`,
+`Filtres détectés : ${JSON.stringify(apiTest.filters || {})}`,
 `Erreur : ${apiTest.error || 'Aucune'}`,
       ...apiTest.examples?.map(
         item => `${item.title} — ${item.price} €`
