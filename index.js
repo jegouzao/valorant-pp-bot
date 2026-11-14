@@ -1021,7 +1021,7 @@ async function getPlayerPoints(userId) {
       },
       {
         upsert: true,
-        new: true
+        returnDocument: 'after'
       }
     );
   }
@@ -1231,7 +1231,7 @@ async function getInviteData(inviterId) {
     },
     {
       upsert: true,
-      new: true
+      returnDocument: 'after'
     }
   );
 
@@ -3034,11 +3034,26 @@ async function fetchLeboncoinListings(searchUrl) {
     options.keywords = keywords;
   }
 
-  const response = await search(options);
+let response;
 
-  if (!Array.isArray(response?.ads)) {
-    throw new Error('Réponse Leboncoin invalide : annonces absentes.');
-  }
+try {
+  response = await search(options);
+} catch (error) {
+  console.error('[LEBONCOIN] Échec de la requête API :', error.message);
+  throw error;
+}
+
+if (!Array.isArray(response?.ads)) {
+  console.error('[LEBONCOIN] Réponse API inattendue :', {
+    type: typeof response,
+    cles: response && typeof response === 'object'
+      ? Object.keys(response).slice(0, 15)
+      : [],
+    message: response?.message || response?.error || null
+  });
+
+  throw new Error('Réponse Leboncoin invalide : annonces absentes.');
+}
 
   return response.ads.map(ad => ({
 
@@ -3697,7 +3712,7 @@ async function watchDeliverPending() {
           },
           {
             sort: { createdAt: 1 },
-            new: true
+            returnDocument: 'after'
           }
         );
 
@@ -10427,7 +10442,7 @@ let updatedClip = await Clip.findOneAndUpdate(
   {
     $pull: { likes: userId }
   },
-  { new: true }
+  { returnDocument: 'after' }
 );
 
 if (!updatedClip) {
@@ -10441,7 +10456,7 @@ if (!updatedClip) {
     {
       $addToSet: { likes: userId }
     },
-    { new: true }
+    { returnDocument: 'after' }
   );
 }
 
