@@ -3943,18 +3943,25 @@ if (platform === 'leboncoin') {
       get('fuel') || vehicle.fuel
     );
 
-    const ct = get('vehicle_technical_inspection_valid')
-  || vehicle.vehicle_technical_inspection_valid;
 
-const ctValue = String(ct || '').toLowerCase();
+
+const gearbox = get('gearbox') || vehicle.gearbox;
+const doors = get('doors') || vehicle.doors;
+const seats = get('seats') || vehicle.seats;
+
+const ct = String(
+  get('vehicle_technical_inspection_valid') ||
+  vehicle.vehicle_technical_inspection_valid ||
+  ''
+).toLowerCase();
 
 addLine(
-  get('gearbox') || vehicle.gearbox,
-  get('doors') || vehicle.doors,
-  get('seats') || vehicle.seats,
-  ['oui', 'true', '1'].includes(ctValue)
+  gearbox ? `Boîte ${gearbox.toLowerCase()}` : null,
+  doors ? `${doors} portes` : null,
+  seats ? `${seats} places` : null,
+  ['oui', 'true', '1'].includes(ct)
     ? 'CT valide'
-    : ['non', 'false', '0'].includes(ctValue)
+    : ['non', 'false', '0'].includes(ct)
       ? 'CT non valide'
       : null
 );
@@ -3992,20 +3999,16 @@ const location = listing.location
       platform === 'leboncoin'
         ? String(listing.location)
             .replace(/\b(\d{5})\b/g, (_, zipcode) => {
-              let department;
-
-              if (/^97|^98/.test(zipcode)) {
-                department = zipcode.slice(0, 3);
-              } else if (zipcode.startsWith('20')) {
-                department = Number(zipcode) <= 20190
-                  ? '2A'
-                  : '2B';
-              } else {
-                department = zipcode.slice(0, 2);
-              }
+              const department = zipcode.startsWith('97') ||
+                zipcode.startsWith('98')
+                ? zipcode.slice(0, 3)
+                : zipcode.startsWith('20')
+                  ? Number(zipcode) <= 20190 ? '2A' : '2B'
+                  : zipcode.slice(0, 2);
 
               return `(${department})`;
             })
+            .replace(/\((\d{2,3}|2A|2B)\)\s*\(\1\)/gi, '($1)')
             .replace(/\s+/g, ' ')
             .trim()
         : listing.location,
@@ -4013,23 +4016,20 @@ const location = listing.location
     )
   : null;
 
-  const header =
+
+    const header =
     `### ${emoji ? emoji + ' ' : ''}${platformName.toUpperCase()}` +
     ` · NOUVELLE ANNONCE DÉTECTÉE`;
 
-  
-const info = [
-  `### ${title}`,
-  `# ${price}`,
-  ...(platform === 'vinted'
-    ? ['-# Prix incluant les frais de protection Vinted']
-    : []),
-  ...details.map(detail => `-# ${detail}`),
-  ...(location
-  ? [`-# ${location}`]
-  : [])
-].join('\n');
-
+  const info = [
+    `### ${title}`,
+    `# ${price}`,
+    ...(platform === 'vinted'
+      ? ['-# Prix incluant les frais de protection Vinted']
+      : []),
+    ...details.map(detail => `-# ${detail}`),
+    ...(location ? [`-# ${location}`] : [])
+  ].join('\n');
 
   const container = new ContainerBuilder()
     .setAccentColor(EMBED_COLOR)
@@ -4074,27 +4074,21 @@ const info = [
     );
   }
 
-
-
-container
-  .addSeparatorComponents(
-    new SeparatorBuilder()
-  )
-  .addActionRowComponents(
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setLabel("Ouvrir l'annonce")
-        .setStyle(ButtonStyle.Link)
-        .setURL(listing.url)
+  container
+    .addSeparatorComponents(
+      new SeparatorBuilder()
     )
-  );
-
-
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("Ouvrir l'annonce")
+          .setStyle(ButtonStyle.Link)
+          .setURL(listing.url)
+      )
+    );
 
   return container;
 }
-
-
 
 const BOOKMAKERS_CATEGORY_ID = '1570174202055626813';
 
