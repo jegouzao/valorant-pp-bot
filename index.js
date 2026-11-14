@@ -6454,9 +6454,13 @@ async function fetchLeaderboardPageMembers(guild, sorted, page = 0) {
     .map(([id]) => id);
   await Promise.all(ids.map(async id => {
     if (guild.members.cache.has(id)) return;
-    await guild.members.fetch(id).catch(err => {
-      console.warn(`⚠️ Rang indisponible pour ${id} : ${err.message}`);
-    });
+await guild.members.fetch(id).catch(err => {
+  // Membre introuvable sur le serveur : aucune alerte nécessaire.
+  if (err.code === 10007) return;
+
+  // Conserver les autres erreurs pour le diagnostic.
+  console.warn(`⚠️ Rang indisponible pour ${id} : ${err.message}`);
+});
   }));
 }
 
