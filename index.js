@@ -2890,8 +2890,12 @@ async function testLeboncoinApiSearch() {
   const startedAt = Date.now();
 
   try {
-    const { search, CATEGORY, SORT_BY, SORT_ORDER } =
-      await import('leboncoin-api-search');
+    const { register } = require('node:module');
+
+register('tsx/esm', __filename);
+
+const { search, CATEGORY, SORT_BY, SORT_ORDER } =
+  await import('leboncoin-api-search');
 
     if (typeof search !== 'function') {
       throw new Error('La fonction search est introuvable.');
