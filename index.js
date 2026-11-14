@@ -3049,7 +3049,25 @@ if (!Array.isArray(response?.ads)) {
     cles: response && typeof response === 'object'
       ? Object.keys(response).slice(0, 15)
       : [],
-    message: response?.message || response?.error || null
+    message: response?.message || response?.error || null,
+urlInfo: typeof response?.url === 'string'
+  ? {
+      domaine: (() => {
+        try {
+          return new URL(response.url).hostname;
+        } catch {
+          return 'URL invalide';
+        }
+      })(),
+      chemin: (() => {
+        try {
+          return new URL(response.url).pathname;
+        } catch {
+          return null;
+        }
+      })()
+    }
+  : null
   });
 
   throw new Error('Réponse Leboncoin invalide : annonces absentes.');
