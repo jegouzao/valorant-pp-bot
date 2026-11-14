@@ -3841,6 +3841,10 @@ function buildWatchListingCard(guild, platform, listing, search) {
   }
 
 
+  if (platform === 'vinted' && details.length > 0) {
+  details.splice(0, details.length, details.join(' · '));
+}
+
 if (platform === 'leboncoin') {
   details.length = 0;
 
