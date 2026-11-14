@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "postinstall": "node -e \"require('esbuild').buildSync({entryPoints:['node_modules/leboncoin-api-search/index.ts'],bundle:true,platform:'node',format:'cjs',outfile:'leboncoin-api-search.cjs'})\""
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "esbuild": "^0.25.0",
     "leboncoin-api-search": "0.0.7",
     "tsx": "^4.20.5",
     "@napi-rs/canvas": "^1.0.8",
