@@ -2311,10 +2311,26 @@ if (filters.personnage) {
           ? Number(item.price.value)
           : null,
       imageUrl: item.image?.imageUrl || null,
-      location: [
-        item.itemLocation?.city,
-        item.itemLocation?.country
-      ].filter(Boolean).join(', '),
+      location: (() => {
+  const city = String(ad.location?.city_label || '').trim();
+  const zipcode = String(ad.location?.zipcode || '').trim();
+
+  if (!city) return '';
+
+  let department = '';
+
+  if (/^\d{5}$/.test(zipcode)) {
+    if (zipcode.startsWith('97') || zipcode.startsWith('98')) {
+      department = zipcode.slice(0, 3);
+    } else if (zipcode.startsWith('20')) {
+      department = Number(zipcode) <= 20190 ? '2A' : '2B';
+    } else {
+      department = zipcode.slice(0, 2);
+    }
+  }
+
+  return department ? `${city} (${department})` : city;
+})(),
       publishedAt: item.itemCreationDate || null
     }));
 }
