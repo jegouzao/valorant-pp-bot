@@ -3254,9 +3254,34 @@ if (invalidCount > 0) {
 
     // Lors du premier passage, on affiche au maximum
     // 10 annonces, mais on mémorise toutes celles récupérées.
-    const selected = isInitialScan
-      ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
-      : unique;
+ const selected = (
+  isInitialScan
+    ? unique.slice(0, WATCH_CONFIG.initialResultsLimit)
+    : unique
+).sort((a, b) => {
+  const getTime = item => {
+    const raw = item.publishedAt;
+
+    if (!raw) return 0;
+
+    const timestamp = Date.parse(
+      String(raw).replace(' ', 'T')
+    );
+
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  };
+
+  const timeA = getTime(a);
+  const timeB = getTime(b);
+
+  if (timeA && timeB && timeA !== timeB) {
+    return timeA - timeB;
+  }
+
+  // En cas de date absente, conserver le tri de
+  // recherche en inversant l'ordre de publication.
+  return unique.indexOf(b) - unique.indexOf(a);
+});
 
 
 
