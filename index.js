@@ -2734,7 +2734,9 @@ function parseLeboncoinSearchFilters(searchUrl) {
   const params = url.searchParams;
 
   const allowed = new Set([
-    'category',
+  'text',
+  'keywords',
+  'category',
     'price',
     'mileage',
     'regdate',
@@ -2942,8 +2944,103 @@ async function testLeboncoinApiSearch() {
   }
 }
 
+async function fetchLeboncoinListings(searchUrl) {
+  const filters = parseLeboncoinSearchFilters(searchUrl);
+  const { search } = require('./leboncoin-api-search.cjs');
+
+  const rangeBounds = (range) => {
+    if (!range) return null;
+
+    if (range.second !== null) {
+      return { min: range.first, max: range.second };
+    }
+
+    if (range.prefix === 'min') {
+      return { max: range.first };
+    }
+
+    if (range.prefix === 'max') {
+      return { min: range.first };
+    }
+
+    return { min: range.first, max: range.first };
+  };
+
+  const price = rangeBounds(filters.price);
+  const mileage = rangeBounds(filters.mileage);
+  const regdate = rangeBounds(filters.regdate);
+
+  const options = {
+    category: filters.category || '0',
+    limit: 30,
+    sort_by: filters.sort === 'price' ? 'price'
+      : filters.sort === 'relevance' ? 'relevance'
+      : 'date',
+    sort_order: filters.order === 'asc' ? 'asc' : 'desc'
+  };
+
+  if (price) {
+    if (price.min != null) options.price_min = price.min;
+    if (price.max != null) options.price_max = price.max;
+  }
+
+  const ranges = {};
+
+  if (mileage) ranges.mileage = mileage;
+  if (regdate) ranges.regdate = regdate;
+
+  if (Object.keys(ranges).length) {
+    options.ranges = ranges;
+  }
+
+  const enums = {};
+
+  if (filters.brand) {
+    enums.u_car_brand = [filters.brand];
+  }
+
+  if (filters.model) {
+    enums.u_car_model = [filters.model];
+  }
+
+  if (Object.keys(enums).length) {
+    options.enums = enums;
+  }
+
+  const params = new URL(filters.url).searchParams;
+  const keywords = params.get('text') || params.get('keywords');
+
+  if (keywords) {
+    options.keywords = keywords;
+  }
+
+  const response = await search(options);
+
+  if (!Array.isArray(response?.ads)) {
+    throw new Error('Réponse Leboncoin invalide : annonces absentes.');
+  }
+
+  return response.ads.map(ad => ({
+    id: String(ad.list_id || ''),
+    title: ad.subject || '',
+    url: ad.url || '',
+    price: Array.isArray(ad.price) ? ad.price[0] : ad.price,
+    imageUrl: ad.images?.urls?.[0]
+      || ad.images?.thumb_url
+      || null,
+    brand: ad.brand || '',
+    size: '',
+    condition: '',
+    location: [
+      ad.location?.city_label,
+      ad.location?.zipcode
+    ].filter(Boolean).join(' '),
+    publishedAt: ad.first_publication_date || null
+  }));
+}
+
 const WATCH_CONNECTORS = {
-  leboncoin: null,
+  leboncoin: fetchLeboncoinListings,
   vinted: fetchVintedListings,
   ebay: fetchEbayListings
 };
