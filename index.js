@@ -2915,98 +2915,6 @@ async function diagnoseLeboncoinAccess(searchUrl) {
   }
 }
 
-async function testLeboncoinPhoneFilters() {
-  const { search } = require('./leboncoin-api-search.cjs');
-
-  const base = {
-    keywords: 'iphone 17',
-    category: '17',
-    price_min: 500,
-    price_max: 800,
-    sort_by: 'date',
-    sort_order: 'desc',
-    limit: 5
-  };
-
-  const tests = [
-    {
-      name: 'Recherche de base',
-      options: base
-    },
-    {
-      name: 'Marque Apple',
-      options: {
-        ...base,
-        enums: { phone_brand: ['apple'] }
-      }
-    },
-    {
-      name: 'Stockage 256/512 Go',
-      options: {
-        ...base,
-        enums: {
-          phone_memory: ['256go', '512go']
-        }
-      }
-    },
-    {
-      name: 'État 1/2',
-      options: {
-        ...base,
-        enums: {
-          item_condition: ['1', '2']
-        }
-      }
-    },
-    {
-      name: 'Vendeur particulier',
-      options: {
-        ...base,
-        owner_type: 'private'
-      }
-    },
-    {
-      name: 'Tous les filtres',
-      options: {
-        ...base,
-        enums: {
-          phone_brand: ['apple'],
-          phone_memory: ['256go', '512go'],
-          item_condition: ['1', '2']
-        },
-        owner_type: 'private'
-      }
-    }
-  ];
-
-  const results = [];
-
-  for (const test of tests) {
-    try {
-      const response = await search(test.options);
-      const ads = Array.isArray(response?.ads)
-        ? response.ads
-        : [];
-
-      results.push({
-        test: test.name,
-        count: ads.length,
-        total: response?.total ?? null,
-        examples: ads.slice(0, 2).map(ad => ({
-          title: ad.subject,
-          price: ad.price?.[0] ?? ad.price
-        }))
-      });
-    } catch (error) {
-      results.push({
-        test: test.name,
-        error: error.message
-      });
-    }
-  }
-
-  return results;
-}
 
 async function testLeboncoinApiSearch(searchUrl) {
   const startedAt = Date.now();
@@ -3130,6 +3038,10 @@ async function fetchLeboncoinListings(searchUrl) {
   if (Object.keys(enums).length) {
     options.enums = enums;
   }
+
+  if (filters.ownerType) {
+  options.owner_type = filters.ownerType;
+}
 
   const params = new URL(filters.url).searchParams;
   const keywords = params.get('text') || params.get('keywords');
@@ -3997,133 +3909,96 @@ if (platform === 'leboncoin') {
     ? listing.attributes
     : [];
 
-  const byKey = new Map(
+  const attrs = new Map(
     attributes.map(attr => [
-      String(attr.key).toLowerCase(),
+      String(attr.key || '').toLowerCase(),
       String(attr.value || '').trim()
     ])
   );
 
-  const used = new Set();
-  const selected = [];
-
-  const add = (keys, formatter = value => value) => {
+  const get = (...keys) => {
     for (const key of keys) {
-      const normalizedKey = key.toLowerCase();
-      const value = byKey.get(normalizedKey);
-
-      if (!value || used.has(normalizedKey)) continue;
-
-      const result = formatter(value);
-
-      if (!result) continue;
-
-      selected.push(clean(result, 100));
-      used.add(normalizedKey);
-      return;
+      const value = attrs.get(key.toLowerCase());
+      if (value && value !== 'null') return value;
     }
+    return null;
   };
 
-  // Caractéristiques automobiles
-  const isVehicle = [
-    'regdate', 'mileage', 'fuel', 'gearbox'
-  ].some(key => byKey.has(key));
+  const addLine = (...values) => {
+    const line = values
+      .filter(Boolean)
+      .map(value => clean(value, 80))
+      .join(' · ');
 
-  if (isVehicle) {
-    add(['regdate']);
-    add(['mileage']);
-    add(['fuel']);
+    if (line) details.push(line);
+  };
 
-    if (selected.length) {
-      details.push(selected.splice(0).join(' · '));
-    }
+  const category = String(
+    new URL(search.searchUrl).searchParams.get('category') || ''
+  );
 
-    add(['gearbox'], value =>
-      `Boîte ${value.toLowerCase()}`
+  if (category === '17') {
+    // Téléphones
+    addLine(
+      get('phone_brand'),
+      get('phone_model'),
+      get('phone_memory'),
+      get('condition', 'item_condition')
+    );
+  } else if (
+    get('regdate') ||
+    get('mileage') ||
+    get('fuel')
+  ) {
+    // Véhicules
+    const vehicle = listing.vehicleDetails || {};
+
+    addLine(
+      get('regdate') || vehicle.regdate,
+      get('mileage') || vehicle.mileage,
+      get('fuel') || vehicle.fuel
     );
 
-    add(['doors'], value => `${value} portes`);
-    add(['seats'], value => `${value} places`);
+    const ct = get('vehicle_technical_inspection_valid')
+  || vehicle.vehicle_technical_inspection_valid;
 
-    add(['vehicle_technical_inspection_valid'], value => {
-      const v = value.toLowerCase();
+const ctValue = String(ct || '').toLowerCase();
 
-      if (['oui', 'true', '1'].includes(v)) {
-        return 'CT valide';
-      }
-
-      if (['non', 'false', '0'].includes(v)) {
-        return 'CT non valide';
-      }
-
-      return null;
-    });
-
-    if (selected.length) {
-      details.push(selected.splice(0).join(' · '));
-    }
+addLine(
+  get('gearbox') || vehicle.gearbox,
+  get('doors') || vehicle.doors,
+  get('seats') || vehicle.seats,
+  ['oui', 'true', '1'].includes(ctValue)
+    ? 'CT valide'
+    : ['non', 'false', '0'].includes(ctValue)
+      ? 'CT non valide'
+      : null
+);
   } else {
-    // Priorité aux caractéristiques utiles
-    const priorities = [
-      ['brand', 'u_brand', 'marque'],
-      ['model', 'u_model', 'modele'],
-      ['storage', 'capacity', 'u_storage', 'memory'],
-      ['size', 'clothing_size', 'u_size'],
-      ['condition', 'item_condition', 'state'],
-      ['color', 'colour', 'u_color'],
-      ['material', 'u_material'],
-      ['dimensions', 'dimension'],
-      ['collection', 'series'],
-      ['edition', 'version']
+    // Autres catégories
+    const usefulKeys = [
+      'brand',
+      'clothing_brand',
+      'size',
+      'clothing_size',
+      'condition',
+      'item_condition',
+      'color',
+      'material',
+      'furniture_material',
+      'dimensions',
+      'storage_capacity',
+      'console_model',
+      'game_console',
+      'bike_brand',
+      'bike_size'
     ];
 
-    for (const keys of priorities) {
-      add(keys);
+    const values = usefulKeys
+      .map(key => get(key))
+      .filter(Boolean);
 
-      if (selected.length >= 6) break;
-    }
-
-    // Compléter avec les attributs disponibles
-    if (selected.length < 4) {
-      const ignored = new Set([
-        'category', 'category_id',
-        'shipping', 'delivery',
-        'payment', 'price',
-        'location', 'zipcode',
-        'phone', 'email'
-      ]);
-
-      for (const attr of attributes) {
-        const key = String(attr.key).toLowerCase();
-
-        if (used.has(key) || ignored.has(key)) continue;
-
-        const value = String(attr.value || '').trim();
-
-        if (!value || value.length > 65) continue;
-
-        const label = String(attr.label || '').trim();
-
-        const display = label &&
-          label.toLowerCase() !== value.toLowerCase()
-          ? `${label} : ${value}`
-          : value;
-
-        selected.push(clean(display, 100));
-        used.add(key);
-
-        if (selected.length >= 6) break;
-      }
-    }
-
-    // Maximum deux lignes de trois caractéristiques
-    if (selected.length) {
-      details.push(selected.slice(0, 3).join(' · '));
-    }
-
-    if (selected.length > 3) {
-      details.push(selected.slice(3, 6).join(' · '));
-    }
+    addLine(...values.slice(0, 4));
   }
 }
 
@@ -9181,12 +9056,6 @@ if (
     );
 const apiTest = await testLeboncoinApiSearch(search.searchUrl);
 
-const phoneTests = await testLeboncoinPhoneFilters();
-
-console.log(
-  '[LEBONCOIN] TEST FILTRES TÉLÉPHONIE',
-  JSON.stringify(phoneTests, null, 2)
-);
     const report = [
       '**DIAGNOSTIC LE BON COIN**',
       '',
