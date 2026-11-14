@@ -2933,7 +2933,21 @@ async function testLeboncoinApiSearch() {
       examples: (items || []).slice(0, 3).map(item => ({
   title: item.subject || item.title || 'Sans titre',
   price: item.price?.[0] ?? item.price ?? '?',
-  attributes: item.attributes || []
+  attributes: (item.attributes || [])
+  .filter(attr =>
+    ![
+      'profile_picture_url',
+      'brand',
+      'model',
+      'u_car_brand',
+      'u_car_model'
+    ].includes(attr.key)
+  )
+  .map(attr => ({
+    key: attr.key,
+    label: attr.key_label,
+    value: attr.value_label || attr.value
+  }))
 }))
     };
 
