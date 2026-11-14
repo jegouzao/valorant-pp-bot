@@ -2929,6 +2929,7 @@ async function testLeboncoinApiSearch() {
       keys: results && typeof results === 'object'
         ? Object.keys(results).slice(0, 10)
         : [],
+        responsePreview: JSON.stringify(results)?.slice(0, 500),
       examples: (items || []).slice(0, 3).map(item => ({
         title: item.subject || item.title || 'Sans titre',
         price: item.price?.[0] ?? item.price ?? '?'
@@ -8880,7 +8881,8 @@ const apiTest = await testLeboncoinApiSearch();
       `Annonces : ${apiTest.count ?? 0}`,
       `Type de réponse : ${apiTest.responseType || 'Inconnu'}`,
       `Clés : ${apiTest.keys?.join(', ') || 'Aucune'}`,
-      `Erreur : ${apiTest.error || 'Aucune'}`,
+`Réponse brute : ${apiTest.responsePreview || 'Aucune'}`,
+`Erreur : ${apiTest.error || 'Aucune'}`,
       ...apiTest.examples?.map(
         item => `${item.title} — ${item.price} €`
       ) || [],
