@@ -2886,7 +2886,61 @@ async function diagnoseLeboncoinAccess(searchUrl) {
     };
   }
 }
+async function testLeboncoinApiSearch() {
+  const startedAt = Date.now();
 
+  try {
+    const { search, CATEGORY, SORT_BY, SORT_ORDER } =
+      await import('leboncoin-api-search');
+
+    if (typeof search !== 'function') {
+      throw new Error('La fonction search est introuvable.');
+    }
+
+    // Test limité : Lada Niva, catégorie voitures,
+    // prix entre 1000 et 4500 euros.
+    const results = await search({
+      keywords: 'Lada Niva',
+      category: CATEGORY.VOITURES,
+      sort_by: SORT_BY.TIME,
+      sort_order: SORT_ORDER.DESC,
+      price_min: 1000,
+      price_max: 4500,
+      limit: 5
+    });
+
+    const items = Array.isArray(results)
+      ? results
+      : Array.isArray(results?.ads)
+        ? results.ads
+        : Array.isArray(results?.data?.ads)
+          ? results.data.ads
+          : null;
+
+    return {
+      success: items !== null,
+      durationMs: Date.now() - startedAt,
+      count: items?.length ?? 0,
+      responseType: Array.isArray(results)
+        ? 'tableau'
+        : typeof results,
+      keys: results && typeof results === 'object'
+        ? Object.keys(results).slice(0, 10)
+        : [],
+      examples: (items || []).slice(0, 3).map(item => ({
+        title: item.subject || item.title || 'Sans titre',
+        price: item.price?.[0] ?? item.price ?? '?'
+      }))
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      durationMs: Date.now() - startedAt,
+      error: error.message
+    };
+  }
+}
 
 const WATCH_CONNECTORS = {
   leboncoin: null,
@@ -8719,9 +8773,20 @@ if (
     const result = await diagnoseLeboncoinAccess(
       search.searchUrl
     );
-
+const apiTest = await testLeboncoinApiSearch();
     const report = [
       '**DIAGNOSTIC LE BON COIN**',
+      '',
+            '**TEST LEBONCOIN-API-SEARCH**',
+      `Succès : ${apiTest.success ? 'Oui' : 'Non'}`,
+      `Durée : ${apiTest.durationMs} ms`,
+      `Annonces : ${apiTest.count ?? 0}`,
+      `Type de réponse : ${apiTest.responseType || 'Inconnu'}`,
+      `Clés : ${apiTest.keys?.join(', ') || 'Aucune'}`,
+      `Erreur : ${apiTest.error || 'Aucune'}`,
+      ...apiTest.examples?.map(
+        item => `${item.title} — ${item.price} €`
+      ) || [],
       '',
       `HTTP : ${result.status ?? 'Erreur réseau'}`,
       `Succès HTTP : ${result.success ? 'Oui' : 'Non'}`,
