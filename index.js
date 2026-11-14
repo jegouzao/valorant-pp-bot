@@ -3139,7 +3139,7 @@ attributes: platform === 'leboncoin' && Array.isArray(raw.attributes)
         label: String(attr.label || attr.key).slice(0, 80),
         value: String(attr.value).slice(0, 120)
       }))
-  : []
+  : [],
 vehicleDetails: platform === 'leboncoin'
   ? (raw.vehicleDetails || {})
   : {}
